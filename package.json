@@ -1,0 +1,65 @@
+{
+  "name": "phi-plugin-openclaw",
+  "version": "0.1.0",
+  "description": "OpenClaw 专用 Phigros 查分插件，内置 SQLite，无需 Redis 或 MySQL",
+  "repository": { "type": "git", "url": "git+https://github.com/Hydroiodic/phi-plugin-openclaw.git" },
+  "homepage": "https://github.com/Hydroiodic/phi-plugin-openclaw#readme",
+  "bugs": { "url": "https://github.com/Hydroiodic/phi-plugin-openclaw/issues" },
+  "main": "openclaw.mjs",
+  "exports": {
+    ".": {
+      "import": "./openclaw.mjs"
+    },
+    "./*": "./*"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "node scripts/test.mjs",
+    "test:openclaw": "node scripts/test.mjs --openclaw",
+    "smoke": "node scripts/smoke-openclaw.mjs",
+    "smoke:gateway": "node scripts/smoke-gateway.mjs",
+    "install:openclaw": "node scripts/install-openclaw.mjs",
+    "resources": "node scripts/resources.mjs",
+    "resources:build": "node scripts/build-resources.mjs",
+    "resources:illustrations": "node scripts/build-illustrations.mjs",
+    "resources:verify": "node scripts/verify-resources.mjs",
+    "typecheck": "tsc -p tsconfig.json --pretty false"
+  },
+  "author": "Hydroiodic",
+  "license": "GPL-3.0-only",
+  "engines": { "node": ">=22.16.0" },
+  "openclaw": { "extensions": ["./openclaw.mjs"], "compat": { "minHostVersion": "2026.9.3" } },
+  "files": ["openclaw.mjs", "openclaw.plugin.json", "src/", "apps/", "components/", "model/", "lib/", "config/default_config/", "resources/LICENSE", "resources/0608badSave/", "resources/html/", "resources/themes/milthm/", "scripts/", "tests/", "types/", "tsconfig.json", "NOTICE.md", "LICENSE", "README.md", "docs/"],
+  "type": "module",
+  "dependencies": {
+    "@puppeteer/browsers": "^2.10.6",
+    "art-template": "^4.13.4",
+    "axios": "^1.11.0",
+    "chalk": "^5.6.2",
+    "chokidar": "^4.0.3",
+    "crypto-js": "^4.1.1",
+    "jszip": "^3.10.1",
+    "lodash": "^4.18.1",
+    "node-fetch": "^3.3.2",
+    "pinyin-pro": "^3.15.4",
+    "puppeteer-core": "^24.16.2",
+    "qrcode": "^1.5.4",
+    "single-line-log": "^1.1.2",
+    "yaml": "^2.8.0"
+  },
+  "keywords": [
+    "openclaw",
+    "phigros",
+    "qqbot",
+    "sqlite"
+  ],
+  "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "@types/lodash": "^4.17.21",
+    "@types/node": "^22.20.1",
+    "@types/single-line-log": "^1.1.2",
+    "typescript": "^5.9.3"
+  }
+}

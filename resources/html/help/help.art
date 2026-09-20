@@ -1,0 +1,72 @@
+{{extend defaultLayout}}
+{{block 'css'}}
+
+<link rel="stylesheet" href="{{_res_path}}html/help/help.css">
+
+{{/block}}
+{{block 'main'}}
+
+    
+    {{each helpGroup group}}
+    {{if group.auth!="master"||isMaster}}
+    <section class="help-table-section">
+        <h2>{{group.group}}</h2>
+        {{if group.list && group.list.length > 0}}
+        <table class="help-table">
+            <colgroup><col class="help-command-col"><col class="help-example-col"><col class="help-description-col"></colgroup>
+            <thead><tr><th scope="col">命令</th><th scope="col">用法示例</th><th scope="col">说明</th></tr></thead>
+            <tbody>
+            {{each group.list help}}
+            <tr>
+                <td class="help-command">
+                    {{each help.title.split('<br>') line}}
+                    <div>{{cmdHead ? line.replace(/(^|\s)[\/杠钢刚纲]/g, `$1/${cmdHead} `) : line}}</div>
+                    {{/each}}
+                </td>
+                <td class="help-example">
+                    {{set exampleLines = (help.eg || help.title).split('<br>')}}
+                    {{each exampleLines line}}
+                    <div>{{cmdHead ? line.replace(/(^|\s)[\/杠钢刚纲]/g, `$1/${cmdHead} `) : line}}</div>
+                    {{/each}}
+                </td>
+                <td class="help-description">
+                    {{if help.desc}}
+                    {{each help.desc.split('<br>') line}}<div>{{line}}</div>{{/each}}
+                    {{/if}}
+                    {{if help.img}}<img src="{{_res_path}}html/otherimg/{{help.img}}" alt="{{help.img}}">{{/if}}
+                </td>
+            </tr>
+            {{/each}}
+            </tbody>
+        </table>
+        {{/if}}
+    </section>
+    {{/if}}
+    {{/each}}
+
+    <div class="createdbox">
+        <div class="phi-plugin">
+            <p>{{_plugin}}</p>
+        </div>
+        <div class="ver">
+            <p>{{Version.ver}}</p>
+        </div>
+    </div>
+    
+    {{if theme == "snow"}}
+    <div class="snow-box"> </div>
+    <script>
+        themeSnow();
+    </script>
+    {{else if theme == "topText" || theme == "foolsDay"}}
+    <div class="topTextBox" id="topTextBox"></div>
+    <script>
+        themeTopText();
+    </script>
+    {{else if theme == "star"}}
+    <canvas id="stars"></canvas>
+    <script>
+        themeStar();
+    </script>
+    {{/if}}
+{{/block}}

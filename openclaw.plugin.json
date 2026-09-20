@@ -1,0 +1,27 @@
+{
+  "id": "phi-plugin-openclaw",
+  "name": "Phigros",
+  "version": "0.1.0",
+  "description": "Phigros 查分、绑定、曲目信息与娱乐。OpenClaw 专用，本地 SQLite。",
+  "activation": {
+    "onStartup": true,
+    "onCapabilities": ["hook"]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "dataDir": { "type": "string", "description": "可选：数据目录的绝对路径，默认位于 OpenClaw 状态目录。" },
+      "resourceBaseUrl": { "type": "string", "description": "静态资源仓库根 HTTPS 地址；PHI_RESOURCE_BASE_URL 环境变量优先。默认 https://hydroiodic.site/phi-plugin-openclaw/resources/v1/" },
+      "resourceVersion": { "type": "string", "pattern": "^(latest|(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-r[1-9][0-9]*)?)$", "default": "latest", "description": "资源版本使用游戏版本，如 3.20.0；可选修订版如 3.20.0-r1。latest 首次解析后缓存，手动更新。PHI_RESOURCE_VERSION 环境变量优先。" },
+      "downloadIllustrations": { "type": "boolean", "default": false, "description": "预下载公共曲绘库的全部分包；默认按需下载、校验并缓存，各游戏版本共用曲绘。" },
+      "chromiumPath": { "type": "string", "description": "可选：Chrome/Chromium 可执行文件；默认自动查找或下载。" },
+      "admins": { "type": "array", "items": { "type": "string" }, "default": [], "description": "管理员身份 channel:accountId:senderId，使用 /phi identity 获取。" },
+      "channels": { "type": "array", "items": { "type": "string" }, "description": "允许的 channel ID，空数组为全部；QQ Bot 为 qqbot。" },
+      "enableApi": { "type": "boolean", "default": false, "description": "启用上游联合查分 API；基本查分无需此服务。" },
+      "renderScale": { "type": "number", "minimum": 50, "maximum": 200, "default": 100 },
+      "renderNum": { "type": "integer", "minimum": 1, "maximum": 4, "default": 1 },
+      "timeout": { "type": "integer", "minimum": 1000, "maximum": 120000, "default": 20000 }
+    }
+  }
+}

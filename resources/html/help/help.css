@@ -1,0 +1,72 @@
+@import "../common/common.css";
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 1200px;
+    height: fit-content;
+    margin: 0;
+    padding: 30px 0;
+    position: relative;
+    color: #f5f8ff;
+    font-family: "NOTO", "NotoSansJP", "HIMALAYA", sans-serif;
+}
+
+.help-table-section {
+    width: 1120px;
+    margin: 0 0 28px;
+    position: relative;
+    z-index: 1;
+}
+
+.help-table-section h2 {
+    margin: 0;
+    padding: 20px 24px;
+    border-left: 5px solid var(--HD);
+    background: rgba(13, 27, 48, 0.94);
+    font-size: 30px;
+    font-weight: 700;
+}
+
+.help-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    background: rgba(15, 28, 46, 0.94);
+    font-size: 21px;
+    line-height: 1.6;
+}
+
+.help-command-col { width: 23%; }
+.help-example-col { width: 31%; }
+.help-description-col { width: 46%; }
+
+.help-table th,
+.help-table td {
+    padding: 15px 18px;
+    border: 1px solid rgba(183, 210, 238, 0.25);
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.help-table th {
+    color: #bfeaff;
+    background: rgba(58, 104, 144, 0.4);
+    font-weight: 700;
+}
+
+.help-table tbody tr:nth-child(even) {
+    background: rgba(169, 201, 230, 0.07);
+}
+
+.help-table td > div { white-space: pre-wrap; }
+.help-command { color: #8fe0ff; font-weight: 600; }
+.help-example { color: #e1ebfb; }
+.help-description { color: #cbd7e8; }
+.help-description img { display: block; max-width: 180px; max-height: 180px; margin-top: 10px; }
+
+.createdbox { padding: 12px 0 20px; align-items: baseline; gap: 12px; }
+.phi-plugin p { font-size: 32px; }
+.ver p { font-size: 20px; }

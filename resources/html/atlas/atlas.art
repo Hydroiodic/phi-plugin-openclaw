@@ -1,0 +1,194 @@
+{{extend defaultLayout}}
+{{block 'css'}}
+<link rel="stylesheet" href="{{_res_path}}html/atlas/atlas.css">
+
+{{/block}}
+
+{{block 'main'}}
+
+    <div class="background" style="background: url({{illustration}}) no-repeat; background-size: cover;">
+        <img src="{{illustration}}" alt="曲绘-模糊">
+    </div>
+    <div class="big-box">
+        <div class="box">
+            <div class="info-box">
+                <div class="name-box clip-box">
+                    <div class="song">
+                        <p name="pvis">{{song}}</p>
+                        <!-- <p style="font-size: 45px;">{{song}}</p> -->
+                    </div>
+                    <div class="composer">
+                        <p name="pvis">{{composer}}</p>
+                    </div>
+                </div>
+                <div class="charts-box">
+                    <div class="length">
+                        <p name="pvis">{{length}}</p>
+                    </div>
+                    <div class="txt">
+                        <div class="sqrt">
+                            <p>SONG'S_INFO</p>
+                        </div>
+                        <div class="line">
+                            {{if spinfo}}
+                            <p name="pvis">{{#spinfo.replace(/\n/g,'<br\>')}}</p>
+                            {{/if}}
+                        </div>
+                    </div>
+                    <div class="chart">
+                        <div class="rankbkg">
+                            <div class="sqr"></div>
+                            {{each chart}}
+                            <div class="sqr rank-{{$index}}" style="background: {{fCompute.rgbaToGradient($value.rgba)}};"></div>
+                            {{/each}}
+                        </div>
+                        <div class="rank">
+                            <div class="pBox">
+                                <p name="pvis">Dif</p>
+                            </div>
+                            {{each chart}}
+                            <div class="pBox">
+                                <p name="pvis">{{$index}}</p>
+                            <p>{{$value.difficulty}}</p>
+                            </div>
+                            {{/each}}
+                        </div>
+                        <div class="rank-box">
+                            <div class="charter">
+                                <p>Charter</p>
+                            </div>
+                            <div class="chart-info"> 
+                                <p>Tap</p>
+                                <p>Drag</p>
+                                <p>Hold</p>
+                                <p>Flick</p>
+                            </div>
+                            {{each chart}}
+                            <div class="charter">
+                                <p name="pvis">{{$value.charter}}</p>
+                            </div>
+                            <div class="chart-info">
+                                <p>{{$value.tap}}</p>
+                                <p>{{$value.drag}}</p>
+                                <p>{{$value.hold}}</p>
+                                <p>{{$value.flick}}</p>
+                            </div>
+                            {{/each}}
+                        </div>
+                        <div class="note-box">
+                            <p>Total</p>
+                            {{each chart}}
+                            <p>{{$value.combo}}</p>
+                            {{/each}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="ill-box clip-box">
+                <img src="{{illustration}}" alt="曲绘">
+            </div>
+            {{if isOriginal}}
+                <div class="original-tag"><p>Phigros Original</p></div>
+            {{/if}}
+        </div>
+        <div class="other-info">
+        {{if bpm}}
+            <div class="other-box">
+                <div class="title">
+                    <p>BPM</p>
+                </div>
+                <div class="dcr">
+                    <p>{{bpm}}</p>
+                </div>
+            </div>
+        {{/if}}
+        {{if illustrator}}
+            <div class="other-box">
+                <div class="title">
+                    <p>Illustrator</p>
+                </div>
+                <div class="dcr">
+                    <p>{{illustrator}}</p>
+                </div>
+            </div>
+        {{/if}}
+        {{if chapter}}
+            <div class="other-box">
+                <div class="title">
+                    <p>Chapter</p>
+                </div>
+                <div class="dcr">
+                    <p>{{chapter}}</p>
+                </div>
+            </div>
+        {{/if}}
+        </div>
+    </div>
+</div>
+{{if comment}}
+<div class="comment-box">
+    <div class="comment_title">
+        <p>Comments</p>
+        <p>{{comment.command}}</p>
+    </div>
+    {{each comment.list user}}
+    <div class="a_comment">
+        <div class="avatar">
+            <img
+                src="{{_res_path}}html/avatar/{{user.avatar}}.png"
+                alt="{{user.avatar}}"
+            >
+        </div>
+        <div class="userInfo">
+            <div class="playerId">
+                <p>{{user.PlayerId}}</p>
+            </div>
+            <div class="rks">
+                <p>{{user.rks.toFixed(4)}}</p>
+            </div>
+            <div class="score {{user.rank}}-BKG">
+                <p>{{user.score}}</p>
+            </div>
+            <div class="acc {{user.rank}}-BKG">
+                <p>{{user.acc.toFixed(2)}}%</p>
+            </div>
+            {{if user.spInfo}}
+            <div class="spInfo colorful-background">
+                <p>{{user.spInfo}}</p>
+            </div>
+            {{/if}}
+            <div class="clg_box">
+                <div class="Challenge">
+                    <img
+                        src="{{_res_path}}html/otherimg/{{Math.floor(user.challenge / 100)}}.png"
+                        alt="{{user.challenge}}"
+                    >
+                    <p>{{user.challenge % 100}}</p>
+                </div>
+            </div>
+            <div class="time">
+                <p>{{user.time}}&ensp;ID:{{user.thisId}}</p>
+            </div>
+        </div>
+        <div class="comment">
+            <p name="pvis">{{#user.comment}}</p>
+        </div>
+    </div>
+    {{/each}}
+</div>
+{{/if}}
+<div class="createdbox">
+    <div class="phi-plugin">
+        <p>{{_plugin}}</p>
+    </div>
+    <div class="ver">
+        <p>{{Version.ver}}</p>
+    </div>
+</div>
+<div class="copyright">
+    <p>*Phi-Plugin不是Phigros官方项目，与南京鸽游网络有限公司及Phigros官方不存在授权、合作或运营关系。
+    </p>
+</div>
+<div class="snow-box"> </div>
+
+{{/block}}

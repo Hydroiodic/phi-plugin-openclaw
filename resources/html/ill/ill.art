@@ -1,0 +1,23 @@
+{{extend defaultLayout}}
+{{block 'css'}}
+    <link rel="stylesheet" href="{{_res_path}}html/ill/ill.css">
+{{/block}}
+
+{{block 'main'}}
+    <img src="{{illustration}}" alt="{{illustration}}">
+    <div class="shadow"></div>
+    <div class="info-box">
+        <div class="phi">
+            <p>Phigros</p>
+        </div>
+        <div class="line"></div>
+        <div class="info">
+            <div class="up">
+                <p>Illustration</p>
+            </div>
+            <div class="down">
+                <p>{{illustrator}}</p>
+            </div>
+        </div>
+    </div>
+{{/block}}

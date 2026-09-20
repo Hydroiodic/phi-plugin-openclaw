@@ -1,0 +1,33 @@
+{
+  "include": ["**/*.js", "**/*.d.ts"],
+  "exclude": [
+    "dist",
+    "client-dist",
+    "node_modules",
+    "logs",
+    "ssl",
+    "data",
+    "backup",
+    "tem",
+    "temp",
+    "lib/tem.js",
+    "resources/html",
+    "resources/info/*.csv"
+  ],
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022"],
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true
+  }
+}

@@ -1,0 +1,414 @@
+/**
+ * @typedef {string & { readonly brand: unique symbol }} idString 曲目id
+ * @typedef {string & { readonly brand: unique symbol }} idStringWithout0 曲目id
+ * @typedef {string & { readonly brand: unique symbol }} songString 曲目名称
+ * @typedef {string & { readonly brand: unique symbol }} chartsTagString 谱面标签
+ * @typedef {'category' | 'detail'} chartsTagNodeKind 谱面标签节点类型，category 为分类标签，detail 为细分标签
+ * @typedef {'primary' | 'secondary'} chartsTagVoteKind 谱面标签投票类型，primary 为主要票，secondary 为次要票
+ * @typedef {string & { readonly brand: unique symbol }} phigrosToken phigrosToken
+ * @typedef {string & { readonly brand: unique symbol }} apiToken apiToken
+ * @typedef {string & { readonly brand: unique symbol }} apiUserId apiId
+ * @typedef {string & { readonly brand: unique symbol }} phigrosObjectId phigrosObjectId
+ * @typedef {'EZ' | 'HD' | 'IN' | 'AT'} levelKind 有效难度分级
+ * @typedef {'EZ' | 'HD' | 'IN' | 'AT' | 'LEGACY'} allLevelKind 全部难度分级
+ * @typedef {'tap' | 'drag' | 'hold' | 'flick'} noteKind note分类
+ * @typedef {  "NEW" | "F" | "C" | "B" | "A" | "S" | "V" | "FC" | "phi" } ratingKind
+ **/
+
+/**
+ * @typedef {'help'
+ * | 'tkhelp'
+ * | 'bind'
+ * | 'unbind'
+ * | 'b19'
+ * | 'p30'
+ * | 'lmtAcc'
+ * | 'arcgrosB19'
+ * | 'update'
+ * | 'info'
+ * | 'list'
+ * | 'singlescore'
+ * | 'lvscore'
+ * | 'chap'
+ * | 'achievement'
+ * | 'suggest'
+ * | 'analyze2025SaveHistory'
+ * | 'hisb30'
+ * | 'bestn'
+ * | 'data'
+ * | 'song'
+ * | 'ill'
+ * | 'chart'
+ * | 'tag'
+ * | 'addtag'
+ * | 'retag'
+ * | 'search'
+ * | 'alias'
+ * | 'randmic'
+ * | 'randClg'
+ * | 'table'
+ * | 'comment'
+ * | 'recallComment'
+ * | 'myComment'
+ * | 'comrks'
+ * | 'rankList'
+ * | 'godList'
+ * | 'tips'
+ * | 'newSong'
+ * | 'tipgame'
+ * | 'guessgame'
+ * | 'ltrgame'
+ * | 'sign'
+ * | 'send'
+ * | 'tasks'
+ * | 'retask'
+ * | 'jrrp'
+ * | 'theme'
+ * | 'dan'
+ * | 'danupdate'
+ * | 'setApiToken'
+ * | 'tokenList'
+ * | 'auth'
+ * | 'clearApiData'
+ * | 'updateHistory'
+ * } allFnc 全部指令
+ */
+
+/**
+ * 渲染设置
+ * @typedef {'renderScale'} renderScale 渲染精度
+ * @typedef {'randerQuality'} randerQuality 渲染质量
+ * @typedef {'timeout'} timeout 渲染超时时间
+ * @typedef {'waitingTimeout'} waitingTimeout 等待超时时间
+ * @typedef {'renderQueueLimit'} renderQueueLimit 等待队列上限
+ * @typedef {'renderNum'} renderNum 并行渲染数量
+ * @typedef {'commentsAPage'} commentsAPage 每页最大渲染评论数量
+ * @typedef {'B19MaxNum'} B19MaxNum B19最大限制
+ * @typedef {'HistoryDayNum'} HistoryDayNum 历史成绩单日数量
+ * @typedef {'HistoryScoreDate'} HistoryScoreDate 历史成绩展示天数
+ * @typedef {'HistoryScoreNum'} HistoryScoreNum 历史成绩展示数量
+ * @typedef {'listScoreMaxNum'} listScoreMaxNum /list 最大数量
+ * 系统设置
+ * @typedef {'defaultGlobal'} defaultGlobal 默认使用国际服
+ * @typedef {'watchInfoPath'} watchInfoPath 监听信息文件
+ * @typedef {'allowComment'} allowComment 曲目评论
+ * @typedef {'allowChartTag'} allowChartTag 曲目标签
+ * @typedef {'isGuild'} isGuild 频道模式
+ * @typedef {'TapTapLoginQRcode'} TapTapLoginQRcode 绑定二维码
+ * @typedef {'WordB19Img'} WordB19Img 文字版B19曲绘图片
+ * @typedef {'WordSuggImg'} WordSuggImg Suggest曲绘图片
+ * @typedef {'cmdhead'} cmdhead 命令头
+ * @typedef {'openPhiPluginApi'} openPhiPluginApi 是否启用Phigros联合查分API地址
+ * @typedef {'enableCustomThemeApi'} enableCustomThemeApi 是否启用自定义主题 API
+ * @typedef {'enableScoreStatisticsApi'} enableScoreStatisticsApi 是否启用免认证查分统计 API
+ * @typedef {'enableOnlineScoreApi'} enableOnlineScoreApi 是否启用需认证在线查分 API
+ * @typedef {'themeMarketDownloadOrigin'} themeMarketDownloadOrigin 主题市场下载来源
+ * @typedef {'debug'} debug 输出测试日志
+ * @typedef {'otherinfo'} otherinfo 曲库
+ * @typedef {'mutiNickWaitTimeOut'} mutiNickWaitTimeOut 多个曲目回复序号等待时长
+ * @typedef {'chartPath'} chartPath 谱面路径
+ * 猜曲绘设置
+ * @typedef {'GuessTipCd'} GuessTipCd 提示间隔
+ * @typedef {'GuessTipRecall'} GuessTipRecall 猜曲绘撤回
+ * 开字母设置
+ * @typedef {'LetterNum'} LetterNum 字母条数
+ * @typedef {'LetterMarkdown'} LetterMarkdown Markdown格式
+ * @typedef {'LetterIllustration'} LetterIllustration 发送曲绘
+ * @typedef {'LetterRevealCd'} LetterRevealCd 字母提示间隔
+ * @typedef {'LetterGuessCd'} LetterGuessCd 字母开启间隔
+ * @typedef {'LetterTipCd'} LetterTipCd 字母提示间隔
+ * @typedef {'LetterTimeLength'} LetterTimeLength 猜字母最长时长
+ * 提示猜歌设置
+ * @typedef {'GuessTipsTipCD'} GuessTipsTipCD 提示冷却
+ * @typedef {'GuessTipsTipNum'} GuessTipsTipNum 提示条数
+ * @typedef {'GuessTipsTimeout'} GuessTipsTimeout 游戏时长
+ * @typedef {'GuessTipsAnsTime'} GuessTipsAnsTime 额外时间
+ * 其他设置
+ * @typedef {'VikaToken'} VikaToken VikaToken
+ * @typedef {'apiBotClientId'} apiBotClientId API签发的Bot clientId
+ * @typedef {'apiBotClientSecret'} apiBotClientSecret API签发的Bot HMAC secret
+ * @typedef {'apiBotSecretVersion'} apiBotSecretVersion Bot HMAC secret版本
+ * 
+ * @typedef {renderScale
+ * |randerQuality
+ * |timeout
+ * |waitingTimeout
+ * |renderQueueLimit
+ * |renderNum
+ * |commentsAPage
+ * |B19MaxNum
+ * |HistoryDayNum
+ * |HistoryScoreDate
+ * |HistoryScoreNum
+ * |listScoreMaxNum
+ * |defaultGlobal
+ * |watchInfoPath
+ * |allowComment
+ * |allowChartTag
+ * |isGuild
+ * |TapTapLoginQRcode
+ * |WordB19Img
+ * |WordSuggImg
+ * |cmdhead
+ * |openPhiPluginApi
+ * |enableCustomThemeApi
+ * |enableScoreStatisticsApi
+ * |enableOnlineScoreApi
+ * |themeMarketDownloadOrigin
+ * |debug
+ * |otherinfo
+ * |mutiNickWaitTimeOut
+ * |chartPath
+ * |GuessTipCd
+ * |GuessTipRecall
+ * |LetterNum
+ * |LetterMarkdown
+ * |LetterIllustration
+ * |LetterRevealCd
+ * |LetterGuessCd
+ * |LetterTipCd
+ * |LetterTimeLength
+ * |GuessTipsTipCD
+ * |GuessTipsTipNum
+ * |GuessTipsTimeout
+ * |GuessTipsAnsTime
+ * |VikaToken
+ * |apiBotClientId
+ * |apiBotClientSecret
+ * |apiBotSecretVersion
+* } configName 全部设置
+*/
+
+
+/**
+ * @typedef {object} ori_record
+ * @property {number} score
+ * @property {number} acc
+ * @property {boolean} fc
+ */
+
+/**
+ * @typedef {object} playerInfo
+ * @property {{ '*': {write: boolean, read: boolean} }} ACL
+ * @property {object} authData
+ * @property {object} authData.taptap
+ * @property {string} authData.taptap.access_token
+ * @property {string} authData.taptap.avatar taptap头像
+ * @property {string} authData.taptap.gender
+ * @property {string} authData.taptap.kid
+ * @property {string} authData.taptap.mac_algorithm
+ * @property {string} authData.taptap.mac_key
+ * @property {string} authData.taptap.name
+ * @property {string} authData.taptap.openid
+ * @property {string} authData.taptap.scope
+ * @property {string} authData.taptap.token_type
+ * @property {string} authData.taptap.unionid
+ * @property {string} avatar taptap头像
+ * @property {string} createdAt '2022-09-03T10:21:42.783Z'
+ * @property {boolean} emailVerified
+ * @property {boolean} mobilePhoneVerified
+ * @property {string} nickname 游戏昵称
+ * @property {phigrosObjectId} objectId
+ * @property {phigrosToken} sessionToken
+ * @property {string} shortId
+ * @property {string} updatedAt
+ * @property {string} username
+ * 
+ * @typedef {object} gameFile
+ * @property {string} __type 文件类型
+ * @property {string} bucket 存档bucket
+ * @property {string} createdAt 存档创建时间 2023-10-05T07:41:24.503Z
+ * @property {string} key gamesaves/{32}/.save
+ * @property {object} metaData metaData
+ * @property {string} mime_type mime_type
+ * @property {string} name ".save"
+ * @property {string} objectId 存档id {24}
+ * @property {string} provider provider
+ * @property {string} updatedAt 存档更新时间 2023-10-05T07:41:24.503Z
+ * @property {string} url https://rak3ffdi.tds1.tapfiles.cn/gamesaves/{32}/.save
+ * 
+ * @typedef {object} modifiedAt
+ * @property {string} __type
+ * @property {Date} iso
+ * 
+ * @typedef {object} summary
+ * @property {string} updatedAt 插件获取存档时间 2023 Oct.06 11:46:33
+ * @property {number} saveVersion 存档版本
+ * @property {number} challengeModeRank 课题分
+ * @property {number} rankingScore rks
+ * @property {number} gameVersion 客户端版本号
+ * @property {string} avatar 头像
+ * @property {number[]} cleared 完成曲目数量
+ * @property {number[]} fullCombo FC曲目数量
+ * @property {number[]} phi AP曲目数量
+ * 
+ * @typedef {object} saveInfo
+ * @property {Date} createdAt 账户创建时间 2022-09-03T10:21:48.613Z
+ * @property {gameFile} gameFile
+ * @property {modifiedAt} modifiedAt 存档上传时间 {__type："Date", "iso": "2023-10-06T03:46:33.000Z"}
+ * @property {string} name
+ * @property {string} objectId 存档id {24}
+ * @property {summary} summary
+ * @property {Date} updatedAt 存档更新时间 2023-10-06T03:46:33.000Z
+ * @property {{'__type': "Pointer", 'className': "_User", 'objectId': string}} user
+ * @property {string} PlayerId
+ * 
+ * @typedef {object} gameProgress
+ * @property {boolean} isFirstRun
+ * @property {boolean} legacyChapterFinished
+ * @property {boolean} alreadyShowCollectionTip
+ * @property {boolean} alreadyShowAutoUnlockINTip
+ * @property {string} completed
+ * @property {number} songUpdateInfo
+ * @property {number} challengeModeRank
+ * @property {number[]} money
+ * @property {number} unlockFlagOfSpasmodic
+ * @property {number} unlockFlagOfIgallta
+ * @property {number} unlockFlagOfRrharil
+ * @property {number} flagOfSongRecordKey
+ * @property {number} randomVersionUnlocked
+ * @property {boolean} chapter8UnlockBegin
+ * @property {boolean} chapter8UnlockSecondPhase
+ * @property {boolean} chapter8Passed
+ * @property {number} chapter8SongUnlocked
+ * 
+ * @typedef {object} gameuser
+ * @property {string} name
+ * @property {string} version
+ * @property {boolean} showPlayerId
+ * @property {string} selfIntro
+ * @property {string} avatar
+ * @property {string} background
+ * @property {string} CLGMOD
+ * 
+ * @typedef {Record<idString, (ori_record | null)[]>} gameRecord
+ * 
+ * @typedef {object} oriSave
+ * @property {phigrosToken} session
+ * @property {apiUserId} [apiId]
+ * @property {boolean} global
+ * @property {saveInfo} saveInfo
+ * @property {playerInfo} playerInfo
+ * @property {number} Recordver
+ * @property {gameProgress} gameProgress
+ * @property {gameuser} gameuser
+ * @property {gameRecord} gameRecord
+ */
+
+/**
+ * 基础历史记录结构
+ * @template T
+ * @typedef {object} BaseHistoryObject<T>
+ * @property {string} date - 日期 ISO格式
+ * @property {T} value - 值
+ */
+
+/**
+ * 单条成绩详细记录
+ * @typedef {[acc: string, score: number, date: string, fc: number | boolean]} ScoreDetail
+ * 0 - acc
+ * 1 - score
+ * 2 - 记录日期
+ * 3 - fc
+ */
+
+/**
+ * 
+ * @typedef {Partial<Record<allLevelKind, ScoreDetail[]>>} songRecordHistory
+ */
+
+/**
+ * @typedef {Record<idString, songRecordHistory>} scoreHistoryObject
+ */
+
+/**
+ * 玩家存档历史数据对象
+ * @typedef {Object} saveHistoryObject
+ * @property {BaseHistoryObject<number[]>[]} [data] - 成绩记录数组（包含日期和五个数值的元组）
+ * @property {BaseHistoryObject<number>[]} [rks] - RKS(评级分数)历史记录数组
+ * @property {scoreHistoryObject} [scoreHistory] - 成绩历史数据（按歌曲ID和难度分类的详细记录）
+ * @property {BaseHistoryObject<number>[]} [challengeModeRank] - 课题模式排名记录
+ * @property {number} [version] - 数据版本号
+ */
+
+/**
+ * @typedef {Object} TapTapUpdateItem
+ * @property {string} version_label
+ * @property {number} update_date
+ * @property {{ text: string }} whatsnew
+ * @property {number} version_code
+ */
+
+/**
+ * @typedef {Object} TapTapUpdateResponse
+ * @property {{ list: TapTapUpdateItem[] }} data
+ * @property {number} now
+ * @property {boolean} success
+ */
+
+/** 
+ * @typedef {Object} TapTapNoticeItem
+ * @property {'moment'} type
+ * @property {string} identification
+ * @property {TapTapNoticeMoment} moment
+ */
+
+/**
+ * @typedef {Object} TapTapNoticeMoment
+ * @property {string} id_str
+ * @property {number} created_time
+ * @property {number} edited_time
+ * @property {number} publish_time
+ * @property {boolean} is_official
+ * @property {TapTapNoticeAuthor} author
+ * @property {TapTapNoticeTopic} topic
+ * @property {TapTapNoticeStat} stat
+ * @property {TapTapNoticeSharing} sharing
+ */
+
+/**
+ * @typedef {Object} TapTapNoticeAuthor
+ * @property {{ id: number, title: string }} app
+ * @property {{ id: number, name: string, avatar: string }} user
+ */
+
+/**
+ * @typedef {Object} TapTapNoticeTopic
+ * @property {string} id_str
+ * @property {string} title
+ * @property {string} summary
+ * @property {TapTapNoticeImage[]} images
+ */
+
+/**
+ * @typedef {Object} TapTapNoticeImage
+ * @property {string} url
+ * @property {string} medium_url
+ * @property {string} small_url
+ * @property {string} original_url
+ * @property {number} width
+ * @property {number} height
+ */
+
+/**
+ * @typedef {Object} TapTapNoticeStat
+ * @property {number} pv_total
+ * @property {number} ups
+ * @property {number} comments
+ * @property {number} favorites
+ */
+
+/**
+ * @typedef {Object} TapTapNoticeSharing
+ * @property {string} url
+ * @property {string} title
+ * @property {string} description
+ * @property {TapTapNoticeImage} [image]
+ */
+
+/**
+ * @typedef {Object} TapTapNoticeResponse
+ * @property {{ list: TapTapNoticeItem[], total: number, next_page: string }} data
+ * @property {number} now
+ * @property {boolean} success
+ */

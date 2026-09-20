@@ -1,0 +1,145 @@
+#  ************ 【渲染设置】 *************
+#  渲染精细度，可选值50~200，建议100。设置高精度会提高图片的精细度，但因图片较大可能会影响渲染与发送速度
+renderScale: 100
+
+#  渲染质量 可选值50~100
+randerQuality: 100
+
+#  渲染超时时间 ms
+timeout: 20000
+
+#  等待渲染超时时间 ms
+waitingTimeout: 10000
+
+#  等待渲染的队列上限，不含正在渲染的请求；0 为不排队，修改后立即生效
+renderQueueLimit: 32
+
+#  并行渲染数量
+renderNum: 1
+
+#  每页最大渲染评论数量
+commentsAPage: 10
+
+#  b19最大成绩数量
+B19MaxNum: 50
+
+#  历史成绩单日数量，至少为2
+HistoryDayNum: 10
+
+#  历史成绩总数量
+HistoryScoreNum: 50
+
+#  历史成绩展示天数
+HistoryScoreDate: 10
+
+#  /list 最大渲染成绩数量
+listScoreMaxNum: 180
+
+#  ************ 【系统设置】 *************
+
+#  默认使用国际服
+defaultGlobal: false
+
+#  是否监听信息文件变化，如遇监听文件超限请尝试关闭
+watchInfoPath: false
+
+#  是否开启曲目评论功能，该功能目前暂无敏感词校验
+allowComment: true
+
+#  是否开启谱面标签功能，该功能目前暂无敏感词校验
+allowChartTag: false
+
+#  是否开启频道模式（文字版仅限私聊，关闭文字版图片，文字版将折叠为一条消息，把@改为回复）
+isGuild: false
+
+#  文字版b19是否带图，关闭可以节约大量发送时间
+WordB19Img: false
+
+#  文字版suggest是否带图，关闭可以节约大量发送时间
+WordSuggImg: false
+
+#  登录TapTap绑定是否发送二维码
+TapTapLoginQRcode: true
+
+#  命令头
+cmdhead: "phi"
+
+#  是否启用Phigros联合查分API
+openPhiPluginApi: false
+
+# 是否允许从 API 获取和安装自定义主题（受上方总开关控制）
+enableCustomThemeApi: true
+
+# 是否允许调用无需用户认证的查分统计与谱面分析接口（受上方总开关控制）
+enableScoreStatisticsApi: true
+
+# 是否允许调用需要用户认证的在线查分接口（受上方总开关和用户个人 API 开关控制）
+enableOnlineScoreApi: true
+
+# 主题市场临时下载链接允许的唯一来源。必须为 HTTPS origin，不含路径。
+themeMarketDownloadOrigin: "https://lyh.org.cn:18473"
+
+# 由查分 API 签发，也可在管理表单中修改；客户端 ID、密钥和版本号须保持匹配。
+apiBotClientId: ""
+apiBotClientSecret: ""
+apiBotSecretVersion: 0
+
+#  输出测试日志
+debug: 0
+
+#  谱面文件路径
+chartPath: ''
+
+#  多个曲目回复序号等待时长(s)
+mutiNickWaitTimeOut: 10
+
+#  ************ 【娱乐设置】 *************
+#  是否启用额外曲库 0:原本 1:原本+额外 2:仅额外
+otherinfo: 0
+
+#  ************ 【猜字母设置】 *************
+#  猜字母条数
+LetterNum: 8
+
+#  是否发送开字母、主题市场及 QQ 官方机器人页面的交互式 Markdown 快捷操作
+LetterMarkdown: true
+
+#  猜对后是否发送以及发送什么曲绘 原版 水印版 不发送
+LetterIllustration: "水印版"
+
+#  猜字母群聊全局猜测冷却时间间隔(s)
+LetterGuessCd: 0
+
+#  猜字母群聊全局翻开字母冷却时间间隔(s)
+LetterRevealCd: 0
+
+#  猜字母群聊全局提示冷却时间间隔(s)
+LetterTipCd: 0
+
+#  猜字母待机时长(s)
+LetterTimeLength: 300
+
+#  ************ 【猜曲绘设置】 *************
+#  猜曲绘是否撤回
+GuessTipRecall: false
+
+#  猜曲绘提示时间间隔(s)
+GuessTipCd: 15
+
+#  ************ 【提示猜歌设置】 *************
+#  提示猜歌提示的冷却时间间隔(s)
+GuessTipsTipCD: 5
+
+#  提示猜歌的提示条数（除曲绘外）
+GuessTipsTipNum: 6
+
+#  提示猜歌超时时长(s)
+GuessTipsTimeout: 600
+
+#  发送曲绘后多久公布答案(s)
+GuessTipsAnsTime: 30
+
+#  ************ 【其他设置】 *************
+#  认证 Token
+VikaToken: ""
+

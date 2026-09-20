@@ -1,0 +1,659 @@
+import Config from '../components/Config.js'
+import send from '../model/render/send.js'
+import Save from '../model/save/Save.js'
+import ScoreHistory from '../model/save/scoreHistory.js'
+import getQRcode from '../lib/getQRcode.js'
+import fCompute from '../model/game/fCompute.js'
+import getBanGroup from '../model/user/getBanGroup.js';
+import { allLevel, redisPath } from "../model/game/constNum.js"
+import makeRequest from '../model/api/makeRequest.js'
+import saveHistory from '../model/save/saveHistory.js'
+import getNotes from '../model/user/getNotes.js'
+import { APII18NCN } from '../model/game/constNum.js'
+import phiPluginBase from '../components/baseClass.js'
+import logger from '../components/Logger.js'
+import segment from '../components/segment.js'
+import getInfo from '../model/game/getInfo.js'
+import picmodle from '../model/render/picmodle.js'
+import { canUseApi } from '../model/user/apiPermission.js'
+import platform, { redis } from '../components/platform/index.js'
+import { UserCredentials } from '../model/user/userCredentials.js'
+import { sendQuickCommands, sessionQuickCommands, updateQuickCommands } from '../model/game/markdown.js'
+
+/**@import {botEvent} from '../components/baseClass.js' */
+
+export class phisstk extends phiPluginBase {
+    constructor() {
+        super({
+            name: 'phi-sessionToken',
+            dsc: 'sessionToken获取',
+            event: 'message',
+            priority: 1000,
+            rule: [
+                {
+                    reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(cn|gb)?(绑定|bind).*$`,
+                    fnc: 'bind'
+                },
+                {
+                    reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(更新存档|update)$`,
+                    fnc: 'update'
+                },
+                {
+                    reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(解绑|unbind)$`,
+                    fnc: 'unbind'
+                },
+                {
+                    reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(clean)$`,
+                    fnc: 'clean'
+                },
+                {
+                    reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)session[tT]oken$`,
+                    fnc: 'getSstk'
+                }
+            ]
+        })
+
+    }
+
+    /**
+     * 
+     * @param {botEvent} e 
+     * @returns 
+     */
+    async bind(e) {
+
+        const credentials = UserCredentials.fromEvent(e)
+
+        if (await getBanGroup.get(e, 'bind')) {
+            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
+            return false
+        }
+
+        let sessionToken =/**@type {phigrosToken} */ (e.msg.replace(/[#/](.*?)(cn|gb)?(绑定|bind)(\s*)/, "").match(/[0-9a-zA-Z]{25}|qrcode/g)?.[0])
+        const useWhich = e.msg.match(/[#/](.*?)(cn|gb)?(绑定|bind)(\s*)/)?.[2]
+
+        /** @type {boolean} */
+        let isGlobal = useWhich ? useWhich === 'gb' : Config.getUserCfg('config', 'defaultGlobal');
+        const allowApi = await canUseApi(e)
+        let apiBindingSucceeded = false
+
+        let localPhigrosToken = await credentials.getSessionToken()
+
+        if (!sessionToken) {
+            let apiId = e.msg.replace(/[#/](.*?)(绑定|bind)(\s*)/, "").match(/[0-9]+/g)?.[0]
+            if (apiId && allowApi) {
+                const result = await credentials.bindWithApiId(apiId)
+                if (result?.apiUserId) {
+                    let resMsg = `绑定成功！您的查分ID为：${result.apiUserId}，请妥善保管嗷！`
+                    send.send_with_At(e, resMsg)
+                    let updateData = await credentials.getUpdatedSaveFromApi()
+                    let history = await credentials.getCloudHistory(['data', 'rks', 'scoreHistory'])
+                    if (updateData && history) await build(e, updateData, history, sessionQuickCommands, '绑定页快捷操作')
+                    else send.send_with_At(e, '绑定已成功，但暂时无法读取 API 存档，请稍后执行更新。')
+                    return true
+                }
+                if (!result) {
+                    send.send_with_At(e, `没有找到${apiId || ''}对应的用户，请先绑定sessionToken哦！如果不知道自己的sessionToken可以尝试扫码绑定嗷！\n帮助：/${Config.getUserCfg('config', 'cmdhead')} tk help\n获取二维码：/${Config.getUserCfg('config', 'cmdhead')} bind qrcode\n普通绑定：/${Config.getUserCfg('config', 'cmdhead')} bind <sessionToken>`)
+                    return false
+                }
+            } else {
+                if (apiId) {
+                    send.send_with_At(e, `这里没有连接查分平台哦！请使用sessionToken进行绑定！`)
+                    return false
+                }
+            }
+            if (!localPhigrosToken) {
+                send.send_with_At(e, `喂喂喂！你还没输入sessionToken呐，如果不知道自己的sessionToken可以尝试扫码绑定嗷！\n帮助：/${Config.getUserCfg('config', 'cmdhead')} tk help\n获取二维码：/${Config.getUserCfg('config', 'cmdhead')} bind qrcode\n普通绑定：/${Config.getUserCfg('config', 'cmdhead')} bind <sessionToken>`)
+                return false
+            }
+
+        }
+
+        if (sessionToken == "qrcode") {
+            if (e._signal?.aborted) return true
+            /**用户若已经触发且未绑定，则发送原来的二维码 */
+            const region = isGlobal ? 'global' : 'cn'
+            let key = `${redisPath}:qrcode:${e.user_id}:${region}`
+            let timeOutKey = `${redisPath}:qrcodeTimeOut:${e.user_id}:${region}`
+            let qrcode = await redis.get(key)
+            let qrcodeTimeOut = qrcode ? await redis.ttl(timeOutKey) : 0
+            if (qrcode && qrcodeTimeOut > 0) {
+                let recallTime = qrcodeTimeOut
+                if (qrcodeTimeOut >= 60) recallTime = 60
+                if (Config.getUserCfg('config', 'TapTapLoginQRcode')) {
+                    await send.send_with_At(e, [
+                        segment.image(await getQRcode.getQRcode(qrcode)),
+                        `请识别二维码并按照提示进行登录嗷！请勿错扫他人二维码。请注意，登录TapTap可能造成账号及财产损失，请在信任Bot来源的情况下扫码登录。\n二维码剩余时间:${qrcodeTimeOut}`
+                    ], false, { recallMsg: recallTime });
+                } else {
+                    await send.send_with_At(e, `请点击链接进行登录嗷！请勿使用他人的链接。请注意，登录TapTap可能造成账号及财产损失，请在信任Bot来源的情况下扫码登录。\n链接剩余时间:${qrcodeTimeOut}\n${qrcode}`, false, { recallMsg: recallTime });
+                }
+                return true
+            }
+            if (qrcode) await redis.del(key, timeOutKey)
+            let ownedQrUrl
+            try {
+                const request = await getQRcode.getRequest(isGlobal, { signal: e._signal })
+                const { seconds, intervalMs } = getQRcode.validateRequest(request, fCompute.getAdapterName(e) === 'QQBot' ? 270 : 600)
+                if (e._signal?.aborted) return true
+                const deadline = Date.now() + seconds * 1000
+                ownedQrUrl = request.data.qrcode_url
+                await redis.set(key, ownedQrUrl, { EX: seconds })
+                await redis.set(timeOutKey, '1', { EX: seconds })
+                const notice = '请按照提示登录 TapTap，并确认已在 Phigros 中同步存档。请勿使用他人的二维码或链接。'
+                const qrCodeMsg = Config.getUserCfg('config', 'TapTapLoginQRcode')
+                    ? await send.send_with_At(e, [segment.image(await getQRcode.getQRcode(ownedQrUrl)), notice], false, { recallMsg: 60 })
+                    : await send.send_with_At(e, `${notice}\n${ownedQrUrl}`, false, { recallMsg: 60 })
+                let scanned = false
+                /** @type {any} */
+                let result = null
+                while (!e._signal?.aborted && Date.now() < deadline) {
+                    result = await getQRcode.checkQRCodeResult(request, isGlobal, {
+                        signal: e._signal, timeoutMs: Math.max(1, Math.min(15000, deadline - Date.now())),
+                    })
+                    if (e._signal?.aborted || Date.now() >= deadline) break
+                    if (result?.success === true) break
+                    const error = result?.data?.error
+                    if (['access_denied', 'authorization_denied', 'expired_token', 'authorization_expired', 'invalid_grant'].includes(error)) {
+                        await send.send_with_At(e, '扫码授权已取消或过期，请重新获取二维码。')
+                        return true
+                    }
+                    if (error === 'authorization_waiting' && !scanned) {
+                        await send.send_with_At(e, '二维码已扫描，请确认登录', false, { recallMsg: 10 })
+                        await platform.recall(e, qrCodeMsg)
+                        scanned = true
+                    }
+                    // null, malformed pending data, and transient network errors
+                    // remain retryable, but never extend the original deadline.
+                    await getQRcode.wait(Math.min(intervalMs, Math.max(1, deadline - Date.now())), e._signal)
+                }
+                if (e._signal?.aborted) return true
+                if (result?.success !== true || Date.now() >= deadline) {
+                    await send.send_with_At(e, '操作超时，请重新获取二维码。')
+                    return true
+                }
+                sessionToken = await getQRcode.getSessionToken(result, isGlobal, { signal: e._signal })
+                if (e._signal?.aborted) return true
+            } catch (err) {
+                if (e._signal?.aborted) return true
+                const type = err instanceof Error && ['Error', 'TypeError', 'RangeError', 'CloudTransportError'].includes(err.name) ? err.name : 'Error'
+                logger.warn('[phi-plugin] 扫码绑定失败：', type)
+                await send.send_with_At(e, '扫码绑定失败，请重新获取二维码，并确认 Phigros 已登录 TapTap 且同步了存档。')
+                return true
+            } finally {
+                if (ownedQrUrl && await redis.get(key) === ownedQrUrl) await redis.del(key, timeOutKey)
+            }
+        }
+
+        sessionToken = sessionToken || localPhigrosToken
+
+        if (!Config.getUserCfg('config', 'isGuild')) {
+
+            send.reply(e, "正在绑定，请稍等一下哦！\n >_<", false, { recallMsg: 5 })
+            // return true
+        }
+
+        if (allowApi) {
+            try {
+
+                let result = await credentials.bindWithSessionToken(sessionToken, isGlobal)
+                if (result?.apiUserId) {
+                    apiBindingSucceeded = true
+                    let resMsg = `绑定成功！您的查分ID为：${result.apiUserId}，请妥善保管嗷！`
+                    send.send_with_At(e, resMsg)
+                    let oldHistory = await credentials.getLocalHistory()
+                    if (oldHistory) {
+                        await credentials.uploadHistory(oldHistory)
+                    }
+                    let updateData = await credentials.getUpdatedSaveFromApi()
+                    let history = await credentials.getCloudHistory(['data', 'rks', 'scoreHistory'])
+                    if (updateData && history) await build(e, updateData, history, sessionQuickCommands, '绑定页快捷操作')
+                    else send.send_with_At(e, '绑定已成功，但暂时无法读取 API 存档，请稍后执行更新。')
+                    return true
+                }
+                logger.warn('[phi-plugin] API绑定未完成，将改用当前 Bot 本地绑定')
+            } catch (err) {
+                logger.warn('[phi-plugin] API绑定异常，将仅更改本地绑定状态', err)
+            }
+        }
+
+
+
+        try {
+            let updateData = apiBindingSucceeded
+                ? await credentials.getUpdatedSaveFromLocal(sessionToken, isGlobal)
+                : await credentials.bindLocallyWithSessionToken(sessionToken, isGlobal)
+            if (!updateData) return true;
+            send.send_with_At(e, `${apiBindingSucceeded ? '' : 'API绑定不可用，已按当前 Bot 本地状态完成绑定。\n'}请注意保护好自己的sessionToken呐！如果需要获取已绑定的sessionToken可以私聊发送 /${Config.getUserCfg('config', 'cmdhead')} sessionToken 哦！`, false, { recallMsg: 10 })
+            let history = await credentials.getLocalHistory()
+            await build(e, updateData, history, sessionQuickCommands, '绑定页快捷操作')
+        } catch (error) {
+            logger.error(error)
+            send.send_with_At(e, `更新失败，请检查你的sessionToken是否正确！\n错误信息：${error}`)
+        }
+
+        return true
+    }
+
+    /**
+     * 
+     * @param {botEvent} e 
+     * @returns 
+     */
+    async update(e) {
+
+        const credentials = UserCredentials.fromEvent(e)
+
+        if (await getBanGroup.get(e, 'update')) {
+            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
+            return false
+        }
+        let updateData;
+        let history;
+        if (await canUseApi(e)) {
+            try {
+
+                if (!Config.getUserCfg('config', 'isGuild') || !e.isGroup) {
+                    send.reply(e, "正在更新，请稍等一下哦！\n >_<", true, { recallMsg: 5 })
+                }
+
+                updateData = await credentials.getUpdatedSaveFromApi()
+                history = await credentials.getCloudHistory(['data', 'rks', 'scoreHistory'])
+            } catch (/**@type {any} */ err) {
+                if (err?.message != APII18NCN.userNotFound) {
+                    makeRequest.handleApiError(e, err, {
+                        errorPrefix: '从API获取存档失败，本次更新将使用本地数据QAQ！',
+                        notifyUser: true,
+                        logTag: 'API错误 update from api',
+                        loggerLevel: 'warn'
+                    })
+                }
+            }
+        }
+        if (!updateData || !history) {
+
+            let session = await credentials.getSessionToken()
+            if (!session) {
+                send.reply(e, `没有找到你的存档，请先绑定sessionToken哦！如果不知道自己的sessionToken可以尝试扫码绑定嗷！\n帮助：/${Config.getUserCfg('config', 'cmdhead')} tk help\n获取二维码：/${Config.getUserCfg('config', 'cmdhead')} bind qrcode\n普通绑定：/${Config.getUserCfg('config', 'cmdhead')} bind <sessionToken>`, true)
+                return true
+            }
+
+            if (!Config.getUserCfg('config', 'isGuild') || !e.isGroup) {
+                send.reply(e, "正在更新，请稍等一下哦！\n >_<", true, { recallMsg: 5 })
+            }
+
+            try {
+                updateData = await credentials.getUpdatedSaveFromLocal(session)
+                if (!updateData) return true;
+                history = await credentials.getLocalHistory()
+            } catch (error) {
+                logger.error(error)
+                send.send_with_At(e, `更新失败，请检查你的sessionToken是否正确QAQ！\n错误信息：${error}`)
+                return true
+            }
+        }
+
+        try {
+            await build(e, updateData, history, updateQuickCommands, '更新页快捷操作')
+        } catch (error) {
+            logger.error(error)
+            send.send_with_At(e, `更新失败QAQ！\n错误信息：${error}`)
+        }
+
+        return true
+    }
+
+
+    /**
+     * @param {botEvent} e
+     */
+    async unbind(e) {
+
+        const credentials = UserCredentials.fromEvent(e)
+
+        if (await getBanGroup.get(e, 'unbind')) {
+            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
+            return false
+        }
+
+
+        const { sessionToken, apiId } = await credentials.getLocalCredentials()
+        if (!sessionToken && !apiId) {
+            send.send_with_At(e, '没有找到你的存档信息嗷！')
+            return false
+        }
+
+        this.setContext('doUnbind', false, 30, '超时已取消，请注意 @Bot 进行回复哦！')
+
+        send.send_with_At(e, '解绑只会清除当前 Bot 本地保存的绑定、存档和历史，不会修改 API 数据。真的要这么做吗？（确认/取消）')
+
+        return true
+    }
+
+    async doUnbind() {
+
+        let e = this.e
+        const credentials = UserCredentials.fromEvent(e)
+
+        let msg = e.msg.replace(' ', '')
+
+        if (msg == '确认') {
+            let flag = true
+            try {
+                await credentials.unbindAndReport()
+            } catch (err) {
+                send.send_with_At(e, err)
+                logger.error(err)
+                flag = false
+            }
+            if (flag) try {
+                await getNotes.update(e.user_id, data => { data.task = [] })
+            } catch (err) {
+                send.send_with_At(e, err)
+                logger.error(err)
+                flag = false
+            }
+            if (flag) {
+                send.send_with_At(e, '当前 Bot 本地解绑成功')
+            } else {
+                send.send_with_At(e, '没有找到你的存档哦！')
+            }
+        } else {
+            send.send_with_At(e, `取消成功！`)
+        }
+        this.finish('doUnbind', false)
+    }
+
+    /**
+     * 
+     * @param {botEvent} e 
+     * @returns 
+     */
+    async clean(e) {
+        this.setContext('doClean', false, 30, '超时已取消，请注意 @Bot 进行回复哦！')
+
+        send.send_with_At(e, '请注意，本操作将会删除Phi-Plugin关于您的所有信息QAQ！（确认/取消）')
+
+        return true
+    }
+
+    async doClean() {
+
+        let e = this.e
+        const credentials = UserCredentials.fromEvent(e)
+
+        let msg = e.msg.replace(' ', '')
+
+        if (msg == '确认') {
+            let flag = true
+            try {
+                await credentials.deleteLocalSave()
+            } catch (err) {
+                send.send_with_At(e, err)
+                flag = false
+            }
+            try {
+                await getNotes.delNotesData(e.user_id)
+            } catch (err) {
+                send.send_with_At(e, err)
+                flag = false
+            }
+            if (flag) {
+                send.send_with_At(e, '清除数据成功')
+            }
+        } else {
+            send.send_with_At(e, `取消成功！`)
+        }
+        this.finish('doClean', false)
+    }
+
+    /**
+     * 
+     * @param {botEvent} e 
+     * @returns 
+     */
+    async getSstk(e) {
+        const credentialManager = UserCredentials.fromEvent(e)
+        if (e.isGroup) {
+            send.send_with_At(e, `请私聊使用嗷`)
+            return false
+        }
+
+        let save = await send.getsave_result(e)
+        if (!save) {
+            send.send_with_At(e, `未绑定存档，请先绑定存档嗷！`)
+            return true
+        }
+
+        const credentials = await credentialManager.getLocalCredentials()
+        send.send_with_At(e, `PlayerId: ${fCompute.convertRichText(save.saveInfo.PlayerId, true)}\nsessionToken: ${credentials.sessionToken}\nObjectId: ${save.saveInfo.objectId}\nQQId: ${e.user_id}\nAPIId: ${credentials.apiId || '未绑定'}`)
+
+    }
+
+}
+
+
+/**
+ * 定义一个函数，接受一个整数参数，返回它的十六进制形式
+ * @param {number} num 
+ * @returns 
+ */
+function toHex(num) {
+    // 如果数字小于 16，就在前面补一个 0
+    if (num < 16) {
+        return "0" + num.toString(16);
+    } else {
+        return num.toString(16);
+    }
+}
+
+// 定义一个函数，不接受参数，返回一个随机的背景色
+function getRandomBgColor() {
+    // 生成三个 0 到 200 之间的随机整数，分别代表红、绿、蓝分量
+    let red = Math.floor(Math.random() * 201);
+    let green = Math.floor(Math.random() * 201);
+    let blue = Math.floor(Math.random() * 201);
+    // 将三个分量转换为十六进制形式，然后拼接成一个 RGB 颜色代码
+    let hexColor = "#" + toHex(red) + toHex(green) + toHex(blue);
+    // 返回生成的颜色代码
+    return hexColor;
+}
+
+/**
+ * 计算/update宽度
+ * @param {number} num
+ */
+function comWidth(num) {
+    return num * 135 + 20 * num - 20
+}
+
+/**
+ * 保存PhigrosUser
+ * @param {botEvent} e
+ * @param {{save:Save, added_rks_notes: number[]}} updateData
+ * @param {saveHistory} history
+ */
+async function build(e, updateData, history, quickCommands = updateQuickCommands, quickCommandsTitle = '更新页快捷操作') {
+
+    let { added_rks_notes, save } = updateData
+
+    const displayAddedRksNotes = ['', ''];
+
+    if (added_rks_notes[0]) displayAddedRksNotes[0] = `${added_rks_notes[0] > 0 ? '+' : ''}${added_rks_notes[0] >= 1e-4 ? added_rks_notes[0].toFixed(4) : ''}`
+    if (added_rks_notes[1]) displayAddedRksNotes[1] = `${added_rks_notes[1] > 0 ? '+' : ''}${added_rks_notes[1]}`
+
+
+    /**图片 */
+
+    /**
+     * 标记数据中含有的时间
+     * @type {{[date:string]:number}}
+     */
+    let time_vis = {}
+
+    /**
+     * 总信息
+     * @type {{date:string,
+        * color:string,
+        * update_num:number,
+        * song:import('../model/save/scoreHistory.js').extendedScoreHistoryDetail[]
+     * }[]}
+     */
+    let tot_update = []
+
+
+    let now = save
+    let pluginData = await getNotes.getNotesData(e.user_id)
+
+    // const RecordErr = now.checkRecord()
+
+    // if (RecordErr) {
+    //     send.send_with_At(e, '[测试功能，概率有误，暂时不清楚错误原因]\n请注意，你的存档可能存在一些问题：\n' + RecordErr)
+    // }
+    for (let id of fCompute.objectKeys(history.scoreHistory)) {
+        const tem = history.scoreHistory[id]
+        for (let level of allLevel) {
+            const history = tem[level]
+            if (!history) continue
+            for (let i = 0; i < history.length; i++) {
+                let score_date = fCompute.formatDate(ScoreHistory.date(history[i]))
+                let score_info = ScoreHistory.extend(id, level, history[i], i ? history[i - 1] : undefined)
+                if (time_vis[score_date] == undefined) {
+                    time_vis[score_date] = tot_update.length
+                    tot_update.push({ date: score_date, color: getRandomBgColor(), update_num: 0, song: [] })
+                }
+                ++tot_update[time_vis[score_date]].update_num
+                tot_update[time_vis[score_date]].song.push(score_info)
+            }
+        }
+    }
+
+    let newnum = tot_update[time_vis[fCompute.formatDate(now.saveInfo.modifiedAt.iso)]]?.update_num || 0
+
+    tot_update.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+    /**实际显示的数量 */
+    let show = 0
+    /**每日显示上限 */
+    const DayNum = Math.max(Config.getUserCfg('config', 'HistoryDayNum'), 2)
+    /**显示日期上限 */
+    const DateNum = Config.getUserCfg('config', 'HistoryScoreDate')
+    /**总显示上限 */
+    const TotNum = Config.getUserCfg('config', 'HistoryScoreNum')
+
+
+
+    for (let date = 0; date < tot_update.length; date++) {
+
+        /**天数上限 */
+        if (date >= DateNum || TotNum < show + Math.min(DayNum, tot_update[date].update_num)) {
+            tot_update.splice(date, tot_update.length)
+            break
+        }
+
+        /**预处理每日显示上限 */
+        tot_update[date].song.sort((a, b) => { return (b.rks_new || 0) - (a.rks_new || 0) })
+
+        tot_update[date].song = tot_update[date].song.slice(0, Math.min(DayNum, TotNum - show))
+
+
+        /**总上限 */
+        show += tot_update[date].song.length
+
+    }
+
+    /**
+     * 预分行
+     * @type {any[]}
+     */
+    let box_line = []
+
+    /**循环中当前行的数量 */
+    let line_num = 0
+
+
+    line_num = 5
+    let flag = false
+
+    while (tot_update.length) {
+        if (line_num == 5) {
+            if (flag) {
+                box_line.push([{ color: tot_update[0].color, song: tot_update[0].song.splice(0, 5) }])
+            } else {
+                box_line.push([{ date: tot_update[0].date, color: tot_update[0].color, song: tot_update[0].song.splice(0, 5) }])
+            }
+            let tem = box_line[box_line.length - 1]
+            line_num = tem[tem.length - 1].song.length
+        } else {
+            let tem = box_line[box_line.length - 1]
+            if (flag) {
+                tem.push({ color: tot_update[0].color, song: tot_update[0].song.splice(0, 5 - line_num) })
+            } else {
+                tem.push({ date: tot_update[0].date, color: tot_update[0].color, song: tot_update[0].song.splice(0, 5 - line_num) })
+
+            }
+            line_num += tem[tem.length - 1].song.length
+        }
+        let tem = box_line[box_line.length - 1]
+        tem[tem.length - 1].width = comWidth(tem[tem.length - 1].song.length)
+        flag = true
+        if (!tot_update[0].song.length) {
+            tem[tem.length - 1].update_num = tot_update[0].update_num
+            tot_update.shift()
+            flag = false
+        }
+    }
+
+    /**添加任务信息 */
+    let task_data = pluginData?.task
+    let task_time = fCompute.formatDate(pluginData?.task_time)
+
+    /**添加曲绘 */
+    if (task_data) {
+        for (let i in task_data) {
+            if (task_data[i]) {
+                // @ts-ignore
+                task_data[i].illustration = getInfo.getill(task_data[i].song)
+                if (task_data[i].request.type == 'acc') {
+                    // @ts-ignore
+                    task_data[i].request.value = task_data[i].request.value.toFixed(2) + '%'
+                } else {
+                    // @ts-ignore
+                    task_data[i].request.value = task_data[i].request.value.toString().padStart(6, '0')
+                }
+                // @ts-ignore
+                task_data[i].song = getInfo.idgetsong(task_data[i].song)
+            }
+        }
+    }
+
+
+
+    let { rks_history, rks_range, rks_date } = history.getRksLine()
+
+    let data = {
+        PlayerId: fCompute.convertRichText(now.saveInfo.PlayerId),
+        Rks: Number(now.saveInfo.summary.rankingScore).toFixed(4),
+        Date: fCompute.formatDate(now.saveInfo.summary.updatedAt),
+        ChallengeMode: (now.saveInfo.summary.challengeModeRank - (now.saveInfo.summary.challengeModeRank % 100)) / 100,
+        ChallengeModeRank: now.saveInfo.summary.challengeModeRank % 100,
+        background: getInfo.getill(getInfo.illlist[Math.floor((Math.random() * (getInfo.illlist.length - 1)))]),
+        box_line: box_line,
+        update_ans: newnum ? `更新了${newnum}份成绩` : `未收集到新成绩`,
+        Notes: pluginData?.money || 0,
+        show: show,
+        tips: getInfo.tips[Math.floor((Math.random() * (getInfo.tips.length - 1)) + 1)],
+        task_data: task_data,
+        task_time: task_time,
+        // dan: await get.getDan(e.user_id),
+        added_rks_notes: displayAddedRksNotes,
+        theme: pluginData?.theme || 'star',
+        rks_date: [fCompute.formatDate(rks_date[0]), fCompute.formatDate(rks_date[1])],
+        rks_history, rks_range,
+    }
+
+    send.send_with_At(e, [await picmodle.update(e, data), `PlayerId: ${fCompute.convertRichText(now.saveInfo.PlayerId, true)}`])
+    await sendQuickCommands(e, quickCommands(Config.getUserCfg('config', 'cmdhead')), quickCommandsTitle)
+
+    return false
+}
