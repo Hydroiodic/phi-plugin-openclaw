@@ -11,4 +11,3 @@ declare module 'qrcode' {
 
     export default QRCode
 }
-

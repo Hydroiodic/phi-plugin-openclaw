@@ -47,17 +47,19 @@ export function revealCharacter(songName, blurName, symbol) {
     const target = symbol.toLowerCase()
     const blurCharacters = Array.from(blurName)
 
-    return Array.from(songName).map((character, index) => {
-        const blurredCharacter = blurCharacters[index] ?? LETTER_HIDDEN_CHAR
-        if (blurredCharacter !== LETTER_HIDDEN_CHAR) return blurredCharacter
+    return Array.from(songName)
+        .map((character, index) => {
+            const blurredCharacter = blurCharacters[index] ?? LETTER_HIDDEN_CHAR
+            if (blurredCharacter !== LETTER_HIDDEN_CHAR) return blurredCharacter
 
-        if (/^[\u4E00-\u9FFF]$/.test(character)) {
-            const initial = pinyin(character, { pattern: 'first', toneType: 'none', type: 'string' })
-            if (initial.toLowerCase() === target) return character
-        }
+            if (/^[\u4E00-\u9FFF]$/.test(character)) {
+                const initial = pinyin(character, { pattern: 'first', toneType: 'none', type: 'string' })
+                if (initial.toLowerCase() === target) return character
+            }
 
-        return character.toLowerCase() === target ? character : blurredCharacter
-    }).join('')
+            return character.toLowerCase() === target ? character : blurredCharacter
+        })
+        .join('')
 }
 
 /**

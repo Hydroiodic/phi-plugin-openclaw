@@ -4,11 +4,13 @@ import test from 'node:test'
 import { buildMarketQuickMarkdown } from '../model/game/markdown.js'
 
 test('market Markdown collapses control whitespace in displayed theme names', () => {
-    const markdown = buildMarketQuickMarkdown([{
-        slug: 'ocean-salt',
-        name: 'Ocean\r\nSalt\tTheme\u0000Name',
-        botDownloadAllowed: true,
-    }])
+    const markdown = buildMarketQuickMarkdown([
+        {
+            slug: 'ocean-salt',
+            name: 'Ocean\r\nSalt\tTheme\u0000Name',
+            botDownloadAllowed: true,
+        },
+    ])
     assert.match(markdown, /Ocean Salt Theme Name/)
     assert.doesNotMatch(markdown, /Ocean\r|Salt\t|\u0000/)
 })

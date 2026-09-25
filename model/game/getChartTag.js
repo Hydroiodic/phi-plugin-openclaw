@@ -23,9 +23,12 @@ export class ChartTagStore {
     get(songId, rank, all = false) {
         const song = Object.hasOwn(this.data, songId) ? this.data[songId] : undefined
         const chart = song && Object.hasOwn(song, rank) ? song[rank] : undefined
-        return Object.entries(chart || {}).map(([name, vote]) => ({
-            name, value: (vote.agree?.length || 0) - (vote.disagree?.length || 0),
-        })).filter(vote => all || vote.value > 0)
+        return Object.entries(chart || {})
+            .map(([name, vote]) => ({
+                name,
+                value: (vote.agree?.length || 0) - (vote.disagree?.length || 0),
+            }))
+            .filter(vote => all || vote.value > 0)
     }
 
     /** @param {idString} id @param {string} tag @param {levelKind} rank @param {string} userId @param {boolean | undefined} agree */
@@ -41,7 +44,8 @@ export class ChartTagStore {
         const song = Object.hasOwn(this.data, id) ? this.data[id] : {}
         const chart = Object.hasOwn(song, rank) ? song[rank] : {}
         const nextChart = { ...chart }
-        if (vote.agree.length || vote.disagree.length) Object.defineProperty(nextChart, tag, { value: vote, enumerable: true, configurable: true })
+        if (vote.agree.length || vote.disagree.length)
+            Object.defineProperty(nextChart, tag, { value: vote, enumerable: true, configurable: true })
         else delete nextChart[tag]
         const next = { ...this.data, [id]: { ...song, [rank]: nextChart } }
         if (!getFile.SetFile(this.filePath, next)) return false
@@ -50,10 +54,14 @@ export class ChartTagStore {
     }
 
     /** @param {idString} id @param {string} tag @param {levelKind} rank @param {boolean} agree @param {string} userId */
-    add(id, tag, rank, agree, userId) { return this.update(id, tag, rank, userId, agree) }
+    add(id, tag, rank, agree, userId) {
+        return this.update(id, tag, rank, userId, agree)
+    }
 
     /** @param {idString} id @param {string} tag @param {levelKind} rank @param {string} userId */
-    cancel(id, tag, rank, userId) { return this.update(id, tag, rank, userId, undefined) }
+    cancel(id, tag, rank, userId) {
+        return this.update(id, tag, rank, userId, undefined)
+    }
 }
 
 export default new ChartTagStore()

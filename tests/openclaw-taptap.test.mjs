@@ -9,7 +9,12 @@ test('QR creation, polling, profile, session login and save URLs consistently se
   const requests = []
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     requests.push({ url: String(url), ...options })
-    return new Response(JSON.stringify({ success: true, data: { device_code: 'synthetic', expires_in: 60, qrcode_url: 'https://example.invalid/login', interval: 1 } }))
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: { device_code: 'synthetic', expires_in: 60, qrcode_url: 'https://example.invalid/login', interval: 1 },
+      }),
+    )
   })
   for (const global of [false, true]) {
     const manager = new SaveManager(global)
@@ -26,7 +31,12 @@ test('QR creation, polling, profile, session login and save URLs consistently se
     assert.equal(new URL(profile.url).searchParams.get('client_id'), client)
     assert.equal(login.headers['X-LC-Id'], client)
     const [signature, timestamp] = login.headers['X-LC-Sign'].split(',')
-    assert.equal(signature, createHash('md5').update(timestamp + manager.headers['X-LC-Key']).digest('hex'))
+    assert.equal(
+      signature,
+      createHash('md5')
+        .update(timestamp + manager.headers['X-LC-Key'])
+        .digest('hex'),
+    )
     assert.equal(login.url, `${manager.baseUrl}/users`)
   }
 })

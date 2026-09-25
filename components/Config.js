@@ -1,4 +1,3 @@
-
 import YAML from 'yaml'
 import fs from 'node:fs'
 import YamlReader from './YamlReader.js'
@@ -30,11 +29,11 @@ export class Config {
 
     /** 初始化配置 */
     initCfg() {
-        let path = `${this.configDir}/`
-        let pathDef = `${this.defaultDir}/`
+        const path = `${this.configDir}/`
+        const pathDef = `${this.defaultDir}/`
         fs.mkdirSync(path, { recursive: true, mode: 0o700 })
         const files = fs.readdirSync(pathDef).filter(file => file.endsWith('.yaml'))
-        for (let file of files) {
+        for (const file of files) {
             if (!fs.existsSync(`${path}${file}`)) {
                 fs.copyFileSync(`${pathDef}${file}`, `${path}${file}`)
             }
@@ -45,9 +44,9 @@ export class Config {
 
     /** 群配置 */
     getGroup(groupId = '') {
-        let config = this.getConfig('whole')
-        let group = this.getConfig('group')
-        let defCfg = this.getdefSet('whole')
+        const config = this.getConfig('whole')
+        const group = this.getConfig('group')
+        const defCfg = this.getdefSet('whole')
 
         if (group[groupId]) {
             return { ...defCfg, ...config, ...group[groupId] }
@@ -81,13 +80,13 @@ export class Config {
      * @param {'config'|'nickconfig'|'otherinfo'} name 文件名
      * @param {any} [style] key值
      * @description 默认配置和用户配置
-    */
+     */
     getUserCfg(name, style = undefined) {
-        let def = this.getdefSet(name)
-        let config = this.getConfig(name)
+        const def = this.getdefSet(name)
+        const config = this.getConfig(name)
         if (name == 'otherinfo' && config) {
-            for (let i in config) {
-                config[i].sp_vis = true;
+            for (const i in config) {
+                config[i].sp_vis = true
             }
         }
         if (style) {
@@ -100,9 +99,7 @@ export class Config {
                 }
                 return def[style]
             }
-        }
-        else
-            return (config ? config : def)
+        } else return config ? config : def
     }
 
     /** 默认配置 */
@@ -132,8 +129,8 @@ export class Config {
      */
     getYaml(type, name) {
         if (!/^[\w-]+$/.test(name)) throw new TypeError('Invalid configuration name')
-        let file = `${type === 'config' ? this.configDir : this.defaultDir}/${name}.yaml`
-        let key = `${type}.${name}`
+        const file = `${type === 'config' ? this.configDir : this.defaultDir}/${name}.yaml`
+        const key = `${type}.${name}`
 
         if (this.config[key] && !this.dirty.has(key)) return this.config[key]
         try {
@@ -160,7 +157,7 @@ export class Config {
      * @param {'config'|'default_config'} [type]
      */
     watch(file, name, type = 'default_config') {
-        let key = `${type}.${name}`
+        const key = `${type}.${name}`
 
         if (this.watcher[key]) return
 
@@ -210,7 +207,7 @@ export class Config {
      */
     modify(name, key, value, type = 'config') {
         if (name === 'config' && type === 'config' && writeHostSetting(key, value)) return
-        let path = `${type === 'config' ? this.configDir : this.defaultDir}/${name}.yaml`
+        const path = `${type === 'config' ? this.configDir : this.defaultDir}/${name}.yaml`
         new YamlReader(path).set(key, value)
         delete this.config[`${type}.${name}`]
     }
@@ -224,15 +221,15 @@ export class Config {
      * @param {'config'|'default_config'} type 配置文件或默认
      */
     modifyarr(name, key, value, category = 'add', type = 'config') {
-        let path = `${type === 'config' ? this.configDir : this.defaultDir}/${name}.yaml`
-        let yaml = new YamlReader(path)
+        const path = `${type === 'config' ? this.configDir : this.defaultDir}/${name}.yaml`
+        const yaml = new YamlReader(path)
         const keyPath = String(key)
         if (category == 'add') {
             yaml.addIn(keyPath, value)
         } else {
             const values = yaml.get(keyPath)
             if (!Array.isArray(values)) return
-            let index = values.indexOf(value)
+            const index = values.indexOf(value)
             if (index < 0) return
             yaml.delete(`${keyPath}.${index}`)
         }

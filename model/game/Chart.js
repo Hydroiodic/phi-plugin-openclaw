@@ -1,4 +1,3 @@
-
 export default class Chart {
     /**
      * @param {any} data 原始数据
@@ -35,7 +34,6 @@ export default class Chart {
         // this.distribution = data.distribution
 
         if (data.tap) {
-
             this.tap = Number(data.tap)
 
             this.drag = Number(data.drag)
@@ -52,6 +50,5 @@ export default class Chart {
             /** @type {[number,number,number,number,number][]} [tap,drag,hold,flick,tot] */
             this.distribution = data.distribution
         }
-
     }
 }

@@ -12,8 +12,13 @@ const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}
 export async function readMarketReceipt(receiptPath) {
     try {
         const value = JSON.parse(await fs.promises.readFile(receiptPath, 'utf8'))
-        if (value?.source !== 'phi-theme-marketplace' || typeof value?.slug !== 'string'
-            || typeof value?.version !== 'string' || !/^[a-f0-9]{64}$/.test(value?.sha256)) return null
+        if (
+            value?.source !== 'phi-theme-marketplace' ||
+            typeof value?.slug !== 'string' ||
+            typeof value?.version !== 'string' ||
+            !/^[a-f0-9]{64}$/.test(value?.sha256)
+        )
+            return null
         return value
     } catch {
         return null
@@ -52,7 +57,7 @@ async function inspectMarketThemeDirectory(directory, themeId) {
     let info = null
     try {
         info = YAML.parse(await fs.promises.readFile(path.join(directory, 'info.yaml'), 'utf8'))
-    } catch { }
+    } catch {}
     return {
         exists: true,
         healthy: info?.id === themeId && receipt?.slug === themeId,
@@ -86,17 +91,17 @@ export async function recoverMarketInstall(themeId) {
     const target = path.join(themesDir, themeId)
     const entries = await fs.promises.readdir(themesDir, { withFileTypes: true })
     const backups = entries.filter(entry => entry.isDirectory() && isThemeBackupName(themeId, entry.name))
-    const candidates = await Promise.all(backups.map(async entry => {
-        const fullPath = path.join(themesDir, entry.name)
-        return {
-            fullPath,
-            stat: await fs.promises.stat(fullPath),
-            state: await inspectMarketThemeDirectory(fullPath, themeId),
-        }
-    }))
-    const healthyBackups = candidates
-        .filter(item => item.state.healthy)
-        .sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs)
+    const candidates = await Promise.all(
+        backups.map(async entry => {
+            const fullPath = path.join(themesDir, entry.name)
+            return {
+                fullPath,
+                stat: await fs.promises.stat(fullPath),
+                state: await inspectMarketThemeDirectory(fullPath, themeId),
+            }
+        }),
+    )
+    const healthyBackups = candidates.filter(item => item.state.healthy).sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs)
     let targetState = await inspectMarketThemeDirectory(target, themeId)
     let recovered = false
 
@@ -139,10 +144,12 @@ export async function recoverMarketInstall(themeId) {
 export async function recoverAllMarketInstalls(options = {}) {
     await fs.promises.mkdir(themesDir, { recursive: true, mode: 0o700 })
     const entries = await fs.promises.readdir(themesDir, { withFileTypes: true })
-    const themeIds = new Set(entries
-        .filter(entry => entry.isDirectory())
-        .map(entry => getBackupThemeId(entry.name))
-        .filter(Boolean))
+    const themeIds = new Set(
+        entries
+            .filter(entry => entry.isDirectory())
+            .map(entry => getBackupThemeId(entry.name))
+            .filter(Boolean),
+    )
     /** @type {{themeId:string,error:unknown}[]} */
     const failures = []
     for (const themeId of themeIds) {

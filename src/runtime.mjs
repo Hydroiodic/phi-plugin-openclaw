@@ -5,6 +5,7 @@ import { createRouter } from './commands.mjs'
 import { ensureResources } from './resources.mjs'
 import { TaskScheduler } from './task-scheduler.mjs'
 import { IllustrationRepository } from './illustrations.mjs'
+import { runSaveTool } from './save-tools.mjs'
 
 /** Runtime owns dispatch, timers and shutdown; initialization may fail safely. */
 export class PhigrosRuntime {
@@ -25,12 +26,27 @@ export class PhigrosRuntime {
   dispatch(context, deliver) {
     if (this.stopped) return Promise.reject(new Error('Phigros runtime is closed'))
     if (context.signal?.aborted) return Promise.resolve(false)
-    const operation = (async () => {
-      const signal = context.signal ? AbortSignal.any([context.signal, this.abortController.signal]) : this.abortController.signal
-      const e = this.adapter.fromContext({ ...context, signal }, deliver)
-      try { return await this.router.dispatch(e) }
-      finally { await this.adapter.flush(e) }
-    })()
+    return this.track(
+      (async () => {
+        const signal = context.signal ? AbortSignal.any([context.signal, this.abortController.signal]) : this.abortController.signal
+        const e = this.adapter.fromContext({ ...context, signal }, deliver)
+        try {
+          return await this.router.dispatch(e)
+        } finally {
+          await this.adapter.flush(e)
+        }
+      })(),
+    )
+  }
+
+  /** Agent tool calls for the requester's own cloud save; see src/save-tools.mjs. */
+  runSaveTool(name, userId, params, extras) {
+    if (this.stopped) return Promise.reject(new Error('Phigros runtime is closed'))
+    return this.track(runSaveTool(this.saveEdit, name, userId, params, extras))
+  }
+
+  /** Shutdown waits for tracked operations to settle. */
+  track(operation) {
     this.active.add(operation)
     operation.finally(() => this.active.delete(operation)).catch(() => {})
     return operation
@@ -43,21 +59,34 @@ export class PhigrosRuntime {
   close() {
     this.stopped = true
     this.abortController.abort()
-    return this.closing ||= (async () => {
+    return (this.closing ||= (async () => {
       // Start each disposer independently: a synchronous throw must not prevent
       // other shutdown work or active requests from draining.
       const stopped = await Promise.allSettled([
         Promise.resolve().then(() => this.scheduler.close()),
         Promise.resolve().then(() => this.apiMonitor?.close()),
-        Promise.resolve().then(() => this.adapter.illustrations?.close()), ...this.active,
+        Promise.resolve().then(() => this.adapter.illustrations?.close()),
+        ...this.active,
       ])
-      const cleanup = [() => this.pictures?.close(), () => this.config?.close(), () => this.watchers?.closeAll(), () => this.adapter.close()]
-      const errors = stopped.slice(0, 3).filter(result => result.status === 'rejected').map(result => result.reason)
+      const cleanup = [
+        () => this.pictures?.close(),
+        () => this.config?.close(),
+        () => this.watchers?.closeAll(),
+        () => this.adapter.close(),
+      ]
+      const errors = stopped
+        .slice(0, 3)
+        .filter(result => result.status === 'rejected')
+        .map(result => result.reason)
       for (const dispose of cleanup) {
-        try { await dispose() } catch (error) { errors.push(error) }
+        try {
+          await dispose()
+        } catch (error) {
+          errors.push(error)
+        }
       }
       if (errors.length) throw new AggregateError(errors, 'Phigros runtime cleanup failed')
-    })()
+    })())
   }
 }
 
@@ -69,7 +98,11 @@ export async function createRuntime(options) {
   try {
     adapter.resourceInfoPath = resources.infoPath
     adapter.resourceManifest = resources.manifest
-    adapter.illustrations = new IllustrationRepository({ baseUrl: resources.baseUrl, cacheRoot: resources.cacheRoot, logger: adapter.logger })
+    adapter.illustrations = new IllustrationRepository({
+      baseUrl: resources.baseUrl,
+      cacheRoot: resources.cacheRoot,
+      logger: adapter.logger,
+    })
     adapter.downloadIllustrations = () => adapter.illustrations.installAll()
     setPlatformAdapter(adapter)
     runtime.watchers = (await import('../components/FileWatcherRegistry.js')).default
@@ -82,6 +115,7 @@ export async function createRuntime(options) {
     const { default: getInfo } = await import('../model/game/getInfo.js')
     await getInfo.init()
     runtime.pictures = (await import('../model/render/picmodle.js')).default
+    runtime.saveEdit = (await import('../model/save/saveEditService.js')).default
     const apps = {}
     for (const file of fs.readdirSync(new URL('../apps/', import.meta.url)).filter(file => file.endsWith('.js'))) {
       const module = await import(new URL(`../apps/${file}`, import.meta.url))

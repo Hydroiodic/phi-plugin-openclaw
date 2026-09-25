@@ -122,7 +122,7 @@ export default class YamlReader {
      * @returns {(string | number)[]}
      */
     mapParentKeys(parentKeys) {
-        return parentKeys.map((k) => {
+        return parentKeys.map(k => {
             if (k.startsWith(Constant.CONFIG_INTEGER_KEY)) {
                 return Number.parseInt(k.replace(Constant.CONFIG_INTEGER_KEY, ''))
             }

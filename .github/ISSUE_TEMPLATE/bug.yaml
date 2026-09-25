@@ -1,7 +1,7 @@
 name: Bug 报告
 description: 创建一份 Bug 报告以帮助我们改进
-title: "[Bug] "
-labels: ["bug", "triage"]
+title: '[Bug] '
+labels: ['bug', 'triage']
 body:
   - type: markdown
     attributes:

@@ -28,8 +28,24 @@ const MAX_COMPRESSION_RATIO = 200
 const RESERVED_IDS = new Set(['default', 'snow', 'star', 'dss2', 'topText', 'foolsDay'])
 const TEXT_EXTENSIONS = new Set(['.art', '.css', '.json', '.md', '.txt', '.yaml'])
 const ALLOWED_EXTENSIONS = new Set([
-    '.art', '.avif', '.css', '.docx', '.gif', '.jpeg', '.jpg', '.json', '.md', '.otf', '.pdf', '.png',
-    '.ttf', '.txt', '.webp', '.woff', '.woff2', '.yaml',
+    '.art',
+    '.avif',
+    '.css',
+    '.docx',
+    '.gif',
+    '.jpeg',
+    '.jpg',
+    '.json',
+    '.md',
+    '.otf',
+    '.pdf',
+    '.png',
+    '.ttf',
+    '.txt',
+    '.webp',
+    '.woff',
+    '.woff2',
+    '.yaml',
 ])
 const WINDOWS_RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i
 
@@ -285,8 +301,12 @@ export async function isMarketThemeCached(themeId, download) {
         if (!stat.isDirectory() || stat.isSymbolicLink()) return false
         const info = YAML.parse(await fs.promises.readFile(path.join(target, 'info.yaml'), 'utf8'))
         const receipt = await readMarketReceipt(path.join(target, '.phi-market.json'))
-        return info?.id === themeId && receipt?.slug === themeId
-            && receipt?.version === download.version && receipt?.sha256 === download.sha256
+        return (
+            info?.id === themeId &&
+            receipt?.slug === themeId &&
+            receipt?.version === download.version &&
+            receipt?.sha256 === download.sha256
+        )
     } catch {
         return false
     }
@@ -314,7 +334,6 @@ export async function assertMarketInstallTarget(themeId) {
 
 /** @param {string} themeId @param {{version:string,sha256:string}} download @param {string} zipPath */
 async function installMarketArchiveUnlocked(themeId, download, zipPath) {
-    let stage = ''
     try {
         const recoveryFailures = await recoverAllMarketInstallsUnlocked()
         if (recoveryFailures.length) throw new ThemeMarketClientError('theme_install_recovery_failed')
@@ -322,7 +341,7 @@ async function installMarketArchiveUnlocked(themeId, download, zipPath) {
         const { existing } = await assertMarketInstallTarget(themeId)
 
         const id = crypto.randomUUID()
-        stage = path.join(WORK_DIR, `stage-${themeId}-${id}`)
+        const stage = path.join(WORK_DIR, `stage-${themeId}-${id}`)
         const backup = path.join(THEMES_DIR, `.phi-market-backup-${themeId}-${id}`)
         let movedOld = false
         let installed = false
@@ -344,7 +363,9 @@ async function installMarketArchiveUnlocked(themeId, download, zipPath) {
                 version: download.version,
             }
             await fs.promises.writeFile(path.join(stage, '.phi-market.json'), `${JSON.stringify(receipt, null, 2)}\n`, {
-                encoding: 'utf8', mode: 0o600, flag: 'wx',
+                encoding: 'utf8',
+                mode: 0o600,
+                flag: 'wx',
             })
             await assertMarketInstallQuota(themeId, stage)
             if (existing) {
@@ -362,7 +383,7 @@ async function installMarketArchiveUnlocked(themeId, download, zipPath) {
             }
             throw error
         } finally {
-            if (stage) await fs.promises.rm(stage, { recursive: true, force: true }).catch(() => {})
+            await fs.promises.rm(stage, { recursive: true, force: true }).catch(() => {})
         }
     } finally {
         await fs.promises.rm(zipPath, { force: true }).catch(() => {})

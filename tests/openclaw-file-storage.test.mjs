@@ -7,17 +7,24 @@ import { AtomicFileWriter } from '../model/filesystem/atomicFile.js'
 import files from '../model/filesystem/getFile.js'
 
 test('failed atomic replacement preserves old data and cleans only its temporary file', t => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'phi-atomic-test-')), target = path.join(root, 'save.json')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'phi-atomic-test-')),
+    target = path.join(root, 'save.json')
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   fs.writeFileSync(target, '{"value":1}')
-  const writer = new AtomicFileWriter({ ...fs, renameSync() { throw new Error('synthetic disk failure') } })
+  const writer = new AtomicFileWriter({
+    ...fs,
+    renameSync() {
+      throw new Error('synthetic disk failure')
+    },
+  })
   assert.throws(() => writer.write(target, '{"value":2}'), /disk failure/)
   assert.equal(fs.readFileSync(target, 'utf8'), '{"value":1}')
   assert.deepEqual(fs.readdirSync(root), ['save.json'])
 })
 
 test('file repository handles serialization, malformed data and awaited deletion', async t => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'phi-files-test-')), target = path.join(root, 'nested/save.json')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'phi-files-test-')),
+    target = path.join(root, 'nested/save.json')
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   assert.equal(files.SetFile(target, { value: 1 }), true)
   assert.deepEqual(files.FileReader(target), { value: 1 })

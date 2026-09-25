@@ -6,12 +6,11 @@ import getSave from '../model/save/getSave.js'
 import send from '../model/render/send.js'
 import picmodle from '../model/render/picmodle.js'
 import Config from '../components/Config.js'
-import getBanGroup from '../model/user/getBanGroup.js';
+import getBanGroup from '../model/user/getBanGroup.js'
 import makeRequest from '../model/api/makeRequest.js'
 import saveHistory from '../model/save/saveHistory.js'
 import phiPluginBase from '../components/baseClass.js'
-import { canUseApi } from '../model/user/apiPermission.js';
-import logger from '../components/Logger.js'
+import { canUseApi } from '../model/user/apiPermission.js'
 import platform from '../components/platform/index.js'
 import { UserCredentials } from '../model/user/userCredentials.js'
 import { sendQuickCommands, rankQuickCommands } from '../model/game/markdown.js'
@@ -19,7 +18,6 @@ import { sendQuickCommands, rankQuickCommands } from '../model/game/markdown.js'
 /**@import {botEvent} from '../components/baseClass.js' */
 
 export class phiRankList extends phiPluginBase {
-
     constructor() {
         super({
             name: 'phi-rankList',
@@ -29,39 +27,28 @@ export class phiRankList extends phiPluginBase {
             rule: [
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(排行榜|ranklist).*$`,
-                    fnc: 'rankList'
+                    fnc: 'rankList',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(查询排名|rankfind).*$`,
-                    fnc: 'rankfind'
-                }
-                // {
-                //     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(封神榜|godlist)$`,
-                //     fnc: 'godList'
-                // }
-            ]
-
+                    fnc: 'rankfind',
+                },
+            ],
         })
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async rankList(e) {
-
-        if (await getBanGroup.get(e, 'rankList')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
-
-
+        if (await getBanGroup.get(e, 'rankList')) return false
 
         if (await canUseApi(e)) {
             const credentials = UserCredentials.fromEvent(e)
-            let data = {
-                Title: "RankingScore排行榜",
+            const data = {
+                Title: 'RankingScore排行榜',
                 totDataNum: 0,
                 BotNick: platform.getBotNickname(e),
                 /** @type {rankingListObject[]} */
@@ -69,14 +56,14 @@ export class phiRankList extends phiPluginBase {
                 me: {},
             }
             /**请求的排名 */
-            let msg = e.msg.match(/\d+/)
+            const msg = e.msg.match(/\d+/)
             const api_ranklist = msg
                 ? await makeRequest.getRanklistRank({ request_rank: Number(msg[0]) }, { event: e })
                 : await credentials.getRanklistUser()
             if (api_ranklist) {
-                data.totDataNum = api_ranklist.totDataNum;
-                for (let item of api_ranklist.users) {
-                    data.users.push({ ...await makeSmallLine(item), index: item.index, me: item.me })
+                data.totDataNum = api_ranklist.totDataNum
+                for (const item of api_ranklist.users) {
+                    data.users.push({ ...(await makeSmallLine(item)), index: item.index, me: item.me })
                 }
                 data.me = await makeLargeLine(new Save(api_ranklist.me.save), new saveHistory(api_ranklist.me.history), e)
                 send.send_with_At(e, [await picmodle.common(e, 'rankingList', data), `总数据量：${data.totDataNum}\n`])
@@ -84,8 +71,8 @@ export class phiRankList extends phiPluginBase {
                 return true
             }
         }
-        let data = {
-            Title: "RankingScore排行榜",
+        const data = {
+            Title: 'RankingScore排行榜',
             totDataNum: 0,
             BotNick: platform.getBotNickname(e),
             /** @type {rankingListObject[]} */
@@ -93,48 +80,42 @@ export class phiRankList extends phiPluginBase {
             me: {},
         }
         /**请求的排名 */
-        let msg = e.msg.match(/\d+/)
-        let rankNum = 0
+        const msg = e.msg.match(/\d+/)
         data.totDataNum = await getRksRank.getAllRank()
 
+        let rankNum
         if (msg) {
             rankNum = Math.max(Math.min(Number(msg[0]), data.totDataNum), 1) - 1
         } else {
-            let save = await send.getsave_result(e)
+            const save = await send.getsave_result(e)
             if (!save) {
                 return true
             }
-            let sessionToken = save.getSessionToken()
-            rankNum = await getRksRank.getUserRank(sessionToken)
+            rankNum = await getRksRank.getUserRank(save.getSessionToken())
         }
 
+        /**展示区间的起始排名（从 0 开始） */
+        const start = Math.max((rankNum ?? 0) - 2, 0)
         /**展示的用户数据 */
-        let list = []
-        let myTk = ''
-        if (rankNum < 2) {
-            list = await getRksRank.getRankUser(0, 5)
-            myTk = list[rankNum]
-        } else {
-            list = await getRksRank.getRankUser(rankNum - 2, rankNum + 3)
-            myTk = list[2]
-        }
-
+        const list = await getRksRank.getRankUser(start, start + 5)
+        // 未上榜时 zRank 返回 null，此时不高亮任何人
+        const myTk = rankNum == null ? undefined : list[rankNum - start]
 
         for (let index = 0; index < Math.max(list.length, 5); index++) {
+            const rank = start + index + 1
             if (index >= list.length) {
-                data.users.push({ playerId: '无效用户', index: index + rankNum - 2 })
+                data.users.push({ playerId: '无效用户', index: rank })
                 continue
             }
-            let item = list[index]
-            let sessionToken = item
+            const sessionToken = list[index]
             const save = await getSave.getSaveBySessionToken(sessionToken)
             if (!save) {
-                data.users.push({ playerId: '无效用户', index: index + rankNum - 2 })
+                data.users.push({ playerId: '无效用户', index: rank })
                 getRksRank.delUserRks(sessionToken)
             } else {
-                data.users.push({ ...await makeSmallLine(save), index: Math.max(index + rankNum - 1, index + 1), me: myTk === save.getSessionToken() })
+                data.users.push({ ...(await makeSmallLine(save)), index: rank, me: myTk === save.getSessionToken() })
                 if (myTk === sessionToken) {
-                    let history = await getSave.getHistoryBySessionToken(save.getSessionToken())
+                    const history = await getSave.getHistoryBySessionToken(save.getSessionToken())
                     data.me = await makeLargeLine(save, history, e)
                 }
             }
@@ -145,17 +126,14 @@ export class phiRankList extends phiPluginBase {
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async rankfind(e) {
-        if (await getBanGroup.get(e, 'rankList')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'rankList')) return false
 
-        let rks = Number(e.msg.replace(/^[#/]?.*?rankfind/, '').match(/\d+(.\d+)?/)?.[0])
+        const rks = Number(e.msg.replace(/^[#/]?.*?rankfind/, '').match(/\d+(.\d+)?/)?.[0])
         if (!rks) {
             send.send_with_At(e, `请输入要查询的 rks！\n格式： /${Config.getUserCfg('config', 'cmdhead')} rankfind <rks>`)
             return false
@@ -170,112 +148,67 @@ export class phiRankList extends phiPluginBase {
             }
         }
 
-        let totDataNum = await getRksRank.getAllRank()
+        const totDataNum = await getRksRank.getAllRank()
 
-        let rank = await getRksRank.getRankByRks(rks)
+        const rank = await getRksRank.getRankByRks(rks)
 
         send.send_with_At(e, `当前服务器记录中一共有 ${totDataNum - rank + 1}/${totDataNum} 位玩家的 rks 大于等于 ${rks}！`)
         await sendQuickCommands(e, rankQuickCommands(Config.getUserCfg('config', 'cmdhead')), '排行榜快捷操作')
 
         return true
     }
-
-
-    // /**
-    //  * 
-    //  * @param {botEvent} e 
-    //  * @returns 
-    //  */
-    // async godList(e) {
-
-    //     if (await getBanGroup.get(e, 'godList')) {
-    //         send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-    //         return false
-    //     }
-
-    //     let plugin_data = await getNotes.getPluginData(e.user_id)
-    //     let data = {
-    //         Title: "封神榜",
-    //         totDataNum: 0,
-    //         BotNick: Bot.nickname,
-    //         users: [],
-    //         background: getInfo.getill(getInfo.illlist[Number((Math.random() * (getInfo.illlist.length - 1)).toFixed(0))], 'blur'),
-    //         theme: plugin_data?.plugin_data?.theme || 'star',
-    //     }
-
-    //     if (!list) {
-    //         data.totDataNum = 0
-    //         send.send_with_At(e, await picmodle.common(e, 'rankingList', data))
-    //         return true
-    //     }
-
-    //     data.totDataNum = list.length
-
-    //     for (let i = 0; i < list.length; i++) {
-    //         try {
-    //             let godRecord = new PhigrosUser(list[i].match(/[a-zA-Z0-9]{25}/)[0])
-    //             await godRecord.buildRecord()
-    //             let god = new Save(godRecord, true)
-    //             await god.init()
-    //             data.users.push(await makeLargeLine(god))
-    //             data.users[data.users.length].index = i
-    //         } catch (e) { }
-    //     }
-    //     send.send_with_At(e, await picmodle.common(e, 'rankingList', data))
-    // }
 }
 
 /**
  * 创建一个详细对象
- * @param {Save} save 
+ * @param {Save} save
  * @param {saveHistory} history
  * @param {botEvent} e
  */
 async function makeLargeLine(save, history, e) {
     if (!save) {
         return {
-            playerId: "无效用户"
+            playerId: '无效用户',
         }
     }
 
-
-    let lineData = history.getRksAndDataLine()
+    const lineData = history.getRksAndDataLine()
     lineData.rks_date.forEach((item, index) => {
         // @ts-ignore
         item = fCompute.formatDateToNow(item)
         lineData.rks_date[index] = item
-    });
+    })
     /**
      * @type {{ ChallengeMode: number; ChallengeModeRank: number; date: string; }[]}
      */
-    let clgHistory = []
+    const clgHistory = []
     history.challengeModeRank.forEach((item, index, array) => {
         if (!index || item.value != array[index - 1].value) {
             clgHistory.push({
                 ChallengeMode: Math.floor(item.value / 100),
                 ChallengeModeRank: item.value % 100,
-                date: fCompute.formatDateToNow(item.date)
+                date: fCompute.formatDateToNow(item.date),
             })
         }
     })
-    let b30Data = await save.getB19(e, 33)
-    let b30list = {
+    const b30Data = await save.getB19(e, 33)
+    const b30list = {
         P3: {
             title: 'Perfect 3',
-            list: b30Data.phi
+            list: b30Data.phi,
         },
         B3: {
             title: 'Best 3',
-            list: b30Data.b19_list.slice(0, 3)
+            list: b30Data.b19_list.slice(0, 3),
         },
         F3: {
             title: 'Floor 3',
-            list: b30Data.b19_list.slice(24, 27)
+            list: b30Data.b19_list.slice(24, 27),
         },
         L3: {
             title: 'Overflow 3',
-            list: b30Data.b19_list.slice(27, 30)
-        }
+            list: b30Data.b19_list.slice(27, 30),
+        },
     }
     return {
         backgroundurl: getInfo.getBackground(save?.gameuser?.background),
@@ -308,12 +241,12 @@ async function makeLargeLine(save, history, e) {
 
 /**
  * 创建一个简略对象
- * @param {Save | import('../model/api/makeRequest.js').UserItem} save 
+ * @param {Save | import('../model/api/makeRequest.js').UserItem} save
  */
 async function makeSmallLine(save) {
     if (!save) {
         return {
-            playerId: "无效用户",
+            playerId: '无效用户',
         }
     }
     return {

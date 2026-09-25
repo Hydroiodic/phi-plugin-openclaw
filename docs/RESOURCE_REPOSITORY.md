@@ -44,12 +44,12 @@ public/
 
 ```json
 {
-  "schemaVersion": 1,
-  "version": "3.20.0",
-  "manifest": "v/3.20.0/metadata.json",
-  "sha256": "<metadata.json 原始字节的 SHA-256>",
-  "game": { "version": "3.20.0", "code": 154 },
-  "packages": ["song-data"]
+    "schemaVersion": 1,
+    "version": "3.20.0",
+    "manifest": "v/3.20.0/metadata.json",
+    "sha256": "<metadata.json 原始字节的 SHA-256>",
+    "game": { "version": "3.20.0", "code": 154 },
+    "packages": ["song-data"]
 }
 ```
 
@@ -66,22 +66,24 @@ npm run resources -- list
 
 ```json
 {
-  "schemaVersion": 1,
-  "dataFormat": "phi-info-v1",
-  "version": "3.20.0",
-  "minPluginVersion": "0.1.0",
-  "game": { "version": "3.20.0", "code": 154 },
-  "packages": {
-    "song-data": {
-      "archives": [{
-        "path": "v/3.20.0/song-data-001.zip",
-        "sha256": "<ZIP 原始字节的 SHA-256>",
-        "bytes": 123456,
-        "unpackedBytes": 765432,
-        "fileCount": 42
-      }]
+    "schemaVersion": 1,
+    "dataFormat": "phi-info-v1",
+    "version": "3.20.0",
+    "minPluginVersion": "0.1.0",
+    "game": { "version": "3.20.0", "code": 154 },
+    "packages": {
+        "song-data": {
+            "archives": [
+                {
+                    "path": "v/3.20.0/song-data-001.zip",
+                    "sha256": "<ZIP 原始字节的 SHA-256>",
+                    "bytes": 123456,
+                    "unpackedBytes": 765432,
+                    "fileCount": 42
+                }
+            ]
+        }
     }
-  }
 }
 ```
 
@@ -99,21 +101,23 @@ ZIP 根目录直接包含 `info.csv`、`infolist.json`、`notesInfo.json`、`old
 
 ```json
 {
-  "schemaVersion": 1,
-  "files": {
-    "ill/Glaciaxion.SunsetRay.png": {
-      "path": "objects/ab/<SHA-256>.png",
-      "bytes": 123456,
-      "sha256": "<图片原始字节的 SHA-256>"
-    }
-  },
-  "archives": [{
-    "path": "packages/<ZIP的SHA-256>.zip",
-    "sha256": "<ZIP 原始字节的 SHA-256>",
-    "bytes": 123456,
-    "unpackedBytes": 120000,
-    "fileCount": 1
-  }]
+    "schemaVersion": 1,
+    "files": {
+        "ill/Glaciaxion.SunsetRay.png": {
+            "path": "objects/ab/<SHA-256>.png",
+            "bytes": 123456,
+            "sha256": "<图片原始字节的 SHA-256>"
+        }
+    },
+    "archives": [
+        {
+            "path": "packages/<ZIP的SHA-256>.zip",
+            "sha256": "<ZIP 原始字节的 SHA-256>",
+            "bytes": 123456,
+            "unpackedBytes": 120000,
+            "fileCount": 1
+        }
+    ]
 }
 ```
 
@@ -210,14 +214,14 @@ JSON 语法、必需数据，以及共享曲绘的每个对象和每个分包，
 使用服务器临时文件和同文件系统 rename，避免客户端下载到半个 JSON。
 构建脚本只生成本地文件，不自动上传或更改服务器。
 
-| 文件 | Content-Type | Cache-Control |
-| --- | --- | --- |
-| 根目录 index.json、latest.json；illustrations/index.json | application/json; charset=utf-8 | public, max-age=60, must-revalidate |
-| index.tab；illustrations/SHA256SUMS | text/plain; charset=utf-8 | public, max-age=60, must-revalidate |
-| v/版本/metadata.json | application/json; charset=utf-8 | public, max-age=31536000, immutable |
-| v/版本/*.zip；illustrations/packages/*.zip | application/zip | public, max-age=31536000, immutable |
-| v/版本/SHA256SUMS | text/plain; charset=utf-8 | public, max-age=31536000, immutable |
-| illustrations/objects/ 下的图片 | image/png、image/jpeg 或 image/webp | public, max-age=31536000, immutable |
+| 文件                                                     | Content-Type                        | Cache-Control                       |
+| -------------------------------------------------------- | ----------------------------------- | ----------------------------------- |
+| 根目录 index.json、latest.json；illustrations/index.json | application/json; charset=utf-8     | public, max-age=60, must-revalidate |
+| index.tab；illustrations/SHA256SUMS                      | text/plain; charset=utf-8           | public, max-age=60, must-revalidate |
+| v/版本/metadata.json                                     | application/json; charset=utf-8     | public, max-age=31536000, immutable |
+| v/版本/_.zip；illustrations/packages/_.zip               | application/zip                     | public, max-age=31536000, immutable |
+| v/版本/SHA256SUMS                                        | text/plain; charset=utf-8           | public, max-age=31536000, immutable |
+| illustrations/objects/ 下的图片                          | image/png、image/jpeg 或 image/webp | public, max-age=31536000, immutable |
 
 服务器直接返回文件，不重定向到登录页、下载页或其他域名。镜像配置应使用最终地址。
 建议 ZIP 不额外 gzip/br 压缩，正确返回 Content-Length。

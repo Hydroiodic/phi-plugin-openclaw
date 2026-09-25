@@ -75,7 +75,7 @@ export interface PlatformRedis {
     set(key: string, value: unknown, options?: RedisExpireOptions): Promise<unknown>
     del(...keys: Array<string | string[]>): Promise<number>
     keys(pattern?: string): Promise<string[]>
-    scan(cursor?: number | string, options?: RedisScanOptions): Promise<{ cursor: number, keys: string[] }>
+    scan(cursor?: number | string, options?: RedisScanOptions): Promise<{ cursor: number; keys: string[] }>
     ttl(key: string): Promise<number>
     zAdd(key: string, item: RedisZSetItem): Promise<number>
     zRem(key: string, value: string): Promise<number>
@@ -234,7 +234,7 @@ export type PlatformRendererBaseConstructor = new (config?: PlatformRendererConf
 export interface PlatformAdapter {
     dataRoot?: string
     resourceInfoPath?: string
-    resourceManifest?: { game: { version: string, code: number } }
+    resourceManifest?: { game: { version: string; code: number } }
     downloadIllustrations?: () => Promise<unknown>
     prepareIllustrations<T>(value: T): Promise<T>
     name: PlatformName
@@ -256,12 +256,12 @@ export interface PlatformAdapter {
     afterReplies(e: PlatformEvent, callback: () => Promise<unknown>): void
     flush(e: PlatformEvent): Promise<void>
     hasContext(e: PlatformEvent): boolean
-    getContext(e: PlatformEvent): { instance: PlatformPluginBase, name: string, isGroup: boolean } | undefined
+    getContext(e: PlatformEvent): { instance: PlatformPluginBase; name: string; isGroup: boolean } | undefined
     close(): void
     sendWithAt(e: PlatformEvent, msg: PlatformMessageInput, quote?: boolean, data?: Record<string, unknown>): Promise<unknown>
     pickMember(e: PlatformEvent, userId: PlatformUserId): Promise<PlatformMemberLike | null>
     sendPrivate(e: PlatformEvent, msg: PlatformMessageInput): Promise<unknown>
-    relpyPrivate(userId: PlatformUserId, msg: PlatformMessageInput, botId?: PlatformUserId): MaybePromise<unknown>
+    replyPrivate(userId: PlatformUserId, msg: PlatformMessageInput, botId?: PlatformUserId): MaybePromise<unknown>
     recall(e: PlatformEvent, sentMessage: unknown): Promise<unknown>
     makeForwardMsg(e: PlatformEvent, msg?: PlatformMessageInput[], dec?: string): Promise<PlatformMessageOutput>
     sleep(ms: number): Promise<void>

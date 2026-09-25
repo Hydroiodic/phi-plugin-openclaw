@@ -69,10 +69,7 @@ class UserCredentialStore {
      * @param {string | number} userId 平台用户 ID
      */
     async clearLocalCredentials(userId) {
-        return redis.del(
-            credentialKey('userToken', userId),
-            credentialKey('userApiId', userId),
-        )
+        return redis.del(credentialKey('userToken', userId), credentialKey('userApiId', userId))
     }
 
     /**
@@ -90,7 +87,7 @@ class UserCredentialStore {
             const values = await Promise.all(info.keys.map(key => redis.get(key)))
             info.keys.forEach((key, index) => {
                 const value = values[index]
-                if (value) result.set(key.slice(prefix.length), /** @type {phigrosToken} */(value))
+                if (value) result.set(key.slice(prefix.length), /** @type {phigrosToken} */ (value))
             })
         } while (cursor !== 0)
         return result
@@ -147,7 +144,6 @@ class UserCredentialStore {
     async listBannedSessionTokenKeys() {
         return redis.keys(`${redisPath}:banSessionToken:*`)
     }
-
 }
 
 export const userCredentialStore = new UserCredentialStore()

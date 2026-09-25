@@ -1,13 +1,7 @@
 import crypto from 'node:crypto'
-import Config from '../../components/Config.js'
 import themeManager from './manager.js'
 import themePolicy from './policy.js'
-import {
-    authorizeThemeDownload,
-    downloadThemeArchive,
-    getAvailableMarketTheme,
-    ThemeMarketClientError,
-} from './marketClient.js'
+import { authorizeThemeDownload, downloadThemeArchive, getAvailableMarketTheme, ThemeMarketClientError } from './marketClient.js'
 import {
     installMarketArchive,
     isMarketThemeCached,
@@ -18,11 +12,7 @@ import {
     withMarketInstallLock,
 } from './installer.js'
 import { getPhiApiUserMessage, hasPhiApiUserMessage, isApiConnectionError } from '../api/phiApiErrors.js'
-import {
-    assertFreshMarketInstallCapacity,
-    freshInstallRateLimiter,
-    marketInstallCoordinator,
-} from './installGuard.js'
+import { assertFreshMarketInstallCapacity, freshInstallRateLimiter, marketInstallCoordinator } from './installGuard.js'
 import { isApiCapabilityConfigured } from '../user/apiPermission.js'
 
 const SLUG_RE = /^[a-z][a-z0-9_-]{0,119}$/
@@ -45,39 +35,41 @@ async function waitForThemeRegistration(themeId) {
  * @param {{requesterId?:string}} [options]
  */
 export function installLatestMarketTheme(themeId, options = {}) {
-    return marketInstallCoordinator.schedule(themeId, () => withMarketInstallLock(async () => {
-        const recoveryFailures = await recoverAllMarketInstalls()
-        if (recoveryFailures.length) throw new ThemeMarketClientError('theme_install_recovery_failed')
-        await recoverMarketInstall(themeId)
-        await assertMarketInstallTarget(themeId)
-        let freshInstallPrepared = false
-        for (let authorizationCycle = 0; authorizationCycle < 2; authorizationCycle++) {
-            const requestId = crypto.randomUUID()
-            const download = await authorizeThemeDownload(themeId, requestId)
-            if (await isMarketThemeCached(themeId, download)) {
-                const theme = await waitForThemeRegistration(themeId)
-                return { cached: true, version: download.version, theme }
-            }
+    return marketInstallCoordinator.schedule(themeId, () =>
+        withMarketInstallLock(async () => {
+            const recoveryFailures = await recoverAllMarketInstalls()
+            if (recoveryFailures.length) throw new ThemeMarketClientError('theme_install_recovery_failed')
+            await recoverMarketInstall(themeId)
+            await assertMarketInstallTarget(themeId)
+            let freshInstallPrepared = false
+            for (let authorizationCycle = 0; authorizationCycle < 2; authorizationCycle++) {
+                const requestId = crypto.randomUUID()
+                const download = await authorizeThemeDownload(themeId, requestId)
+                if (await isMarketThemeCached(themeId, download)) {
+                    const theme = await waitForThemeRegistration(themeId)
+                    return { cached: true, version: download.version, theme }
+                }
 
-            if (!freshInstallPrepared) {
-                const capacity = await assertFreshMarketInstallCapacity(themeId)
-                if (capacity.fresh) await freshInstallRateLimiter.consume(String(options.requesterId || ''))
-                freshInstallPrepared = true
-            }
+                if (!freshInstallPrepared) {
+                    const capacity = await assertFreshMarketInstallCapacity(themeId)
+                    if (capacity.fresh) await freshInstallRateLimiter.consume(String(options.requesterId || ''))
+                    freshInstallPrepared = true
+                }
 
-            const archivePath = marketWorkPath(`download-${themeId}-${requestId}.zip`)
-            try {
-                await downloadThemeArchive(download, archivePath)
-                await installMarketArchive(themeId, download, archivePath)
-                const theme = await waitForThemeRegistration(themeId)
-                return { cached: false, version: download.version, theme }
-            } catch (error) {
-                if (/** @type {any} */ (error)?.code === 'theme_download_url_expired' && authorizationCycle === 0) continue
-                throw error
+                const archivePath = marketWorkPath(`download-${themeId}-${requestId}.zip`)
+                try {
+                    await downloadThemeArchive(download, archivePath)
+                    await installMarketArchive(themeId, download, archivePath)
+                    const theme = await waitForThemeRegistration(themeId)
+                    return { cached: false, version: download.version, theme }
+                } catch (error) {
+                    if (/** @type {any} */ (error)?.code === 'theme_download_url_expired' && authorizationCycle === 0) continue
+                    throw error
+                }
             }
-        }
-        throw new ThemeMarketClientError('theme_download_url_expired')
-    }))
+            throw new ThemeMarketClientError('theme_download_url_expired')
+        }),
+    )
 }
 
 export class ThemeUseService {
@@ -87,8 +79,7 @@ export class ThemeUseService {
     constructor(dependencies = {}) {
         this.getTheme = dependencies.getTheme || getAvailableMarketTheme
         this.install = dependencies.install || installLatestMarketTheme
-        this.marketEnabled = dependencies.marketEnabled
-            || (() => isApiCapabilityConfigured('customTheme'))
+        this.marketEnabled = dependencies.marketEnabled || (() => isApiCapabilityConfigured('customTheme'))
     }
 
     /** @param {any} theme @param {any} [detail] */

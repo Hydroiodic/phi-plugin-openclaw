@@ -13,7 +13,9 @@ import aliasProposalService from '../model/api/aliasProposalService.js'
 function deferred() {
     /** @type {(value?: any) => void} */
     let resolve = () => {}
-    const promise = new Promise(done => { resolve = done })
+    const promise = new Promise(done => {
+        resolve = done
+    })
     return { promise, resolve }
 }
 
@@ -22,7 +24,10 @@ function service(t, retryDelayMs = 30_000) {
     const api = new AutoSeekApi({ retryDelayMs })
     setApiVersionBlocked(false)
     t.mock.method(Config, 'getUserCfg', () => true)
-    t.after(async () => { await api.close(); setApiVersionBlocked(false) })
+    t.after(async () => {
+        await api.close()
+        setApiVersionBlocked(false)
+    })
     return api
 }
 
@@ -57,7 +62,9 @@ test('closing API service aborts shared status requests and keeps default HTTPS 
         assert.equal(Object.hasOwn(options, 'rejectUnauthorized'), false)
         const requestSignal = options.signal
         signal = requestSignal
-        return new Promise((resolve, reject) => requestSignal.addEventListener('abort', () => reject(new Error('cancelled')), { once: true }))
+        return new Promise((resolve, reject) =>
+            requestSignal.addEventListener('abort', () => reject(new Error('cancelled')), { once: true }),
+        )
     })
     const first = api.testStatus()
     assert.equal(api.testStatus(), first)
@@ -72,15 +79,22 @@ test('closing API service aborts shared status requests and keeps default HTTPS 
 })
 
 test('API shutdown drains current identity recovery without starting later synchronization', async t => {
-    const api = service(t), entered = deferred(), identity = deferred()
+    const api = service(t),
+        entered = deferred(),
+        identity = deferred()
     t.mock.method(axios, 'get', async () => ({ status: 200, data: { version: SUPPORTED_API_VERSION } }))
-    t.mock.method(botApiAuth, 'recoverAfterReconnect', async () => { entered.resolve(); return identity.promise })
+    t.mock.method(botApiAuth, 'recoverAfterReconnect', async () => {
+        entered.resolve()
+        return identity.promise
+    })
     t.mock.method(botSyncService, 'recoverAfterReconnect', async () => assert.fail('must not synchronize after shutdown'))
     t.mock.method(aliasProposalService, 'initialize', async () => assert.fail('must not initialize after shutdown'))
     const work = api.testStatus()
     await entered.promise
     let closed = false
-    const stopping = api.close().then(() => { closed = true })
+    const stopping = api.close().then(() => {
+        closed = true
+    })
     await Promise.resolve()
     assert.equal(closed, false)
     identity.resolve({ clientId: 'test-client' })
@@ -93,7 +107,9 @@ test('pending API retry exits without another request when API is disabled', asy
     const api = service(t, 1)
     let enabled = true
     t.mock.method(Config, 'getUserCfg', () => enabled)
-    const request = t.mock.method(axios, 'get', async () => { throw new Error('offline') })
+    const request = t.mock.method(axios, 'get', async () => {
+        throw new Error('offline')
+    })
     await api.testStatus()
     assert.equal(request.mock.callCount(), 1)
     const retry = api.retryPromise
@@ -109,14 +125,19 @@ test('pending API retry exits without another request when API is disabled', asy
 
 test('API retry performs one recovery chain and stops after a successful reconnect', async t => {
     const api = service(t, 1)
-    let calls = 0, recovered = 0
+    let calls = 0,
+        recovered = 0
     t.mock.method(axios, 'get', async () => {
         if (++calls === 1) throw new Error('offline')
         return { status: 200, data: { version: SUPPORTED_API_VERSION } }
     })
     t.mock.method(botApiAuth, 'recoverAfterReconnect', async () => ({ clientId: 'test-client' }))
-    t.mock.method(botSyncService, 'recoverAfterReconnect', async () => { recovered++ })
-    t.mock.method(aliasProposalService, 'initialize', async () => { recovered++ })
+    t.mock.method(botSyncService, 'recoverAfterReconnect', async () => {
+        recovered++
+    })
+    t.mock.method(aliasProposalService, 'initialize', async () => {
+        recovered++
+    })
     await api.testStatus()
     const retry = api.retryPromise
     await delay(15)

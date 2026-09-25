@@ -62,7 +62,7 @@ WordSuggImg: false
 TapTapLoginQRcode: true
 
 #  命令头
-cmdhead: "phi"
+cmdhead: 'phi'
 
 #  是否启用Phigros联合查分API
 openPhiPluginApi: false
@@ -77,11 +77,11 @@ enableScoreStatisticsApi: true
 enableOnlineScoreApi: true
 
 # 主题市场临时下载链接允许的唯一来源。必须为 HTTPS origin，不含路径。
-themeMarketDownloadOrigin: "https://lyh.org.cn:18473"
+themeMarketDownloadOrigin: 'https://lyh.org.cn:18473'
 
 # 由查分 API 签发，也可在管理表单中修改；客户端 ID、密钥和版本号须保持匹配。
-apiBotClientId: ""
-apiBotClientSecret: ""
+apiBotClientId: ''
+apiBotClientSecret: ''
 apiBotSecretVersion: 0
 
 #  输出测试日志
@@ -105,7 +105,7 @@ LetterNum: 8
 LetterMarkdown: true
 
 #  猜对后是否发送以及发送什么曲绘 原版 水印版 不发送
-LetterIllustration: "水印版"
+LetterIllustration: '水印版'
 
 #  猜字母群聊全局猜测冷却时间间隔(s)
 LetterGuessCd: 0
@@ -141,5 +141,4 @@ GuessTipsAnsTime: 30
 
 #  ************ 【其他设置】 *************
 #  认证 Token
-VikaToken: ""
-
+VikaToken: ''

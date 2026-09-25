@@ -1,12 +1,11 @@
-import { redisPath } from "./constNum.js"
-import { redis } from "../../components/platform/index.js"
+import { redisPath } from './constNum.js'
+import { redis } from '../../components/platform/index.js'
 
-
-export default new class getRksRank {
+export default new (class getRksRank {
     /**
      * 添加成绩
-     * @param {string} sessionToken 
-     * @param {number} rks 
+     * @param {string} sessionToken
+     * @param {number} rks
      * @returns {Promise<number>}
      */
     async addUserRks(sessionToken, rks) {
@@ -16,7 +15,7 @@ export default new class getRksRank {
 
     /**
      * 删除成绩
-     * @param {string} sessionToken 
+     * @param {string} sessionToken
      * @returns {Promise<number>}
      */
     async delUserRks(sessionToken) {
@@ -26,7 +25,7 @@ export default new class getRksRank {
 
     /**
      * 获取用户排名
-     * @param {string} sessionToken 
+     * @param {string} sessionToken
      * @returns {Promise<number>}
      */
     async getUserRank(sessionToken) {
@@ -36,7 +35,7 @@ export default new class getRksRank {
 
     /**
      * 获取sessionToken rks
-     * @param {number} sessionToken 
+     * @param {number} sessionToken
      * @returns {Promise<number>}
      */
     async getUserRks(sessionToken) {
@@ -57,13 +56,13 @@ export default new class getRksRank {
 
     /**
      * 获取指定rks的排名（倒序）
-     * @param {number} rks 
+     * @param {number} rks
      * @returns {Promise<number>}
      */
     async getRankByRks(rks) {
         // @ts-ignore
-        const rank = await redis.zCount(`${redisPath}:rksRankSet`, rks * -1, 100);
-        return rank; // 返回排名，-1表示未找到
+        const rank = await redis.zCount(`${redisPath}:rksRankSet`, rks * -1, 100)
+        return rank // 返回排名，-1表示未找到
     }
 
     /**
@@ -74,4 +73,4 @@ export default new class getRksRank {
         // @ts-ignore
         return await redis.zCard(`${redisPath}:rksRankSet`)
     }
-}()
+})()

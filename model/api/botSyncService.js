@@ -42,7 +42,7 @@ export class BotSyncService {
 
             for (const message of response?.messages || []) {
                 try {
-                    const sent = await platform.relpyPrivate(message.target.platformId, message.text)
+                    const sent = await platform.replyPrivate(message.target.platformId, message.text)
                     if (sent !== false && sent != null) this.pendingAcknowledgements.add(message.id)
                 } catch (error) {
                     logger.warn(`[phi-plugin] Bot消息私聊失败，将在下次同步重试：${message.id}`, error)

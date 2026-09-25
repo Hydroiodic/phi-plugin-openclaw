@@ -11,7 +11,9 @@ let host
 export function bindHostSettings(values, write) {
     const binding = { values: shared.validateSettings({ ...shared.defaults, ...shared.readGeneratedSettings(), ...values }), write }
     host = binding
-    return () => { if (host === binding) host = undefined }
+    return () => {
+        if (host === binding) host = undefined
+    }
 }
 
 export function getHostSettings() {

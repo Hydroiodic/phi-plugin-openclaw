@@ -18,7 +18,9 @@ export class TemplateRenderer {
     this.dir = path.join(getPlatformAdapter()?.dataRoot || process.cwd(), 'temp', 'html')
   }
   /** @param {string} source @param {any} data */
-  renderTemplate(source, data) { return template.render(source, data) }
+  renderTemplate(source, data) {
+    return template.render(source, data)
+  }
   /** @param {string} name @param {any} data */
   dealTpl(name, data) {
     if (!fs.existsSync(data.tplFile)) return false
@@ -30,9 +32,15 @@ export class TemplateRenderer {
     const fd = fs.openSync(file, 'wx', 0o600)
     this.generatedFiles.add(file)
     try {
-      try { fs.writeFileSync(fd, html) }
-      finally { fs.closeSync(fd) }
-    } catch (error) { this.releaseTemplate(file); throw error }
+      try {
+        fs.writeFileSync(fd, html)
+      } finally {
+        fs.closeSync(fd)
+      }
+    } catch (error) {
+      this.releaseTemplate(file)
+      throw error
+    }
     return file
   }
 
@@ -48,8 +56,11 @@ export class TemplateRenderer {
   closeTemplates() {
     const errors = []
     for (const file of this.generatedFiles) {
-      try { this.releaseTemplate(file) }
-      catch (error) { errors.push(error) }
+      try {
+        this.releaseTemplate(file)
+      } catch (error) {
+        errors.push(error)
+      }
     }
     if (errors.length) throw new AggregateError(errors, '渲染临时文件清理失败。')
   }

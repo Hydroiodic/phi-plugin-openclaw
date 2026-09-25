@@ -2,19 +2,20 @@
 
 ## 模块职责
 
-| 层次 | 主要对象 | 职责 |
-| --- | --- | --- |
-| OpenClaw 接入 | `PhigrosPlugin` | 注册原生命令和消息 hook，统一轻量回复、隐私检查和运行时加载 |
-| 运行时 | `PhigrosRuntime`、`TaskScheduler` | 管理活动请求、后台任务和关闭顺序 |
-| 命令路由 | `CommandRouter` | 规范化命令、权限检查、交互上下文、业务分发 |
-| 平台服务 | `OpenClawPlatform` | 提供事件、身份、消息和本地存储接口 |
-| 消息与会话 | `ReplyQueue`、`MessagePayloadEncoder`、`ConversationContexts` | 有序回复、附件编码、快捷操作收尾、会话隔离与过期 |
-| 资源与存储 | `ResourceRepository`、`IllustrationRepository`、`SqliteStore` | 曲目版本缓存、共享曲绘下载校验、键值/排行榜数据及事务 |
-| 本地文件 | `FileRepository`、`AtomicFileWriter` | 序列化、原子替换和明确的读写结果 |
-| 云端与备份 | `CloudTransport`、`CloudSaveArchive`、`BackupRestoreService` | 有界请求、存档解析、备份预检和恢复 |
-| 用户数据 | `UserDataLock`、Notes 数据服务 | 用户级更新锁、多用户转账、余额校验及失败补偿 |
-| 业务 | `apps/`、`model/`、`lib/` | 查分、绑定、游戏、主题、云存档和成绩计算 |
-| 图片 | `TemplateRenderer`、Puppeteer 渲染器及实例池 | 模板、页面、浏览器、队列和临时文件生命周期 |
+| 层次          | 主要对象                                                      | 职责                                                                   |
+| ------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| OpenClaw 接入 | `PhigrosPlugin`                                               | 注册原生命令、消息 hook 和存档工具，统一轻量回复、隐私检查和运行时加载 |
+| AI 存档工具   | `save-tools`、`SaveEditService`、`CloudSaveUploader`          | 确认私聊发送者身份，解码与校验修改，等待本人确认后备份、上传和校验     |
+| 运行时        | `PhigrosRuntime`、`TaskScheduler`                             | 管理活动请求、后台任务和关闭顺序                                       |
+| 命令路由      | `CommandRouter`                                               | 规范化命令、权限检查、交互上下文、业务分发                             |
+| 平台服务      | `OpenClawPlatform`                                            | 提供事件、身份、消息和本地存储接口                                     |
+| 消息与会话    | `ReplyQueue`、`MessagePayloadEncoder`、`ConversationContexts` | 有序回复、附件编码、快捷操作收尾、会话隔离与过期                       |
+| 资源与存储    | `ResourceRepository`、`IllustrationRepository`、`SqliteStore` | 曲目版本缓存、共享曲绘下载校验、键值/排行榜数据及事务                  |
+| 本地文件      | `FileRepository`、`AtomicFileWriter`                          | 序列化、原子替换和明确的读写结果                                       |
+| 云端与备份    | `CloudTransport`、`CloudSaveArchive`、`BackupRestoreService`  | 有界请求、存档解析、备份预检和恢复                                     |
+| 用户数据      | `UserDataLock`、Notes 数据服务                                | 用户级更新锁、多用户转账、余额校验及失败补偿                           |
+| 业务          | `apps/`、`model/`、`lib/`                                     | 查分、绑定、游戏、主题、云存档和成绩计算                               |
+| 图片          | `TemplateRenderer`、Puppeteer 渲染器及实例池                  | 模板、页面、浏览器、队列和临时文件生命周期                             |
 
 `openclaw.mjs` 只负责声明插件和创建接入控制器。业务模块通过平台接口访问消息与存储，不应直接依赖 OpenClaw 的宿主 API。
 工厂函数用于创建有状态对象，具体行为由类承担；无状态的解析、验证和格式化函数保持独立，不为函数额外套无职责的类。
@@ -39,6 +40,8 @@
 - ZIP 必须检查原始路径、链接、重复文件和实际解压大小。校验完内容再恢复，不以“开始写入”代表“恢复完成”。
 - 损坏的配置优先使用上次有效值或默认值，日志不包含配置内容；用户修复文件后可重新加载。保存配置前必须拒绝格式错误的 YAML。
 - 网络请求设置超时和响应限制，错误消息不暴露 sessionToken。二进制读取检查长度、偏移和编码边界。
+- 存档工具的身份只取自宿主上下文，且只接受会话键属于该发送者的私聊；参数里不出现用户或凭据。写回云端前需要用户本人发送确认码，
+  并先备份原存档、检查云端是否已变化；无法无损重建的存档只读。
 - 可选外部服务失败不应破坏本地数据；资源更新失败不得覆盖已有有效版本。
 - 曲绘索引独立于游戏版本，以内容哈希复用缓存。业务只生成曲绘引用，平台在渲染或发送前统一下载并校验；关闭运行时时取消在途下载。
 
@@ -61,5 +64,11 @@ npm pack --dry-run
 ```
 
 单元与回归测试覆盖全部启用命令的入口和真实方法存在性。图片冒烟测试执行实际模板渲染；宿主冒烟测试使用独立状态目录验证 OpenClaw 启动与消息队列。
-GitHub Actions 使用锁文件安装依赖，执行类型检查、测试、图片冒烟和打包检查。宿主冒烟需要另行安装 OpenClaw，在开发机或集成环境运行。
+GitHub Actions 有三个工作流，都用锁文件安装依赖：
+
+- `Checks`（`ci.yml`）：ESLint、类型检查、测试、图片冒烟和打包检查。
+- `Format`（`format.yml`）：推送后运行 Prettier 和 `eslint --fix`，有改动就以 `github-actions[bot]` 提交回同一分支，再为新提交触发 `Checks` 和 `Package`；来自 fork 的 PR 无法推送，只检查格式。推送后如果看到这条提交，先 `git pull` 再继续开发。
+- `Package`（`package.yml`）：推送或打 `v*` 标签后执行 `npm pack`，把 `.tgz` 作为构建产物上传，保留 30 天。
+
+宿主冒烟需要另行安装 OpenClaw，在开发机或集成环境运行。
 自动化测试不替代真实账号的扫码授权和 QQ 客户端显示验收。

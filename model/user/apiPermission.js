@@ -13,8 +13,8 @@ const capabilityConfigKeys = {
 /** @param {ApiCapability} capability */
 export function isApiCapabilityConfigured(capability) {
     return Boolean(
-        Config.getUserCfg('config', 'openPhiPluginApi')
-        && Config.getUserCfg('config', /** @type {configName} */ (capabilityConfigKeys[capability])) !== false
+        Config.getUserCfg('config', 'openPhiPluginApi') &&
+        Config.getUserCfg('config', /** @type {configName} */ (capabilityConfigKeys[capability])) !== false,
     )
 }
 
@@ -42,7 +42,7 @@ export async function isUserApiEnabled(userId) {
  * @param {import('../../components/baseClass.js').botEvent} e
  */
 export async function getApiAccessState(e, capability = /** @type {ApiCapability} */ ('onlineScore')) {
-    const globalEnabled = !!autoSeekApi.openPhiPluginApi;
+    const globalEnabled = !!autoSeekApi.openPhiPluginApi
     const capabilityEnabled = Config.getUserCfg('config', /** @type {configName} */ (capabilityConfigKeys[capability])) !== false
     const userEnabled = capability === 'onlineScore' ? await isUserApiEnabled(e?.user_id) : true
     return {
@@ -50,7 +50,7 @@ export async function getApiAccessState(e, capability = /** @type {ApiCapability
         capability,
         capabilityEnabled,
         userEnabled,
-        enabled: globalEnabled && capabilityEnabled && userEnabled
+        enabled: globalEnabled && capabilityEnabled && userEnabled,
     }
 }
 

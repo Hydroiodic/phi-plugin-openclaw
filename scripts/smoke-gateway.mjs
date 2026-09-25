@@ -11,7 +11,9 @@ import { resolveTestInfo } from './test-resources.mjs'
 import { serveRepository } from '../tests/resource-server.mjs'
 
 const pluginRoot = path.resolve(process.argv[2] || fileURLToPath(new URL('../', import.meta.url)))
-const executable = (process.env.PATH || '').split(path.delimiter).map(dir => path.join(dir, 'openclaw'))
+const executable = (process.env.PATH || '')
+  .split(path.delimiter)
+  .map(dir => path.join(dir, 'openclaw'))
   .find(candidate => fs.existsSync(candidate))
 const hostRoot = process.env.OPENCLAW_PACKAGE_ROOT || (executable && path.dirname(fs.realpathSync(executable)))
 if (!hostRoot) throw new Error('需要安装 OpenClaw，或设置 OPENCLAW_PACKAGE_ROOT 指向其 npm 包目录。')
@@ -26,8 +28,12 @@ const server = await serveRepository(path.join(root, 'repository'))
 process.env.PHI_RESOURCE_BASE_URL = server.url
 process.env.PHI_RESOURCE_VERSION = 'latest'
 const cfg = {
-  plugins: { allow: ['phi-plugin-openclaw'], slots: { memory: 'none' }, load: { paths: [pluginRoot] },
-    entries: { 'phi-plugin-openclaw': { enabled: true, config: { channels: ['qqbot'] } } } },
+  plugins: {
+    allow: ['phi-plugin-openclaw'],
+    slots: { memory: 'none' },
+    load: { paths: [pluginRoot] },
+    entries: { 'phi-plugin-openclaw': { enabled: true, config: { channels: ['qqbot'] } } },
+  },
   agents: { defaults: { workspace: path.join(root, 'workspace') } },
   session: { store: path.join(root, 'sessions.json') },
 }
@@ -46,9 +52,17 @@ try {
   assert.ok(plan.pluginIds.includes('phi-plugin-openclaw'), 'Gateway startup skips Phigros: missing activation metadata')
   // Reproduce the original failure: enabled + individually loadable is not
   // sufficient when the startup activation hints are missing.
-  const withoutActivation = planFromRegistry({ config: cfg, env: process.env, index: metadataSnapshot.index,
-    manifestRegistry: { ...metadataSnapshot.manifestRegistry, plugins: metadataSnapshot.manifestRegistry.plugins.map(
-      entry => entry.id === 'phi-plugin-openclaw' ? { ...entry, activation: undefined } : entry) } })
+  const withoutActivation = planFromRegistry({
+    config: cfg,
+    env: process.env,
+    index: metadataSnapshot.index,
+    manifestRegistry: {
+      ...metadataSnapshot.manifestRegistry,
+      plugins: metadataSnapshot.manifestRegistry.plugins.map(entry =>
+        entry.id === 'phi-plugin-openclaw' ? { ...entry, activation: undefined } : entry,
+      ),
+    },
+  })
   assert.ok(!withoutActivation.pluginIds.includes('phi-plugin-openclaw'))
   const { loadAndActivateRootPluginRegistry } = await hostImport('plugins/loader.js')
   registry = loadAndActivateRootPluginRegistry({ config: cfg, pluginIds: plan.pluginIds, cache: false, logger: console })
@@ -58,17 +72,40 @@ try {
   let modelCalls = 0
   let sequence = 0
   async function dispatch(body, { group = false, authorized = false, channel = 'qqbot' } = {}) {
-    const replies = [], deliveryErrors = []
+    const replies = [],
+      deliveryErrors = []
     const result = await dispatchReplyWithBufferedBlockDispatcher({
       cfg,
-      ctx: { Body: body, BodyForAgent: body, RawBody: body, CommandBody: body,
-        CommandAuthorized: authorized, CommandSource: 'text', Provider: channel, Surface: channel,
-        SenderId: 'synthetic-user', AccountId: 'default', ChatType: group ? 'group' : 'direct',
+      ctx: {
+        Body: body,
+        BodyForAgent: body,
+        RawBody: body,
+        CommandBody: body,
+        CommandAuthorized: authorized,
+        CommandSource: 'text',
+        Provider: channel,
+        Surface: channel,
+        SenderId: 'synthetic-user',
+        AccountId: 'default',
+        ChatType: group ? 'group' : 'direct',
         From: `${channel}:${group ? 'group:synthetic-group' : 'direct:synthetic-user'}`,
-        To: `${channel}:${group ? 'group:synthetic-group' : 'direct:synthetic-user'}`, SessionKey: `agent:main:${channel}:phi-smoke-${++sequence}`,
-        MessageSid: `phi-smoke-${sequence}`, WasMentioned: group },
-      dispatcherOptions: { deliver: async payload => { replies.push(payload) }, onError: error => { deliveryErrors.push(error) } },
-      replyResolver: async () => { modelCalls++; return { text: 'synthetic-model-reply' } },
+        To: `${channel}:${group ? 'group:synthetic-group' : 'direct:synthetic-user'}`,
+        SessionKey: `agent:main:${channel}:phi-smoke-${++sequence}`,
+        MessageSid: `phi-smoke-${sequence}`,
+        WasMentioned: group,
+      },
+      dispatcherOptions: {
+        deliver: async payload => {
+          replies.push(payload)
+        },
+        onError: error => {
+          deliveryErrors.push(error)
+        },
+      },
+      replyResolver: async () => {
+        modelCalls++
+        return { text: 'synthetic-model-reply' }
+      },
     })
     assert.deepEqual(deliveryErrors, [])
     return { result, replies, text: replies.map(reply => reply.text || '').join('\n') }
@@ -94,7 +131,8 @@ try {
   const { default: pictures } = await import(pathToFileURL(path.join(pluginRoot, 'model/render/picmodle.js')).href)
   const { default: Config } = await import(pathToFileURL(path.join(pluginRoot, 'components/Config.js')).href)
   const { default: platform } = await import(pathToFileURL(path.join(pluginRoot, 'components/platform/index.js')).href)
-  const renderHelp = pictures.help, markdownSetting = Config.runtimeOverrides.LetterMarkdown
+  const renderHelp = pictures.help,
+    markdownSetting = Config.runtimeOverrides.LetterMarkdown
   pictures.help = async () => platform.segment.image('https://example.invalid/help.png')
   Config.runtimeOverrides.LetterMarkdown = true
   try {
@@ -103,33 +141,56 @@ try {
     assert.match(help.replies.at(-1).text, /帮助页常用操作/)
     assert.doesNotMatch(help.replies.at(-1).text, /^\*\*\*$/m)
     assert.equal(help.replies.length, 2)
-  } finally { pictures.help = renderHelp; Config.runtimeOverrides.LetterMarkdown = markdownSetting }
+  } finally {
+    pictures.help = renderHelp
+    Config.runtimeOverrides.LetterMarkdown = markdownSetting
+  }
   // Use real app handlers, with only the account/network boundary stubbed.
   // No real tokens are accessed and no TapTap login is performed.
   const { UserCredentials } = await import(pathToFileURL(path.join(pluginRoot, 'model/user/userCredentials.js')).href)
   const { default: qr } = await import(pathToFileURL(path.join(pluginRoot, 'lib/getQRcode.js')).href)
   const bind = UserCredentials.prototype.bindLocallyWithSessionToken
   const qrOriginal = Object.fromEntries(['getRequest', 'checkQRCodeResult', 'getSessionToken'].map(name => [name, qr[name]]))
-  const bindings = [], qrSteps = []
+  const bindings = [],
+    qrSteps = []
   const token = 'SyntheticPhiToken12345678'
   assert.equal(token.length, 25)
   UserCredentials.prototype.bindLocallyWithSessionToken = async function (value, global) {
-    bindings.push({ value, global }); return null
+    bindings.push({ value, global })
+    return null
   }
-  qr.getRequest = async global => { qrSteps.push(['create', global]); return {
-    deviceId: 'synthetic-device', data: { device_code: 'synthetic-code',
-      qrcode_url: 'https://example.invalid/synthetic-login', expires_in: 60 },
-  } }
-  qr.checkQRCodeResult = async (request, global) => { qrSteps.push(['poll', global]); return { success: true, data: {} } }
-  qr.getSessionToken = async (result, global) => { qrSteps.push(['token', global]); return token }
-  try {
-    for (const prefix of ['', 'phi ']) for (const [region, global] of [['gb', true], ['cn', false]]) {
-      for (const credential of [token, 'qrcode']) {
-        assert.match((await dispatch(`/${prefix}${region}bind ${credential}`)).text, /正在绑定/)
-        assert.deepEqual(bindings.at(-1), { value: token, global })
-        if (credential === 'qrcode') assert.deepEqual(qrSteps.slice(-3), [['create', global], ['poll', global], ['token', global]])
-      }
+  qr.getRequest = async global => {
+    qrSteps.push(['create', global])
+    return {
+      deviceId: 'synthetic-device',
+      data: { device_code: 'synthetic-code', qrcode_url: 'https://example.invalid/synthetic-login', expires_in: 60 },
     }
+  }
+  qr.checkQRCodeResult = async (request, global) => {
+    qrSteps.push(['poll', global])
+    return { success: true, data: {} }
+  }
+  qr.getSessionToken = async (result, global) => {
+    qrSteps.push(['token', global])
+    return token
+  }
+  try {
+    for (const prefix of ['', 'phi '])
+      for (const [region, global] of [
+        ['gb', true],
+        ['cn', false],
+      ]) {
+        for (const credential of [token, 'qrcode']) {
+          assert.match((await dispatch(`/${prefix}${region}bind ${credential}`)).text, /正在绑定/)
+          assert.deepEqual(bindings.at(-1), { value: token, global })
+          if (credential === 'qrcode')
+            assert.deepEqual(qrSteps.slice(-3), [
+              ['create', global],
+              ['poll', global],
+              ['token', global],
+            ])
+        }
+      }
     assert.equal(bindings.length, 8)
   } finally {
     UserCredentials.prototype.bindLocallyWithSessionToken = bind
@@ -139,7 +200,9 @@ try {
   assert.equal((await dispatch('普通聊天')).text, 'synthetic-model-reply')
   assert.equal((await dispatch('/phi', { channel: 'telegram' })).text, 'synthetic-model-reply')
   assert.equal(modelCalls, 2, 'Other conversations must continue through the host')
-  console.log(JSON.stringify({ ok: true, pluginRoot, startupLoaded: true, phigrosModelCalls: 0, capturedCases: sequence, stateDir: root }, null, 2))
+  console.log(
+    JSON.stringify({ ok: true, pluginRoot, startupLoaded: true, phigrosModelCalls: 0, capturedCases: sequence, stateDir: root }, null, 2),
+  )
 } finally {
   for (const entry of registry?.services || []) await entry.service.stop?.()
   await server.close()

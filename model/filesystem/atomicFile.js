@@ -5,7 +5,9 @@ import { randomUUID } from 'node:crypto'
 /** Same-directory replacement keeps a failed save from truncating valid data. */
 export class AtomicFileWriter {
     /** @param {typeof fs} [filesystem] */
-    constructor(filesystem = fs) { this.fs = filesystem }
+    constructor(filesystem = fs) {
+        this.fs = filesystem
+    }
 
     /** @param {string} file @param {string | NodeJS.ArrayBufferView} data */
     write(file, data) {

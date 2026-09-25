@@ -1,0 +1,38 @@
+name: Package
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Build the npm package
+        run: |
+          mkdir -p dist
+          npm pack --pack-destination dist
+          ls -l dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phi-plugin-openclaw-${{ github.sha }}
+          path: dist/*.tgz
+          if-no-files-found: error
+          retention-days: 30

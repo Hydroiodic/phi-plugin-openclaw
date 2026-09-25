@@ -145,8 +145,12 @@ export class PersistentFreshInstallRateLimiter {
         /** @type {Record<string, number[]>} */
         const records = {}
         for (const [key, timestamps] of entries) {
-            if (!/^[a-f0-9]{64}$/.test(key) || !Array.isArray(timestamps)
-                || timestamps.length > 1_000 || timestamps.some(item => !Number.isFinite(item))) {
+            if (
+                !/^[a-f0-9]{64}$/.test(key) ||
+                !Array.isArray(timestamps) ||
+                timestamps.length > 1_000 ||
+                timestamps.some(item => !Number.isFinite(item))
+            ) {
                 throw new ThemeMarketClientError('theme_install_rate_state_invalid')
             }
             records[key] = timestamps
@@ -160,7 +164,9 @@ export class PersistentFreshInstallRateLimiter {
         const temporary = `${this.filePath}.${process.pid}.${crypto.randomUUID()}.tmp`
         try {
             await fs.promises.writeFile(temporary, `${JSON.stringify({ version: 1, records })}\n`, {
-                encoding: 'utf8', mode: 0o600, flag: 'wx',
+                encoding: 'utf8',
+                mode: 0o600,
+                flag: 'wx',
             })
             await fs.promises.rename(temporary, this.filePath)
         } finally {
@@ -174,7 +180,10 @@ export class PersistentFreshInstallRateLimiter {
      * @param {string} requesterId
      */
     async consume(requesterId) {
-        const requesterKey = crypto.createHash('sha256').update(requesterId || 'unknown').digest('hex')
+        const requesterKey = crypto
+            .createHash('sha256')
+            .update(requesterId || 'unknown')
+            .digest('hex')
         const now = this.now()
         const cutoff = now - this.windowMs
         const records = await this.readRecords()
@@ -201,7 +210,10 @@ export class PersistentFreshInstallRateLimiter {
             return
         }
         const records = await this.readRecords()
-        const requesterKey = crypto.createHash('sha256').update(requesterId || 'unknown').digest('hex')
+        const requesterKey = crypto
+            .createHash('sha256')
+            .update(requesterId || 'unknown')
+            .digest('hex')
         delete records[requesterKey]
         if (Object.keys(records).length) await this.writeRecords(records)
         else await fs.promises.rm(this.filePath, { force: true })
@@ -246,19 +258,22 @@ export class ThemeInstallCoordinator {
         this.active++
         Promise.resolve()
             .then(task.operation)
-            .then(value => {
-                if (this.flights.get(task.key) === task.promise) this.flights.delete(task.key)
-                this.active--
-                const next = this.queue.shift()
-                if (next) this.start(next)
-                task.resolve(value)
-            }, error => {
-                if (this.flights.get(task.key) === task.promise) this.flights.delete(task.key)
-                this.active--
-                const next = this.queue.shift()
-                if (next) this.start(next)
-                task.reject(error)
-            })
+            .then(
+                value => {
+                    if (this.flights.get(task.key) === task.promise) this.flights.delete(task.key)
+                    this.active--
+                    const next = this.queue.shift()
+                    if (next) this.start(next)
+                    task.resolve(value)
+                },
+                error => {
+                    if (this.flights.get(task.key) === task.promise) this.flights.delete(task.key)
+                    this.active--
+                    const next = this.queue.shift()
+                    if (next) this.start(next)
+                    task.reject(error)
+                },
+            )
     }
 }
 

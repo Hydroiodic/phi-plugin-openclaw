@@ -2,8 +2,8 @@ import fCompute from '../game/fCompute.js'
 
 export default class makeRequestFnc {
     /**
-     * 
-    * @param {import('../../components/baseClass.js').botEvent } e
+     *
+     * @param {import('../../components/baseClass.js').botEvent } e
      * @returns {import('./makeRequest.js').platformAuth}
      */
     static makePlatform(e) {
@@ -13,5 +13,4 @@ export default class makeRequestFnc {
             _local_user_id: `${e.user_id}`,
         }
     }
-
 }

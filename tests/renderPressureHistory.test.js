@@ -37,23 +37,36 @@ test('render pressure history retains only the latest 30 minutes', () => {
 
 test('render pressure history merges repeated syncs in the same minute', () => {
     const history = new RenderPressureHistory()
-    history.record(pressure('2026-09-05T12:00:00.000Z', {
-        active: 1, maxActive: 1, completed: 2,
-    }), '2026-09-05T12:00:15.000Z')
-    history.record(pressure('2026-09-05T12:00:15.000Z', {
-        queued: 1, maxQueued: 2, completed: 3, failed: 1,
-    }), '2026-09-05T12:00:50.000Z')
+    history.record(
+        pressure('2026-09-05T12:00:00.000Z', {
+            active: 1,
+            maxActive: 1,
+            completed: 2,
+        }),
+        '2026-09-05T12:00:15.000Z',
+    )
+    history.record(
+        pressure('2026-09-05T12:00:15.000Z', {
+            queued: 1,
+            maxQueued: 2,
+            completed: 3,
+            failed: 1,
+        }),
+        '2026-09-05T12:00:50.000Z',
+    )
 
-    assert.deepEqual(history.snapshot(), [{
-        startedAt: '2026-09-05T12:00:00.000Z',
-        endedAt: '2026-09-05T12:00:50.000Z',
-        capacity: 2,
-        active: 0,
-        queued: 1,
-        maxActive: 1,
-        maxQueued: 2,
-        completed: 5,
-        failed: 1,
-        timedOut: 0,
-    }])
+    assert.deepEqual(history.snapshot(), [
+        {
+            startedAt: '2026-09-05T12:00:00.000Z',
+            endedAt: '2026-09-05T12:00:50.000Z',
+            capacity: 2,
+            active: 0,
+            queued: 1,
+            maxActive: 1,
+            maxQueued: 2,
+            completed: 5,
+            failed: 1,
+            timedOut: 0,
+        },
+    ])
 })

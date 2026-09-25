@@ -18,7 +18,9 @@ test('reuses a watcher while replacing stale hot-reload callbacks', async () => 
 
         /** @type {() => void} */
         let resolveChanged = () => {}
-        const changed = new Promise(resolve => { resolveChanged = () => resolve(undefined) })
+        const changed = new Promise(resolve => {
+            resolveChanged = () => resolve(undefined)
+        })
         const secondLease = registry.watch('config', file, resolveChanged)
         assert.equal(secondLease.watcher, firstLease.watcher)
         await secondLease.ready

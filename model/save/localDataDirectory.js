@@ -4,7 +4,9 @@ import path from 'node:path'
 /** Resolves only opaque data keys; no caller can address a parent or a symlink. */
 export class LocalDataDirectory {
     /** @param {string} root */
-    constructor(root) { this.root = path.resolve(root) }
+    constructor(root) {
+        this.root = path.resolve(root)
+    }
 
     /** @param {unknown} key */
     directory(key) {

@@ -41,7 +41,7 @@ openclaw plugins inspect phi-plugin-openclaw --runtime --json
 
 检查结果应包含 `status: "loaded"`、`b30` 等 commands 和 `reply_dispatch` hook。
 `inspect --runtime` 验证当前 CLI 进程的注册结果；重启后的实际 QQ 消息才验证正在运行的 Gateway。
-Gateway 日志中应包含 `phi-plugin-openclaw` 和 `Phigros ready: commands and reply_dispatch registered.`。
+Gateway 日志中应包含 `phi-plugin-openclaw` 和 `Phigros ready: commands and reply_dispatch registered`（开启存档工具时后面还有 `, save tools enabled`）。
 
 ### 从 Git 仓库安装
 
@@ -67,25 +67,25 @@ QQ 平台若为不同场景分配不同 OpenID，需要分别绑定；插件不�
 
 ### 常用命令
 
-| 功能 | 示例 |
-| --- | --- |
-| 分类表格帮助（文本 / 图片） | `/phi` / `/phi help` |
-| B30、更多成绩 | `/b30`、`/b40`、`/phi b50` |
-| P30、FC、其他成绩列表 | `/p30`、`/fc30`、`/x30` |
-| 更新存档 / 解绑 | `/phi update` / `/unbind` |
-| 国际服 / 国服绑定 | `/gbbind qrcode` / `/cnbind qrcode`，也支持后接 sessionToken |
-| 单曲成绩 | `/score Rrhar'il` |
-| 推分建议 | `/suggest` |
-| 个人信息 / 成绩筛选 / 定数统计 | `/phi info`、`/phi list`、`/phi lvsco` |
-| 章节成绩 / 成就 / 历史 | `/phi chap`、`/phi achievement`、`/phi hisb30` |
-| 曲目信息 / 检索 / 曲绘 | `/song Credits`、`/phi search`、`/phi ill Credits` |
-| 定数表 / 计算 / 随机曲目 | `/phi table 15`、`/phi com`、`/phi rand` |
-| 本机绑定用户排行榜 | `/phi ranklist` |
-| 签到、任务、今日人品 | `/phi sign`、`/phi task`、`/phi jrrp` |
-| 群聊猜曲绘、提示猜曲、开字母 | `/phi guess`、`/phi tipgame`、`/phi ltr` |
-| 个人主题与统计展示 | `/phi myset` |
-| 多轮选择或游戏回答 | `@机器人 /phi reply 1`；也可按原提示回复 |
-| 管理员身份 / 项目说明 | `/phi identity` / `/phi license` |
+| 功能                           | 示例                                                         |
+| ------------------------------ | ------------------------------------------------------------ |
+| 分类表格帮助（文本 / 图片）    | `/phi` / `/phi help`                                         |
+| B30、更多成绩                  | `/b30`、`/b40`、`/phi b50`                                   |
+| P30、FC、其他成绩列表          | `/p30`、`/fc30`、`/x30`                                      |
+| 更新存档 / 解绑                | `/phi update` / `/unbind`                                    |
+| 国际服 / 国服绑定              | `/gbbind qrcode` / `/cnbind qrcode`，也支持后接 sessionToken |
+| 单曲成绩                       | `/score Rrhar'il`                                            |
+| 推分建议                       | `/suggest`                                                   |
+| 个人信息 / 成绩筛选 / 定数统计 | `/phi info`、`/phi list`、`/phi lvsco`                       |
+| 章节成绩 / 成就 / 历史         | `/phi chap`、`/phi achievement`、`/phi hisb30`               |
+| 曲目信息 / 检索 / 曲绘         | `/song Credits`、`/phi search`、`/phi ill Credits`           |
+| 定数表 / 计算 / 随机曲目       | `/phi table 15`、`/phi com`、`/phi rand`                     |
+| 本机绑定用户排行榜             | `/phi ranklist`                                              |
+| 签到、任务、今日人品           | `/phi sign`、`/phi task`、`/phi jrrp`                        |
+| 群聊猜曲绘、提示猜曲、开字母   | `/phi guess`、`/phi tipgame`、`/phi ltr`                     |
+| 个人主题与统计展示             | `/phi myset`                                                 |
+| 多轮选择或游戏回答             | `@机器人 /phi reply 1`；也可按原提示回复                     |
+| 管理员身份 / 项目说明          | `/phi identity` / `/phi license`                             |
 
 完整功能入口、别名、参数和权限见 [命令清单](docs/COMMANDS.md)。
 详细参数也可看 `/phi help`、`/phi tk help`、`/phi api help`。
@@ -111,43 +111,68 @@ QQ 官方 Bot 不保证支持撤回、私聊转发、合并转发或群文件等
 从群聊转发凭据到私聊的操作会提示改到私聊执行。自动超时提醒和游戏提示受当前 QQ 回复窗口及 OpenClaw dispatcher 生命周期限制。
 管理备份保存在服务器的数据目录中；`/phi restore` 可选择 ZIP 恢复业务存档，完整数据迁移请使用下方停机备份流程。插件更新由 OpenClaw 管理。
 
+### 让 AI 助手查看和修改自己的存档
+
+插件自带 `phigros-save` skill 和 `phigros_save_fetch`、`phigros_save_read`、`phigros_save_edit`、`phigros_save_upload` 四个工具。
+在私聊里对助手说“看看我 IN 难度的成绩”“把我的简介改成今天也要 AP 然后上传”，助手会下载并解密**你自己绑定的**云存档，
+查看或修改成绩、Data、课题等级、头像、背景、简介和游戏设置，然后准备上传。
+
+- **只能操作自己的存档。** 身份只来自 OpenClaw 提供的消息发送者，工具没有“指定用户”或凭据参数，助手无法读取或修改别人的存档。
+- **只在按用户隔离的私聊会话中可用。** 群聊和多人共用的会话里工具直接拒绝，存档内容不会进入别人能看到的对话。
+  OpenClaw 默认 `session.dmScope` 为 `main`，所有私聊共用一个会话，此时工具会拒绝工作；需要改为按用户隔离：
+
+    ```bash
+    openclaw config set session.dmScope per-channel-peer   # 一个 channel 接多个 Bot 账号时用 per-account-channel-peer
+    openclaw gateway restart
+    ```
+
+- **上传必须由本人确认。** 插件把修改清单和 6 位确认码直接发给用户，用户自己发送 `/phi 确认上传 <确认码>` 才会上传，
+  `/phi 取消上传` 放弃；确认码 10 分钟内有效，助手无法代为确认。
+- **不写入不合理的数据。** 分数、acc 与 Full Combo 必须能同时出现；插件无法无损重建的存档（例如游戏更新了存档格式）只读不写。
+- **可以恢复。** 上传前原存档备份到数据目录的 `backup/saves/`；读取之后云端若出现新存档（例如在游戏里同步过）则取消上传；
+  上传后重新下载校验，校验失败时把云端记录指回原文件。
+
+上传流程按社区公开的 TapTap 云存档接口实现，仓库中的测试使用模拟服务端。第一次使用前建议先在游戏内同步一次，确认原存档已备份。
+不需要此功能时在配置中设置 `saveEditing: false`。
+
 ## 配置
 
 默认即可查分，无需填写数据库地址、用户名或密码。以下示例合并到已有 `openclaw.json` 的对应位置，保留已有的其他字段：
 
 ```json
 {
-  "plugins": {
-    "entries": {
-      "phi-plugin-openclaw": {
-        "enabled": true,
-        "config": {
-          "channels": ["qqbot"],
-          "admins": [],
-          "enableApi": false,
-          "renderScale": 100,
-          "renderNum": 1,
-          "timeout": 20000
+    "plugins": {
+        "entries": {
+            "phi-plugin-openclaw": {
+                "enabled": true,
+                "config": {
+                    "channels": ["qqbot"],
+                    "admins": [],
+                    "enableApi": false,
+                    "renderScale": 100,
+                    "renderNum": 1,
+                    "timeout": 20000
+                }
+            }
         }
-      }
     }
-  }
 }
 ```
 
-| 配置 | 说明 |
-| --- | --- |
-| `channels` | 允许的 channel ID；未配置或空数组表示全部，QQ Bot 是 `qqbot` |
-| `admins` | 管理员身份列表，格式 `channel:accountId:senderId`，从 `/phi identity` 获取；普通命令授权不等于管理员权限 |
-| `enableApi` | 是否启用外部联合查分服务，默认 `false` |
-| `dataDir` | 可选，自定义持久数据目录；建议绝对路径 |
-| `resourceBaseUrl` | 自建资源仓库的根 HTTPS 地址，默认 `https://hydroiodic.site/phi-plugin-openclaw/resources/v1/` |
-| `resourceVersion` | `latest`（默认）或游戏版本，如 `3.20.0`；首次解析 latest 后缓存，手动更新 |
-| `downloadIllustrations` | 是否预下载完整共享曲绘库，默认 `false`；默认按需下载单张并校验缓存 |
-| `chromiumPath` | 可选，指定现有 Chrome/Chromium 可执行文件 |
-| `renderScale` | 图片比例 50–200，默认 100 |
-| `renderNum` | 同时渲染的浏览器数量 1–4，默认 1 |
-| `timeout` | 图片页面加载超时，毫秒，默认 20000 |
+| 配置                    | 说明                                                                                                     |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| `channels`              | 允许的 channel ID；未配置或空数组表示全部，QQ Bot 是 `qqbot`                                             |
+| `admins`                | 管理员身份列表，格式 `channel:accountId:senderId`，从 `/phi identity` 获取；普通命令授权不等于管理员权限 |
+| `enableApi`             | 是否启用外部联合查分服务，默认 `false`                                                                   |
+| `saveEditing`           | 是否允许 AI 助手在私聊中读取、修改用户本人的云存档，默认 `true`；上传始终需要用户本人确认                |
+| `dataDir`               | 可选，自定义持久数据目录；建议绝对路径                                                                   |
+| `resourceBaseUrl`       | 自建资源仓库的根 HTTPS 地址，默认 `https://hydroiodic.site/phi-plugin-openclaw/resources/v1/`            |
+| `resourceVersion`       | `latest`（默认）或游戏版本，如 `3.20.0`；首次解析 latest 后缓存，手动更新                                |
+| `downloadIllustrations` | 是否预下载完整共享曲绘库，默认 `false`；默认按需下载单张并校验缓存                                       |
+| `chromiumPath`          | 可选，指定现有 Chrome/Chromium 可执行文件                                                                |
+| `renderScale`           | 图片比例 50–200，默认 100                                                                                |
+| `renderNum`             | 同时渲染的浏览器数量 1–4，默认 1                                                                         |
+| `timeout`               | 图片页面加载超时，毫秒，默认 20000                                                                       |
 
 例如在 Linux 上使用本机 Chrome：
 
@@ -175,7 +200,7 @@ phi-plugin-openclaw/
   themes/                本地主题与可选下载主题
   resource-cache/        按镜像隔离：v/<版本>/song-data/ 保存元数据，illustrations/ 保存共享曲绘
   otherill/              用户曲绘
-  backup/                管理命令生成的备份
+  backup/                管理命令生成的备份；saves/ 是 AI 助手上传前保存的原云存档
   browser/               没有系统 Chrome 时下载的浏览器
   temp/                  临时渲染文件和浏览器 profile
 ```
@@ -261,6 +286,8 @@ CLI 会明确联网刷新索引；安装后重启 Gateway。若锁定了 `resour
 
 ```bash
 pnpm install --frozen-lockfile --ignore-scripts
+npm run format        # Prettier 格式化；推送后 GitHub Actions 也会自动格式化并提交
+npm run lint
 npm test
 npm run typecheck
 npm run smoke

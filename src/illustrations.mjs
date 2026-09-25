@@ -8,21 +8,28 @@ export { ILLUSTRATION_PREFIX, illustrationReference } from '../model/filesystem/
 
 export const ILLUSTRATION_DIRS = ['ill', 'illLow', 'illBlur', 'SP', 'chap', 'chartimg', 'table']
 const MAX_FILE = 32 * 1024 * 1024
-const check = (value, message) => { if (!value) throw new ResourceError(message) }
+const check = (value, message) => {
+  if (!value) throw new ResourceError(message)
+}
 export const isIllustrationFile = name => ILLUSTRATION_DIRS.includes(name.split('/')[0]) && /\.(png|jpe?g|webp)$/i.test(name)
 export const illustrationObjectPath = (hash, name) => `objects/${hash.slice(0, 2)}/${hash}${path.extname(name).toLowerCase()}`
 
 /** Shared artwork has no game/plugin version; immutable objects are addressed by hash. */
 export function validateIllustrationIndex(index) {
   check(index?.schemaVersion === 1 && index.files && typeof index.files === 'object' && !Array.isArray(index.files), '曲绘索引格式无效。')
-  const entries = Object.entries(index.files), seen = new Set(), objects = new Map()
+  const entries = Object.entries(index.files),
+    seen = new Set(),
+    objects = new Map()
   check(entries.length > 0 && entries.length <= 20000, '曲绘文件数量超出限制。')
   let total = 0
   for (const [name, file] of entries) {
     validateResourcePath(name)
     check(isIllustrationFile(name) && !seen.has(name.toLowerCase()), '曲绘文件名无效或重复。')
     seen.add(name.toLowerCase())
-    check(/^[a-f0-9]{64}$/.test(file?.sha256) && Number.isSafeInteger(file.bytes) && file.bytes > 0 && file.bytes <= MAX_FILE, '曲绘文件校验信息无效。')
+    check(
+      /^[a-f0-9]{64}$/.test(file?.sha256) && Number.isSafeInteger(file.bytes) && file.bytes > 0 && file.bytes <= MAX_FILE,
+      '曲绘文件校验信息无效。',
+    )
     check(file.path === illustrationObjectPath(file.sha256, name), '曲绘对象路径与 SHA-256 不一致。')
     check(!objects.has(file.path) || objects.get(file.path) === file.bytes, '相同曲绘对象的大小不一致。')
     objects.set(file.path, file.bytes)
@@ -32,9 +39,16 @@ export function validateIllustrationIndex(index) {
   check(Array.isArray(index.archives) && index.archives.length > 0 && index.archives.length <= 256, '曲绘分包数量无效。')
   const archives = new Set()
   for (const archive of index.archives) {
-    check(/^[a-f0-9]{64}$/.test(archive?.sha256) && archive.path === `packages/${archive.sha256}.zip` && !archives.has(archive.path), '曲绘分包路径或哈希无效。')
+    check(
+      /^[a-f0-9]{64}$/.test(archive?.sha256) && archive.path === `packages/${archive.sha256}.zip` && !archives.has(archive.path),
+      '曲绘分包路径或哈希无效。',
+    )
     archives.add(archive.path)
-    for (const [key, max] of [['bytes', 128 * 1024 ** 2], ['unpackedBytes', 512 * 1024 ** 2], ['fileCount', 10000]]) {
+    for (const [key, max] of [
+      ['bytes', 128 * 1024 ** 2],
+      ['unpackedBytes', 512 * 1024 ** 2],
+      ['fileCount', 10000],
+    ]) {
       check(Number.isSafeInteger(archive[key]) && archive[key] > 0 && archive[key] <= max, `曲绘分包 ${key} 无效。`)
     }
   }
@@ -44,7 +58,7 @@ export function validateIllustrationIndex(index) {
 export function parseIllustrationChecksums(bytes) {
   const hashes = new Map()
   for (const line of bytes.toString('utf8').trimEnd().split('\n')) {
-    const match = /^([a-f0-9]{64})  (index\.json|packages\/[a-f0-9]{64}\.zip)$/.exec(line)
+    const match = /^([a-f0-9]{64}) {2}(index\.json|packages\/[a-f0-9]{64}\.zip)$/.exec(line)
     check(match && !hashes.has(match[2]), '曲绘 SHA256SUMS 无效。')
     hashes.set(match[2], match[1])
   }
@@ -54,7 +68,12 @@ export function parseIllustrationChecksums(bytes) {
 
 /** Download, verify and cache shared images before handing bytes to a channel or renderer. */
 export class IllustrationRepository {
-  constructor({ baseUrl, cacheRoot, logger = console, fallback = fileURLToPath(new URL('../resources/html/otherimg/phigros.png', import.meta.url)) }) {
+  constructor({
+    baseUrl,
+    cacheRoot,
+    logger = console,
+    fallback = fileURLToPath(new URL('../resources/html/otherimg/phigros.png', import.meta.url)),
+  }) {
     this.baseUrl = new URL('illustrations/', baseUrl).href
     this.root = path.join(cacheRoot, 'illustrations')
     this.logger = logger
@@ -76,22 +95,34 @@ export class IllustrationRepository {
     if (this.index && !refresh) return this.index
     this.loading = (async () => {
       const cache = await this.objectFile('index.json')
-      if (!refresh) try {
-        const stored = JSON.parse(await fs.readFile(cache, 'utf8'))
-        if (sha256(JSON.stringify(stored.index)) === stored.sha256) return this.index = validateIllustrationIndex(stored.index)
-      } catch { /* A damaged cache is retried from the configured repository. */ }
+      if (!refresh)
+        try {
+          const stored = JSON.parse(await fs.readFile(cache, 'utf8'))
+          if (sha256(JSON.stringify(stored.index)) === stored.sha256) return (this.index = validateIllustrationIndex(stored.index))
+        } catch {
+          /* A damaged cache is retried from the configured repository. */
+        }
       const sums = parseIllustrationChecksums(await downloadResource(this.baseUrl, 'SHA256SUMS', 1024 * 1024, this.controller.signal))
       const bytes = await downloadResource(this.baseUrl, 'index.json', 8 * 1024 * 1024, this.controller.signal)
       check(sha256(bytes) === sums.get('index.json'), '曲绘索引 SHA-256 校验失败。')
       let index
-      try { index = validateIllustrationIndex(JSON.parse(bytes.toString('utf8'))) }
-      catch { throw new ResourceError('曲绘索引内容无效。') }
-      check(sums.size === index.archives.length + 1 && index.archives.every(archive => sums.get(archive.path) === archive.sha256), '曲绘索引与 SHA256SUMS 不一致。')
+      try {
+        index = validateIllustrationIndex(JSON.parse(bytes.toString('utf8')))
+      } catch {
+        throw new ResourceError('曲绘索引内容无效。')
+      }
+      check(
+        sums.size === index.archives.length + 1 && index.archives.every(archive => sums.get(archive.path) === archive.sha256),
+        '曲绘索引与 SHA256SUMS 不一致。',
+      )
       atomicFileWriter.write(cache, JSON.stringify({ index, sha256: sha256(JSON.stringify(index)) }))
-      return this.index = index
+      return (this.index = index)
     })()
-    try { return await this.loading }
-    finally { this.loading = undefined }
+    try {
+      return await this.loading
+    } finally {
+      this.loading = undefined
+    }
   }
 
   async objectFile(relative) {
@@ -99,8 +130,11 @@ export class IllustrationRepository {
     let current = this.root
     for (const part of ['', ...relative.split('/')]) {
       if (part) current = path.join(current, part)
-      try { check(!(await fs.lstat(current)).isSymbolicLink(), '曲绘缓存不能包含符号链接。') }
-      catch (error) { if (error.code !== 'ENOENT') throw error }
+      try {
+        check(!(await fs.lstat(current)).isSymbolicLink(), '曲绘缓存不能包含符号链接。')
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error
+      }
     }
     return current
   }
@@ -110,7 +144,9 @@ export class IllustrationRepository {
     try {
       const stat = await fs.stat(destination)
       if (stat.isFile() && stat.size === file.bytes && sha256(await fs.readFile(destination)) === file.sha256) return destination
-    } catch (error) { if (error.code !== 'ENOENT') throw error }
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error
+    }
     return null
   }
 
@@ -123,7 +159,8 @@ export class IllustrationRepository {
       return await operation()
     } finally {
       const next = this.queue.shift()
-      if (next) next(); else this.active--
+      if (next) next()
+      else this.active--
     }
   }
 
@@ -162,10 +199,14 @@ export class IllustrationRepository {
     const visit = async (item, depth = 0) => {
       check(depth <= 100 && ++nodes <= 100000, '曲绘参数层数或数量过多。')
       if (typeof item === 'string' && item.startsWith(ILLUSTRATION_PREFIX)) {
-        try { return await this.resolve(item) }
-        catch (error) {
+        try {
+          return await this.resolve(item)
+        } catch (error) {
           if (this.controller.signal.aborted) throw error
-          if (!this.warned.has(item)) { this.warned.add(item); this.logger.warn('曲绘暂不可用，使用默认图片；请检查资源仓库与校验结果。') }
+          if (!this.warned.has(item)) {
+            this.warned.add(item)
+            this.logger.warn('曲绘暂不可用，使用默认图片；请检查资源仓库与校验结果。')
+          }
           return this.fallback
         }
       }
@@ -173,11 +214,13 @@ export class IllustrationRepository {
       if (seen.has(item)) return seen.get(item)
       const copy = Array.isArray(item) ? [] : Object.create(Object.getPrototypeOf(item))
       seen.set(item, copy)
-      await Promise.all(Object.keys(item).map(async key => {
-        const descriptor = Object.getOwnPropertyDescriptor(item, key)
-        if ('value' in descriptor) descriptor.value = await visit(descriptor.value, depth + 1)
-        Object.defineProperty(copy, key, descriptor)
-      }))
+      await Promise.all(
+        Object.keys(item).map(async key => {
+          const descriptor = Object.getOwnPropertyDescriptor(item, key)
+          if ('value' in descriptor) descriptor.value = await visit(descriptor.value, depth + 1)
+          Object.defineProperty(copy, key, descriptor)
+        }),
+      )
       return copy
     }
     return visit(value)
@@ -188,7 +231,7 @@ export class IllustrationRepository {
     this.bulk = (async () => {
       const index = await this.loadIndex({ refresh })
       const missing = new Set()
-      for (const [name, file] of Object.entries(index.files)) if (!await this.cached(file)) missing.add(name)
+      for (const [name, file] of Object.entries(index.files)) if (!(await this.cached(file))) missing.add(name)
       if (!missing.size) return { files: Object.keys(index.files).length, downloaded: 0 }
       await fs.mkdir(this.root, { recursive: true, mode: 0o700 })
       const stage = await fs.mkdtemp(path.join(this.root, '.download-'))
@@ -211,9 +254,15 @@ export class IllustrationRepository {
           installed++
         }
         return { files: Object.keys(index.files).length, downloaded: installed }
-      } finally { await fs.rm(stage, { recursive: true, force: true }) }
+      } finally {
+        await fs.rm(stage, { recursive: true, force: true })
+      }
     })()
-    try { return await this.bulk } finally { this.bulk = undefined }
+    try {
+      return await this.bulk
+    } finally {
+      this.bulk = undefined
+    }
   }
 
   async close() {

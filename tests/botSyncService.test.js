@@ -18,19 +18,29 @@ test('Bot sync acknowledges a message only after private delivery succeeds', asy
             serverTime: new Date().toISOString(),
             nextSyncAfterSeconds: 60,
             reporting: { renderPressure: false },
-            messages: requests.length === 1 ? [{
-                id: '00000000-0000-4000-8000-000000000001',
-                type: 'test',
-                schemaVersion: 1,
-                target: { platform: 'yunzai', platformId: '10001' },
-                text: '审核结果',
-                payload: {},
-                createdAt: new Date().toISOString(),
-                expiresAt: new Date(Date.now() + 60_000).toISOString(),
-            }] : [],
+            messages:
+                requests.length === 1
+                    ? [
+                          {
+                              id: '00000000-0000-4000-8000-000000000001',
+                              type: 'test',
+                              schemaVersion: 1,
+                              target: { platform: 'yunzai', platformId: '10001' },
+                              text: '审核结果',
+                              payload: {},
+                              createdAt: new Date().toISOString(),
+                              expiresAt: new Date(Date.now() + 60_000).toISOString(),
+                          },
+                      ]
+                    : [],
         }
     }
-    setPlatformAdapter({ relpyPrivate: async () => { delivered += 1; return { message_id: 'sent' } } })
+    setPlatformAdapter({
+        replyPrivate: async () => {
+            delivered += 1
+            return { message_id: 'sent' }
+        },
+    })
     try {
         await service.sync()
         assert.equal(delivered, 1)
@@ -60,13 +70,18 @@ test('Bot sync applies unbind requests by clearing local data and reporting back
             serverTime: new Date().toISOString(),
             nextSyncAfterSeconds: 60,
             reporting: { renderPressure: false },
-            unbindRequests: requests.length === 1 ? [{
-                bindingId: 'binding-1',
-                platform: 'yunzai',
-                platformId: '10001',
-                reason: 'disabled_by_account',
-                requestedAt: new Date().toISOString(),
-            }] : [],
+            unbindRequests:
+                requests.length === 1
+                    ? [
+                          {
+                              bindingId: 'binding-1',
+                              platform: 'yunzai',
+                              platformId: '10001',
+                              reason: 'disabled_by_account',
+                              requestedAt: new Date().toISOString(),
+                          },
+                      ]
+                    : [],
             messages: [],
         }
     }
@@ -81,22 +96,26 @@ test('Bot sync applies unbind requests by clearing local data and reporting back
     try {
         await service.sync()
         assert.deepEqual(locallyUnbound, ['10001'])
-        assert.deepEqual(reported, [{
-            userId: '10001',
-            platform: 'yunzai',
-            platformId: '10001',
-            reason: 'disabled_by_account',
-        }])
+        assert.deepEqual(reported, [
+            {
+                userId: '10001',
+                platform: 'yunzai',
+                platformId: '10001',
+                reason: 'disabled_by_account',
+            },
+        ])
 
         // 服务端确认后不再下发信号，本地不会重复解绑
         await service.sync()
         assert.deepEqual(locallyUnbound, ['10001'])
-        assert.deepEqual(reported, [{
-            userId: '10001',
-            platform: 'yunzai',
-            platformId: '10001',
-            reason: 'disabled_by_account',
-        }])
+        assert.deepEqual(reported, [
+            {
+                userId: '10001',
+                platform: 'yunzai',
+                platformId: '10001',
+                reason: 'disabled_by_account',
+            },
+        ])
     } finally {
         makeRequest.syncBot = originalSync
         UserCredentials.prototype.unbindLocal = originalUnbindLocal

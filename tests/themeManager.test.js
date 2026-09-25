@@ -52,11 +52,21 @@ function renderUserInfo(theme, themeInfo, template = 'userinfo') {
         acc_rks_data: [],
         acc_rks_range: [0, 0],
         acc_rks_AccRange: [],
-        userstats: [{
-            Rating: 'FC', title: 'IN', unlock: 1, tot: 1, cleared: 1, fc: 1, phi: 1,
-            real_score: 1, tot_score: 1, highest: { toFixed: () => '15.00' },
-            lowest: { toFixed: () => '14.00' },
-        }],
+        userstats: [
+            {
+                Rating: 'FC',
+                title: 'IN',
+                unlock: 1,
+                tot: 1,
+                cleared: 1,
+                fc: 1,
+                phi: 1,
+                real_score: 1,
+                tot_score: 1,
+                highest: { toFixed: () => '15.00' },
+                lowest: { toFixed: () => '14.00' },
+            },
+        ],
     })
 }
 
@@ -103,8 +113,18 @@ test('getRenderInfo：自定义主题返回模板路径与 themeInfo，资源 ur
 
 test('getRenderInfo：按页面选择 CSS，缺省页面保留背景和颜色但不启用主题字体', () => {
     const pages = [
-        'b19', 'sign', 'update', 'clg', 'arcgrosB19', 'suggest', 'table',
-        'list', 'historyB30', 'setting', 'difficultyHistory', 'help',
+        'b19',
+        'sign',
+        'update',
+        'clg',
+        'arcgrosB19',
+        'suggest',
+        'table',
+        'list',
+        'historyB30',
+        'setting',
+        'difficultyHistory',
+        'help',
     ]
     for (const page of pages) {
         const info = themeManager.getRenderInfo('milthm', RES, `${page}/${page}`)
@@ -127,17 +147,20 @@ test('仅配置背景和难度色的主题可用默认 B19 模板与图标渲染
     const testDir = path.join(THEMES_DIR, testId)
     try {
         fs.mkdirSync(testDir, { recursive: true })
-        fs.writeFileSync(path.join(testDir, 'info.yaml'), [
-            `id: "${testId}"`,
-            'name: "Colors only"',
-            'background: "background.png"',
-            'color:',
-            '  AT: "#111111"',
-            '  IN: "#222222"',
-            '  HD: "#333333"',
-            '  EZ: "#444444"',
-            '',
-        ].join('\n'))
+        fs.writeFileSync(
+            path.join(testDir, 'info.yaml'),
+            [
+                `id: "${testId}"`,
+                'name: "Colors only"',
+                'background: "background.png"',
+                'color:',
+                '  AT: "#111111"',
+                '  IN: "#222222"',
+                '  HD: "#333333"',
+                '  EZ: "#444444"',
+                '',
+            ].join('\n'),
+        )
         fs.writeFileSync(path.join(testDir, 'background.png'), 'fixture')
         themeManager.scan()
 
@@ -164,17 +187,20 @@ test('新版页面 CSS 优先匹配完整渲染目标，再回退到 app 短键'
     const testDir = path.join(THEMES_DIR, testId)
     try {
         fs.mkdirSync(testDir, { recursive: true })
-        fs.writeFileSync(path.join(testDir, 'info.yaml'), [
-            `id: "${testId}"`,
-            'name: "Page keys"',
-            'font: "font.ttf"',
-            'css:',
-            '  setting: "setting.css"',
-            '  setting/userSetting: "user-setting.css"',
-            '  setting/missing: "missing.css"',
-            '  invalid/path/extra: "ignored.css"',
-            '',
-        ].join('\n'))
+        fs.writeFileSync(
+            path.join(testDir, 'info.yaml'),
+            [
+                `id: "${testId}"`,
+                'name: "Page keys"',
+                'font: "font.ttf"',
+                'css:',
+                '  setting: "setting.css"',
+                '  setting/userSetting: "user-setting.css"',
+                '  setting/missing: "missing.css"',
+                '  invalid/path/extra: "ignored.css"',
+                '',
+            ].join('\n'),
+        )
         for (const file of ['font.ttf', 'setting.css', 'user-setting.css']) {
             fs.writeFileSync(path.join(testDir, file), 'fixture')
         }
@@ -201,15 +227,18 @@ test('userinfo/userinfo 后置加载精确页面样式并使用主题图标', ()
     const testDir = path.join(THEMES_DIR, testId)
     try {
         fs.mkdirSync(testDir, { recursive: true })
-        fs.writeFileSync(path.join(testDir, 'info.yaml'), [
-            'id: "' + testId + '"',
-            'name: "User info"',
-            'css:',
-            '  userinfo/userinfo: "userinfo.css"',
-            'icon:',
-            '  FC: "FC.png"',
-            '',
-        ].join('\n'))
+        fs.writeFileSync(
+            path.join(testDir, 'info.yaml'),
+            [
+                'id: "' + testId + '"',
+                'name: "User info"',
+                'css:',
+                '  userinfo/userinfo: "userinfo.css"',
+                'icon:',
+                '  FC: "FC.png"',
+                '',
+            ].join('\n'),
+        )
         fs.writeFileSync(path.join(testDir, 'userinfo.css'), 'fixture')
         fs.writeFileSync(path.join(testDir, 'FC.png'), 'fixture')
         themeManager.scan()
@@ -262,18 +291,21 @@ test('旧版字符串 css 仅替换 B19 样式，其他页面使用默认 CSS �
     const testDir = path.join(THEMES_DIR, testId)
     try {
         fs.mkdirSync(testDir, { recursive: true })
-        fs.writeFileSync(path.join(testDir, 'info.yaml'), [
-            `id: "${testId}"`,
-            'name: "Legacy CSS"',
-            'font: "font.ttf"',
-            'background: "background.png"',
-            'css: "b19.css"',
-            'icon:',
-            '  FC: "FC.png"',
-            'color:',
-            '  IN: "#123456"',
-            '',
-        ].join('\n'))
+        fs.writeFileSync(
+            path.join(testDir, 'info.yaml'),
+            [
+                `id: "${testId}"`,
+                'name: "Legacy CSS"',
+                'font: "font.ttf"',
+                'background: "background.png"',
+                'css: "b19.css"',
+                'icon:',
+                '  FC: "FC.png"',
+                'color:',
+                '  IN: "#123456"',
+                '',
+            ].join('\n'),
+        )
         for (const file of ['font.ttf', 'background.png', 'b19.css', 'FC.png']) {
             fs.writeFileSync(path.join(testDir, file), 'fixture')
         }
@@ -313,32 +345,33 @@ test('主题资源 URL 使用实际目录名，并拒绝越界路径和符号链
     let symlinkCreated = false
     try {
         fs.mkdirSync(nestedDir, { recursive: true })
-        fs.writeFileSync(path.join(testDir, 'info.yaml'), [
-            `id: "${testId}"`,
-            'name: "Path safety"',
-            'background: "background #%.png"',
-            'css:',
-            '  sign: "nested styles/valid #%.css"',
-            '  update: "../__theme_outside.css"',
-            '  help: "linked.css"',
-            '',
-        ].join('\n'))
+        fs.writeFileSync(
+            path.join(testDir, 'info.yaml'),
+            [
+                `id: "${testId}"`,
+                'name: "Path safety"',
+                'background: "background #%.png"',
+                'css:',
+                '  sign: "nested styles/valid #%.css"',
+                '  update: "../__theme_outside.css"',
+                '  help: "linked.css"',
+                '',
+            ].join('\n'),
+        )
         fs.writeFileSync(path.join(nestedDir, 'valid #%.css'), 'fixture')
         fs.writeFileSync(path.join(testDir, 'background #%.png'), 'fixture')
         fs.writeFileSync(outsideFile, 'fixture')
         try {
             fs.symlinkSync(outsideFile, path.join(testDir, 'linked.css'))
             symlinkCreated = true
-        } catch { }
+        } catch {}
         themeManager.scan()
 
         const sign = themeManager.getRenderInfo(testId, RES, 'sign/sign')
         const encodedDir = encodeURIComponent(dirName)
         assert.equal(sign?.themeInfo.baseUrl, `resources/themes/${encodedDir}/`)
-        assert.equal(sign?.themeInfo.cssUrl,
-            `resources/themes/${encodedDir}/nested%20styles/valid%20%23%25.css`)
-        assert.equal(sign?.themeInfo.backgroundUrl,
-            `resources/themes/${encodedDir}/background%20%23%25.png`)
+        assert.equal(sign?.themeInfo.cssUrl, `resources/themes/${encodedDir}/nested%20styles/valid%20%23%25.css`)
+        assert.equal(sign?.themeInfo.backgroundUrl, `resources/themes/${encodedDir}/background%20%23%25.png`)
         const cssUrl = new URL(sign?.themeInfo.cssUrl ?? '', 'file:///')
         assert.equal(cssUrl.hash, '')
         assert.equal(cssUrl.search, '')
@@ -356,7 +389,7 @@ test('主题资源 URL 使用实际目录名，并拒绝越界路径和符号链
     }
 })
 
-test('主题根目录符号链接不会被注册', (t) => {
+test('主题根目录符号链接不会被注册', t => {
     const testId = '__theme_linked_root__'
     const linkedDir = path.join(THEMES_DIR, testId)
     const externalDir = fs.mkdtempSync(path.join(path.dirname(THEMES_DIR), '__theme_external_root__'))
@@ -386,7 +419,10 @@ test('旧主题目录按 info.yaml.id 自动迁移到 resources/themes', () => {
         fs.mkdirSync(legacyDir, { recursive: true })
         fs.writeFileSync(path.join(legacyDir, 'info.yaml'), `id: "${id}"\nname: "Legacy move"\n`)
         const moved = migrateLegacyThemeDirectories()
-        assert.equal(moved.some(item => item.from === legacyDir && item.to === target), true)
+        assert.equal(
+            moved.some(item => item.from === legacyDir && item.to === target),
+            true,
+        )
         assert.equal(fs.existsSync(legacyDir), false)
         assert.equal(fs.existsSync(path.join(target, 'info.yaml')), true)
     } finally {
@@ -411,15 +447,13 @@ test('热更新：新增/修改/删除主题目录无需重启即可生效', asy
     const testDir = path.join(THEMES_DIR, testId)
     try {
         fs.mkdirSync(testDir, { recursive: true })
-        fs.writeFileSync(path.join(testDir, 'info.yaml'),
-            `name: "HotReload"\nid: "${testId}"\ndescription: "hot reload test"\n`)
+        fs.writeFileSync(path.join(testDir, 'info.yaml'), `name: "HotReload"\nid: "${testId}"\ndescription: "hot reload test"\n`)
         assert.ok(await waitFor(() => themeManager.isCustomTheme(testId)), '新增主题未被注册')
 
         const beforeOptions = themeManager.getThemeOptions()
         const before = beforeOptions[testId]
         const beforeIndex = Object.keys(beforeOptions).indexOf(testId)
-        fs.writeFileSync(path.join(testDir, 'info.yaml'),
-            `name: "HotReloadV2"\nid: "${testId}"\ndescription: "updated"\n`)
+        fs.writeFileSync(path.join(testDir, 'info.yaml'), `name: "HotReloadV2"\nid: "${testId}"\ndescription: "updated"\n`)
         assert.ok(await waitFor(() => themeManager.getThemeOptions()[testId].description === 'updated'), '修改 info.yaml 未生效')
 
         fs.rmSync(testDir, { recursive: true, force: true })
@@ -522,7 +556,10 @@ test('默认 b19.art 主题感知：新版覆盖样式后置，图标缺失时�
 test('milthm b19.art：使用主题 css 与图标，无 snow/star/topText 分支', () => {
     const info = themeManager.getRenderInfo('milthm', RES, 'b19')
     assert.ok(info)
-    const source = fs.readFileSync(path.join(info.themeInfo.baseUrl.replace('resources/', pluginResources.replace(/\\/g, '/') + '/'), 'b19.art'), 'utf8')
+    const source = fs.readFileSync(
+        path.join(info.themeInfo.baseUrl.replace('resources/', pluginResources.replace(/\\/g, '/') + '/'), 'b19.art'),
+        'utf8',
+    )
     const html = art.render(source, renderData('milthm', info.themeInfo))
     assert.ok(html.includes('html/b19/b19.css'))
     assert.ok(html.includes(info.themeInfo.cssUrl))
@@ -541,7 +578,8 @@ test('default.art 布局：themeInfo 注入字体/难度色/背景，无 themeIn
 
     const html = art.render(source, {
         ...renderData('milthm', info.themeInfo),
-        b19_list: [], phi: [],
+        b19_list: [],
+        phi: [],
     })
     assert.ok(html.includes('@font-face'))
     assert.ok(html.includes('font-family: "phi-theme"'))
@@ -556,8 +594,10 @@ test('default.art 布局：themeInfo 注入字体/难度色/背景，无 themeIn
     assert.ok(html.includes('class="background theme-background"'))
     assert.ok(html.includes('body > .background:not(.theme-background) { display: none; }'))
     // 清单颜色与字体必须位于主题 CSS 之后，保证清单配置优先。
-    assert.ok(html.indexOf(info.themeInfo.cssUrl) < html.indexOf('@font-face'),
-        '主题样式应注入在 css 链接之后，以保证覆盖 common.css 默认值')
+    assert.ok(
+        html.indexOf(info.themeInfo.cssUrl) < html.indexOf('@font-face'),
+        '主题样式应注入在 css 链接之后，以保证覆盖 common.css 默认值',
+    )
 
     const plain = art.render(source, { ...renderData('default', null), b19_list: [], phi: [] })
     assert.ok(!plain.includes('phi-theme'))
@@ -595,10 +635,7 @@ test('sign.art：页面主题样式后置；未配置页面样式时使用默认
         good: [],
         bad: [],
         quote: 'Test quote',
-        edgeRate: Object.fromEntries(['EZ', 'HD', 'IN', 'AT'].map(rank => [
-            rank,
-            { unlock: '50%', fc: '40%', phi: '30%' },
-        ])),
+        edgeRate: Object.fromEntries(['EZ', 'HD', 'IN', 'AT'].map(rank => [rank, { unlock: '50%', fc: '40%', phi: '30%' }])),
         dailyTasks: [],
         notice: null,
         calendar: { title: '2026 年 8 月', weekdays: [], weeks: [] },

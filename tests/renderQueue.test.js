@@ -15,9 +15,16 @@ beforeEach(t => {
 
 function pool() {
     return Object.assign(Object.create(Object.getPrototypeOf(rendererPool)), {
-        idle: [], waiters: [], rendering: new Set(), puppeteer: [],
-        shuttingDown: false, closePromise: null, tot: 0,
-        pressureMaxQueued: 0, pressureFailed: 0, pressureTimedOut: 0,
+        idle: [],
+        waiters: [],
+        rendering: new Set(),
+        puppeteer: [],
+        shuttingDown: false,
+        closePromise: null,
+        tot: 0,
+        pressureMaxQueued: 0,
+        pressureFailed: 0,
+        pressureTimedOut: 0,
     })
 }
 
@@ -28,7 +35,10 @@ test('queue refuses excess requests without adding waiters and preserves FIFO', 
     assert.equal(p.waiters.length, MAX_RENDER_QUEUE)
     assert.equal(p.pressureMaxQueued, MAX_RENDER_QUEUE)
     for (let i = 0; i < MAX_RENDER_QUEUE; i++) p.release(i)
-    assert.deepEqual(await Promise.all(waiting), Array.from({ length: MAX_RENDER_QUEUE }, (_, i) => i))
+    assert.deepEqual(
+        await Promise.all(waiting),
+        Array.from({ length: MAX_RENDER_QUEUE }, (_, i) => i),
+    )
     assert.equal(p.waiters.length, 0)
     p.release(0)
     assert.equal(await p.acquire(10000), 0)
@@ -71,10 +81,15 @@ test('pool slot is released after a screenshot with a hanging page close', { tim
     renderer.browser = {
         newPage: async () => ({ isClosed: () => false, close: () => new Promise(() => {}) }),
         process: () => child,
-        close: async () => { child.exitCode = 0 },
+        close: async () => {
+            child.exitCode = 0
+        },
     }
     renderer.dealTpl = () => 'test.html'
-    renderer.renderPage = async () => { renderer.renderNum++; return [Buffer.from('image')] }
+    renderer.renderPage = async () => {
+        renderer.renderNum++
+        return [Buffer.from('image')]
+    }
     p.puppeteer = [renderer]
     p.idle = [0]
     try {
@@ -116,7 +131,9 @@ test('shared settings expose the queue limit and settings form validates and sav
     const values = { ...shared.defaults }
     const panel = createSettingsForm({
         getUserCfg: (_name, key) => values[key],
-        modify: (_name, key, value) => { values[key] = value },
+        modify: (_name, key, value) => {
+            values[key] = value
+        },
     })
     panel.setConfigData({ renderQueueLimit: 7 })
     assert.equal(values.renderQueueLimit, 7)

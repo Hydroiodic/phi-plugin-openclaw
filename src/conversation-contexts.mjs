@@ -26,9 +26,12 @@ export class ConversationContexts {
     const key = this.key(instance.e, isGroup)
     this.remove(key)
     const entry = { instance, name, isGroup, timer: /** @type {NodeJS.Timeout | null} */ (null) }
-    entry.timer = setTimeout(() => {
-      if (this.entries.get(key) === entry) this.remove(key)
-    }, Math.max(1, timeout * 1000))
+    entry.timer = setTimeout(
+      () => {
+        if (this.entries.get(key) === entry) this.remove(key)
+      },
+      Math.max(1, timeout * 1000),
+    )
     entry.timer.unref()
     this.entries.set(key, entry)
     return true
@@ -38,7 +41,7 @@ export class ConversationContexts {
   finish(instance, name, isGroup = false) {
     const key = this.key(instance.e, isGroup)
     const current = this.entries.get(key)
-    if (!current || current.instance !== instance || name && current.name !== name) return false
+    if (!current || current.instance !== instance || (name && current.name !== name)) return false
     this.remove(key)
     return true
   }

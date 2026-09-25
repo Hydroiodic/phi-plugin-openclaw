@@ -3,7 +3,7 @@
  * 每首曲目的名字只显示一部分，剩下的部分隐藏
  * 通过给出的字母猜出相应的歌曲
  * 玩家可以翻开所有曲目响应的字母获得更多线索
-*/
+ */
 import { pinyin } from 'pinyin-pro'
 
 import Config from '../../components/Config.js'
@@ -21,18 +21,18 @@ import {
     encryptSongName,
     getRevealCandidates,
     hasHiddenCharacters,
-    revealCharacter
+    revealCharacter,
 } from './letterGameUtils.js'
 
 /**
  * @type {idString[]}
  */
-let songIdList = getInfo.idList || []
+const songIdList = getInfo.idList || []
 /**
  * 存储每首歌曲被抽取的权重
  * @type {Record<string, Record<idString, number>>}
  */
-let songweights = {}
+const songweights = {}
 
 /** @type {Record<string, NodeJS.Timeout>} */
 const songweightCleanupTimers = {}
@@ -62,23 +62,13 @@ function cleanupGameState(groupId, gameList) {
  * @typedef {{ansList: string[], winnerlist: string[]}} LetterGameResult
  */
 
-// let gamelist = {}//存储标准答案曲名
-// let blurlist = {}//存储模糊后的曲名
-// let alphalist = {}//存储翻开的字母
-// let winnerlist = {} //存储猜对者的群名称
-// let lastGuessedTime = {} //存储群聊猜字母全局冷却时间
-// let lastRevealedTime = {} //存储群聊翻字母全局冷却时间
-// let lastTipTime = {} //存储群聊提示全局冷却时间
-// let gameSelectList = {} //群聊游戏选择的游戏范围
-
-
 class letterGameDataObject {
     /**
      * 单个群聊开字母游戏数据对象
      * @param {number} letterNum 曲目数量
      */
     constructor(letterNum = 8) {
-        /** 
+        /**
          * 曲目数量
          * @type {number}
          */
@@ -131,7 +121,6 @@ class letterGameDataObject {
     }
 }
 
-
 /**@type {Record<string, letterGameDataObject>} */
 const letterGameData = {}
 
@@ -139,8 +128,7 @@ const letterGameData = {}
  * 存储群聊游戏计时器
  * @type {Object.<string, {startTime: number, newTime: number}>}
  */
-let timeCount = {}
-
+const timeCount = {}
 
 /**
  * @import {GameList} from '../guessGame.js'
@@ -156,29 +144,32 @@ export default class guessLetter {
         const { group_id } = e // 使用对象解构提取group_id
 
         if (letterGameData[group_id]) {
-            send.reply(e, `喂喂喂，已经有群友发起出字母猜歌啦，不要再重复发起了，赶快输入'/第X个XXXX'来猜曲名或者'/出X'来揭开字母吧！结束请发 /${Config.getUserCfg('config', 'cmdhead')} ans 嗷！`, true)
+            send.reply(
+                e,
+                `喂喂喂，已经有群友发起出字母猜歌啦，不要再重复发起了，赶快输入'/第X个XXXX'来猜曲名或者'/出X'来揭开字母吧！结束请发 /${Config.getUserCfg('config', 'cmdhead')} ans 嗷！`,
+                true,
+            )
             return true
         }
 
         let { msg } = e // 提取消息
-        msg = msg.replace(/[#/](.*?)(ltr|letter|开字母)(\s*)/, "")
+        msg = msg.replace(/[#/](.*?)(ltr|letter|开字母)(\s*)/, '')
 
         /**
          * 其他游戏的曲目
          * @type {idString[]}
          */
         let allSelectSongId = []
-        // console.info(getInfo.DLC_Info)
 
         // 初始化游戏数据对象
-        letterGameData[group_id] = new letterGameDataObject(Config.getUserCfg('config', 'LetterNum'));
+        letterGameData[group_id] = new letterGameDataObject(Config.getUserCfg('config', 'LetterNum'))
 
-        const currentGame = letterGameData[group_id];
+        const currentGame = letterGameData[group_id]
 
-        for (let i in getInfo.DLC_Info) {
+        for (const i in getInfo.DLC_Info) {
             if (msg.includes(i)) {
                 letterGameData[group_id].gameSelectList.push(i)
-                allSelectSongId = allSelectSongId.concat(/**@type {idString[]} */(getInfo.DLC_Info[i]))
+                allSelectSongId = allSelectSongId.concat(/**@type {idString[]} */ (getInfo.DLC_Info[i]))
             }
         }
 
@@ -188,11 +179,10 @@ export default class guessLetter {
         }
 
         if (allSelectSongId.length < Config.getUserCfg('config', 'LetterNum')) {
-            send.reply(e, "曲库中曲目的数量小于开字母的条数哦！更改曲库后需要重启哦！")
+            send.reply(e, '曲库中曲目的数量小于开字母的条数哦！更改曲库后需要重启哦！')
             cleanupGameState(group_id, gameList)
             return true
         }
-
 
         if (!songweights[group_id]) {
             songweights[group_id] = {}
@@ -209,7 +199,7 @@ export default class guessLetter {
         })
         scheduleSongweightCleanup(group_id)
 
-        let nowTime = Date.now()
+        const nowTime = Date.now()
 
         for (let i = 0; i < currentGame.letterNum; i++) {
             // 根据曲目权重随机返回一首曲目名称
@@ -230,26 +220,28 @@ export default class guessLetter {
             const songs_info = getInfo.info(randId)
 
             /**@type {songString} */
-            const song_name = songs_info?.song ? songs_info.song :/**@type {any} */ (randId)
+            const song_name = songs_info?.song ? songs_info.song : /**@type {any} */ (randId)
 
             currentGame.ansIdList[i] = randId
             currentGame.ansList[i] = song_name
             currentGame.blurlist[i] = encryptSongName(song_name)
-            gameList[group_id] = { gameType: "guessLetter" }
+            gameList[group_id] = { gameType: 'guessLetter' }
             timeCount[group_id] = {
                 startTime: nowTime,
-                newTime: Date.now() + (1000 * Config.getUserCfg('config', 'LetterTimeLength'))
+                newTime: Date.now() + 1000 * Config.getUserCfg('config', 'LetterTimeLength'),
             }
-
         }
 
         // 输出提示信息
-        send.reply(e, `开字母开启成功！回复'/nX. XXXX'命令猜歌，例如：/n1. Reimei;发送'/open X'来揭开字母(不区分大小写，不需要指令头)，如'/open A';发送'/${Config.getUserCfg('config', 'cmdhead')} ans'结束并查看答案哦！`)
+        send.reply(
+            e,
+            `开字母开启成功！回复'/nX. XXXX'命令猜歌，例如：/n1. Reimei;发送'/open X'来揭开字母(不区分大小写，不需要指令头)，如'/open A';发送'/${Config.getUserCfg('config', 'cmdhead')} ans'结束并查看答案哦！`,
+        )
 
         // 延时1s
         await timeout(1 * 1000)
 
-        await tryToSendMd(e, (t) => ['开字母进行中：', getPuzzle(currentGame, t)].join('\n'));
+        await tryToSendMd(e, t => ['开字母进行中：', getPuzzle(currentGame, t)].join('\n'))
 
         /**如果过长时间没人回答则结束 */
         while (timeCount[group_id]?.startTime == nowTime && Date.now() < timeCount[group_id].newTime) {
@@ -264,7 +256,7 @@ export default class guessLetter {
             await send.reply(e, '呜，怎么还没有人答对啊QAQ！只能说答案了喵……')
             const result = finishGame(group_id, gameList)
             if (result) {
-                await tryToSendMd(e, (t) => formatGameover(result, t));
+                await tryToSendMd(e, t => formatGameover(result, t))
             }
 
             return true
@@ -280,14 +272,14 @@ export default class guessLetter {
     static async reveal(e, gameList) {
         const { group_id, msg } = e
 
-        const currentGame = letterGameData[group_id];
+        const currentGame = letterGameData[group_id]
         if (!currentGame) {
             send.reply(e, `现在还没有进行的开字母捏，赶快输入'/${Config.getUserCfg('config', 'cmdhead')} ltr'开始新的一局吧！`, true)
             return false
         }
 
         if (timeCount[group_id]) {
-            timeCount[group_id].newTime = Date.now() + (1000 * Config.getUserCfg('config', 'LetterTimeLength'))
+            timeCount[group_id].newTime = Date.now() + 1000 * Config.getUserCfg('config', 'LetterTimeLength')
         }
 
         const time = Config.getUserCfg('config', 'LetterRevealCd')
@@ -306,7 +298,8 @@ export default class guessLetter {
 
         if (newMsg) {
             const letter = newMsg.toLowerCase()
-            let output = []
+            /** @type {string[]} */
+            const output = []
             let included = false
 
             if (currentGame.alphalist.includes(letter.toUpperCase())) {
@@ -314,14 +307,13 @@ export default class guessLetter {
                 return true
             }
 
-            for (let i in currentGame.ansList) {
+            for (const i in currentGame.ansList) {
                 const songname = currentGame.ansList[i]
                 const blurname = currentGame.blurlist[i]
-                let characters = ''
                 let letters = ''
 
                 if (/[\u4e00-\u9fa5]/.test(songname)) {
-                    characters = [...songname].filter(char => /[\u4e00-\u9fa5]/.test(char)).join("")
+                    const characters = [...songname].filter(char => /[\u4e00-\u9fa5]/.test(char)).join('')
                     letters = pinyin(characters, { pattern: 'first', toneType: 'none', type: 'string' })
                 }
 
@@ -340,7 +332,7 @@ export default class guessLetter {
                 currentGame.blurlist[i] = newBlurname
 
                 if (!hasHiddenCharacters(newBlurname)) {
-                    currentGame.blurlist[i] = null;
+                    currentGame.blurlist[i] = null
                 }
             }
 
@@ -356,13 +348,13 @@ export default class guessLetter {
 
             output.push(opened)
 
-            const isEmpty = allGuessed(currentGame);
+            const isEmpty = allGuessed(currentGame)
             if (!isEmpty) {
-                await tryToSendMd(e, (t) => [...output, '开字母进行中：', getPuzzle(currentGame, t)].join('\n'));
+                await tryToSendMd(e, t => [...output, '开字母进行中：', getPuzzle(currentGame, t)].join('\n'))
             } else {
                 const result = finishGame(group_id, gameList)
                 if (result) {
-                    await tryToSendMd(e, (t) => ['所有字母已翻开，答案如下：', ...output, formatGameover(result, t)].join('\n'));
+                    await tryToSendMd(e, t => ['所有字母已翻开，答案如下：', ...output, formatGameover(result, t)].join('\n'))
                 }
             }
 
@@ -377,8 +369,8 @@ export default class guessLetter {
      * @param {GameList} gameList 进行中的游戏列表
      */
     static async guess(e, gameList) {
-        const { group_id, msg, user_id, sender } = e //使用对象解构提取group_id,msg,user_id和sender
-        const currentGame = letterGameData[group_id];
+        const { group_id, msg, sender } = e
+        const currentGame = letterGameData[group_id]
         //必须已经开始了一局
         if (!currentGame) {
             /**未进行游戏放过命令 */
@@ -386,7 +378,7 @@ export default class guessLetter {
         }
 
         if (timeCount[group_id]) {
-            timeCount[group_id].newTime = Date.now() + (1000 * Config.getUserCfg('config', 'LetterTimeLength'))
+            timeCount[group_id].newTime = Date.now() + 1000 * Config.getUserCfg('config', 'LetterTimeLength')
         }
 
         const time = Config.getUserCfg('config', 'LetterGuessCd')
@@ -404,7 +396,7 @@ export default class guessLetter {
         currentGame.lastGuessedTime = currentTime
 
         const opened = `\n所有翻开的字母[ ${currentGame.alphalist.join(' ')}]\n`
-        const regex = /^[#/]\s*[第n]\s*(\d+|[一二三四五六七八九十百]+)\s*[个首\.]?(.*)$/
+        const regex = /^[#/]\s*[第n]\s*(\d+|[一二三四五六七八九十百]+)\s*[个首.]?(.*)$/
         /**
          * [0] 完整匹配
          * [1] Num
@@ -424,13 +416,7 @@ export default class guessLetter {
          * @type {string[]}
          */
         const output = []
-        let num = 0
-
-        if (isNaN(result[1])) {
-            num = NumberToArabic(result[1])
-        } else {
-            num = Number(result[1])
-        }
+        let num = isNaN(result[1]) ? NumberToArabic(result[1]) : Number(result[1])
 
         const content = result[2]
 
@@ -439,7 +425,7 @@ export default class guessLetter {
             return true
         }
 
-        --num;
+        --num
 
         const ids = getInfo.fuzzysongsnick(content, 0.95)
         const standard_id = currentGame.ansIdList[num] // 标准答案
@@ -463,17 +449,19 @@ export default class guessLetter {
 
                 /**发送曲绘 */
                 const info = getInfo.info(standard_id)
-                if (info?.illustration) { //如果有曲绘文件
+                if (info?.illustration) {
+                    //如果有曲绘文件
                     switch (Config.getUserCfg('config', 'LetterIllustration')) {
-                        case "水印版": {
+                        case '水印版': {
                             send.reply(e, await picmodle.ill(e, { illustration: info.illustration, illustrator: info.illustrator }))
-                            break;
+                            break
                         }
-                        case "原版": {
+                        case '原版': {
                             send.reply(e, getPic.getIll(standard_id))
+                            break
                         }
                         default:
-                            break;
+                            break
                     }
                 }
 
@@ -483,13 +471,13 @@ export default class guessLetter {
                 if (!isEmpty) {
                     output.push('开字母进行中：')
                     output.push(opened)
-                    await tryToSendMd(e, (t) => [...output, getPuzzle(currentGame, t)].join('\n'));
+                    await tryToSendMd(e, t => [...output, getPuzzle(currentGame, t)].join('\n'))
                     return true
                 } else {
-                    output.push('所有曲目均已被猜出，答案如下：');
+                    output.push('所有曲目均已被猜出，答案如下：')
                     const result = finishGame(group_id, gameList)
                     if (result) {
-                        await tryToSendMd(e, (t) => [...output, formatGameover(result, t)].join('\n'));
+                        await tryToSendMd(e, t => [...output, formatGameover(result, t)].join('\n'))
                     }
                     return true
                 }
@@ -497,13 +485,20 @@ export default class guessLetter {
         }
 
         if (ids[1]) {
-            send.reply(e, `第${num + 1}首不是[${content}]www，要不再想想捏？如果实在不会可以悄悄发个[/${Config.getUserCfg('config', 'cmdhead')} tip]哦≧ ﹏ ≦`, true)
+            send.reply(
+                e,
+                `第${num + 1}首不是[${content}]www，要不再想想捏？如果实在不会可以悄悄发个[/${Config.getUserCfg('config', 'cmdhead')} tip]哦≧ ﹏ ≦`,
+                true,
+            )
         } else {
-            send.reply(e, `第${num + 1}首不是[${getInfo.info(ids[0])?.song ?? ids[0]}]www，要不再想想捏？如果实在不会可以悄悄发个[/${Config.getUserCfg('config', 'cmdhead')} tip]哦≧ ﹏ ≦`, true)
+            send.reply(
+                e,
+                `第${num + 1}首不是[${getInfo.info(ids[0])?.song ?? ids[0]}]www，要不再想想捏？如果实在不会可以悄悄发个[/${Config.getUserCfg('config', 'cmdhead')} tip]哦≧ ﹏ ≦`,
+                true,
+            )
         }
 
         return false
-
     }
 
     /**
@@ -512,9 +507,9 @@ export default class guessLetter {
      * @param {GameList} gameList 进行中的游戏列表
      */
     static async ans(e, gameList) {
-        const { group_id } = e//使用对象解构提取group_id
+        const { group_id } = e //使用对象解构提取group_id
 
-        const currentGame = letterGameData[group_id];
+        const currentGame = letterGameData[group_id]
         //必须已经开始了一局
         if (!currentGame) {
             /**未进行游戏放过命令 */
@@ -522,11 +517,10 @@ export default class guessLetter {
             return false
         }
 
-
         await send.reply(e, '好吧好吧，既然你执着要放弃，那就公布答案好啦。', true)
         const result = finishGame(group_id, gameList)
         if (result) {
-            await tryToSendMd(e, (t) => formatGameover(result, t));
+            await tryToSendMd(e, t => formatGameover(result, t))
         }
         return true
     }
@@ -539,8 +533,7 @@ export default class guessLetter {
     static async getTip(e, gameList) {
         const { group_id } = e
 
-
-        const currentGame = letterGameData[group_id];
+        const currentGame = letterGameData[group_id]
 
         if (!currentGame) {
             send.reply(e, `现在还没有进行的开字母捏，赶快输入'/${Config.getUserCfg('config', 'cmdhead')} letter'开始新的一局吧！`, true)
@@ -548,7 +541,7 @@ export default class guessLetter {
         }
 
         if (timeCount[group_id]) {
-            timeCount[group_id].newTime = Date.now() + (1000 * Config.getUserCfg('config', 'LetterTimeLength'))
+            timeCount[group_id].newTime = Date.now() + 1000 * Config.getUserCfg('config', 'LetterTimeLength')
         }
 
         const time = Config.getUserCfg('config', 'LetterTipCd')
@@ -578,10 +571,10 @@ export default class guessLetter {
 
         currentGame.ansList.forEach((value, index) => {
             const songname = value
-            let blurname = currentGame.blurlist[index]
+            const blurname = currentGame.blurlist[index]
 
             if (!blurname) {
-                return;
+                return
             }
 
             const newBlurname = revealCharacter(songname, blurname, randsymbol)
@@ -608,12 +601,12 @@ export default class guessLetter {
         const isEmpty = allGuessed(currentGame)
         if (!isEmpty) {
             output.push('开字母进行中：')
-            await tryToSendMd(e, (t) => [...output, getPuzzle(currentGame, t)].join('\n'));
+            await tryToSendMd(e, t => [...output, getPuzzle(currentGame, t)].join('\n'))
         } else {
-            output.unshift('所有字母已翻开，答案如下：');
+            output.unshift('所有字母已翻开，答案如下：')
             const result = finishGame(group_id, gameList)
             if (result) {
-                await tryToSendMd(e, (t) => [...output, formatGameover(result, t)].join('\n'));
+                await tryToSendMd(e, t => [...output, formatGameover(result, t)].join('\n'))
             }
         }
         return true
@@ -626,7 +619,7 @@ export default class guessLetter {
     static async mix(e) {
         const { group_id } = e
 
-        const currentGame = letterGameData[group_id];
+        const currentGame = letterGameData[group_id]
 
         if (currentGame) {
             await send.reply(e, `当前有正在进行的游戏，请等待游戏结束再执行该指令`, true)
@@ -641,12 +634,11 @@ export default class guessLetter {
     }
 }
 
-
 /**
  * 定义随机抽取曲目的函数
- * @param {any} e 
- * @param {idString[]} allSelectSongId 
- * @returns 
+ * @param {any} e
+ * @param {idString[]} allSelectSongId
+ * @returns
  */
 function getRandomSong(e, allSelectSongId) {
     //对象解构提取groupid
@@ -677,42 +669,45 @@ function getRandomSong(e, allSelectSongId) {
 }
 
 /**
- * 
- * @param {number} ms 
- * @returns 
+ *
+ * @param {number} ms
+ * @returns
  */
 function timeout(ms) {
     return new Promise((resolve, reject) => {
-        setTimeout(resolve, ms, 'done');
-    });
+        setTimeout(resolve, ms, 'done')
+    })
 }
 
 /**
  * 将中文数字转为阿拉伯数字
- * @param {string} digit 
- * @returns 
+ * @param {string} digit
+ * @returns
  */
 function NumberToArabic(digit) {
     //只处理到千，再高也根本用不上的www(十位数都用不上的说)
     const numberMap = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 }
     const unitMap = { 十: 10, 百: 100, 千: 1000 }
 
-    const total = digit.split('').reduce((acc, character) => {
-        // @ts-ignore
-        const { [character]: numberValue } = numberMap
-        // @ts-ignore
-        const { [character]: unitValue } = unitMap
+    const total = digit.split('').reduce(
+        (acc, character) => {
+            // @ts-ignore
+            const { [character]: numberValue } = numberMap
+            // @ts-ignore
+            const { [character]: unitValue } = unitMap
 
-        if (numberValue !== undefined) {
-            acc.currentUnit = numberValue
-        } else if (unitValue !== undefined) {
-            acc.currentUnit *= unitValue
-            acc.total += acc.currentUnit
-            acc.currentUnit = 0
-        }
+            if (numberValue !== undefined) {
+                acc.currentUnit = numberValue
+            } else if (unitValue !== undefined) {
+                acc.currentUnit *= unitValue
+                acc.total += acc.currentUnit
+                acc.currentUnit = 0
+            }
 
-        return acc
-    }, { total: 0, currentUnit: 1 })
+            return acc
+        },
+        { total: 0, currentUnit: 1 },
+    )
 
     return total.total + total.currentUnit
 }
@@ -729,7 +724,7 @@ function finishGame(group_id, gameList) {
 
     const result = {
         ansList: [...currentGame.ansList],
-        winnerlist: [...currentGame.winnerlist]
+        winnerlist: [...currentGame.winnerlist],
     }
 
     cleanupGameState(group_id, gameList)
@@ -748,35 +743,35 @@ function formatGameover(result, letterMarkdown) {
         const correct_name = value
         const winner_card = result.winnerlist[index]
         output.push(`${index + 1}. ${correct_name}` + (winner_card ? ` @${winner_card}` : ''))
-    });
+    })
     if (letterMarkdown) {
         const cmdhead = Config.getUserCfg('config', 'cmdhead')
-        output.push(`\n***\n\n` +
-            // '| - | - | - |\n' +
-            `| ${cmdInpt(`/${cmdhead} letter `, '再来一局')} | ${cmdInpt(`/${cmdhead} guess`, '猜个曲绘')} | ${cmdInpt(`/${cmdhead} tipgame`, '提示猜歌')} |` +
-            '\n| :---: | :---: | :---: |\n');
+        output.push(
+            `\n***\n\n` +
+                // '| - | - | - |\n' +
+                `| ${cmdInpt(`/${cmdhead} letter `, '再来一局')} | ${cmdInpt(`/${cmdhead} guess`, '猜个曲绘')} | ${cmdInpt(`/${cmdhead} tipgame`, '提示猜歌')} |` +
+                '\n| :---: | :---: | :---: |\n',
+        )
     }
 
-    return output.join('\n');
+    return output.join('\n')
 }
 
 /**
  * 生成谜面
- * @param {letterGameDataObject} currentGame 
+ * @param {letterGameDataObject} currentGame
  * @param {boolean} letterMarkdown 是否使用markdown格式的字母谜面
  */
 function getPuzzle(currentGame, letterMarkdown) {
     /**@type {string[]} */
-    const output = [];
-    letterMarkdown && output.push('***');
-    output.push(`曲库范围：${currentGame.gameSelectList.join('、')}\n`);
+    const output = []
+    letterMarkdown && output.push('***')
+    output.push(`曲库范围：${currentGame.gameSelectList.join('、')}\n`)
     currentGame.ansList.forEach((song, index) => {
         if (currentGame.blurlist[index]) {
             const visibleBlurName = currentGame.blurlist[index].replaceAll(LETTER_HIDDEN_CHAR, '*')
-            const str = letterMarkdown
-                ? cmdInpt(`/n${index + 1}. `, visibleBlurName.replace(/\*/g, '\\*'))
-                : visibleBlurName
-            output.push(`${index + 1}. ${str}`);
+            const str = letterMarkdown ? cmdInpt(`/n${index + 1}. `, visibleBlurName.replace(/\*/g, '\\*')) : visibleBlurName
+            output.push(`${index + 1}. ${str}`)
         } else {
             output.push(`${index + 1}. ${song} ✅`)
             if (currentGame.winnerlist[index]) {
@@ -786,13 +781,15 @@ function getPuzzle(currentGame, letterMarkdown) {
     })
     if (letterMarkdown) {
         const cmdhead = Config.getUserCfg('config', 'cmdhead')
-        output.push(`\n***\n` +
-            // '| - | - | - |\n' +
-            `| ${cmdInpt(`/开 `, '开个字母')} | ${cmdInpt(`/${cmdhead} tip`, '看看提示')} | ${cmdInpt(`/${cmdhead} ans`, '公布答案')} |` +
-            '\n| :---: | :---: | :---: |\n');
+        output.push(
+            `\n***\n` +
+                // '| - | - | - |\n' +
+                `| ${cmdInpt(`/开 `, '开个字母')} | ${cmdInpt(`/${cmdhead} tip`, '看看提示')} | ${cmdInpt(`/${cmdhead} ans`, '公布答案')} |` +
+                '\n| :---: | :---: | :---: |\n',
+        )
         output.push('\n*点击蓝色字体可以快速填写指令哦~')
     }
-    return output.join('\n');
+    return output.join('\n')
 }
 
 /**
@@ -814,7 +811,7 @@ async function tryToSendMd(e, fnc) {
     const letterMarkdown = Config.getUserCfg('config', 'LetterMarkdown')
     if (!letterMarkdown || ((e?.bot || e?.platform) && !isOfficialBot(e))) {
         await send.reply(e, fnc(false))
-        return;
+        return
     }
 
     let sent

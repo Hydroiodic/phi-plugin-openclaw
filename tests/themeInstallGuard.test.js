@@ -21,7 +21,9 @@ import { themesDir } from '../model/theme/paths.js'
 /** @returns {{promise:Promise<void>,resolve:()=>void}} */
 function deferred() {
     /** @type {() => void} */ let resolve = () => {}
-    const promise = new Promise(resolvePromise => { resolve = () => resolvePromise(undefined) })
+    const promise = new Promise(resolvePromise => {
+        resolve = () => resolvePromise(undefined)
+    })
     return { promise, resolve }
 }
 
@@ -30,12 +32,15 @@ async function makeInstalledTheme(root, themeId, bytes) {
     const directory = path.join(root, themeId)
     await fs.mkdir(directory, { recursive: true })
     await fs.writeFile(path.join(directory, 'payload.bin'), Buffer.alloc(bytes))
-    await fs.writeFile(path.join(directory, '.phi-market.json'), JSON.stringify({
-        source: 'phi-theme-marketplace',
-        slug: themeId,
-        version: '1.0.0',
-        sha256: 'a'.repeat(64),
-    }))
+    await fs.writeFile(
+        path.join(directory, '.phi-market.json'),
+        JSON.stringify({
+            source: 'phi-theme-marketplace',
+            slug: themeId,
+            version: '1.0.0',
+            sha256: 'a'.repeat(64),
+        }),
+    )
     return directory
 }
 
@@ -96,10 +101,7 @@ test('persistent fresh-install limits survive a limiter restart', async () => {
         await first.consume('user-a')
         await first.consume('user-a')
         const restarted = new PersistentFreshInstallRateLimiter({ filePath, limit: 2, windowMs: 100, now: () => 1_001 })
-        await assert.rejects(
-            restarted.consume('user-a'),
-            error => /** @type {any} */ (error)?.code === 'theme_install_rate_limited',
-        )
+        await assert.rejects(restarted.consume('user-a'), error => /** @type {any} */ (error)?.code === 'theme_install_rate_limited')
         assert.equal(await restarted.consume('user-b'), true)
     } finally {
         await fs.rm(root, { recursive: true, force: true })
@@ -129,8 +131,14 @@ test('local and offline-cached selections bypass fresh-install limits', async ()
     let onlineCalls = 0
     const service = new ThemeUseService({
         marketEnabled: () => false,
-        getTheme: async () => { onlineCalls++; return /** @type {any} */ ({}) },
-        install: async () => { onlineCalls++; return /** @type {any} */ ({}) },
+        getTheme: async () => {
+            onlineCalls++
+            return /** @type {any} */ ({})
+        },
+        install: async () => {
+            onlineCalls++
+            return /** @type {any} */ ({})
+        },
     })
     try {
         const local = await service.use('local-theme', { requesterId })
@@ -184,12 +192,15 @@ test('fresh downloads are rate-limited after authorization while an exact cache 
 
         await fs.mkdir(cachedTarget, { recursive: true })
         await fs.writeFile(path.join(cachedTarget, 'info.yaml'), `id: ${cachedThemeId}\nname: Cached Theme\n`)
-        await fs.writeFile(path.join(cachedTarget, '.phi-market.json'), JSON.stringify({
-            source: 'phi-theme-marketplace',
-            slug: cachedThemeId,
-            version: '1.0.0',
-            sha256,
-        }))
+        await fs.writeFile(
+            path.join(cachedTarget, '.phi-market.json'),
+            JSON.stringify({
+                source: 'phi-theme-marketplace',
+                slug: cachedThemeId,
+                version: '1.0.0',
+                sha256,
+            }),
+        )
         themeManager.scan()
         const cached = await installLatestMarketTheme(cachedThemeId, { requesterId })
         assert.equal(cached.cached, true)

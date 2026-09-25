@@ -38,10 +38,10 @@ export function resolveBotDownloadAllowed(response, theme) {
     const responseValue = hasResponseValue ? response.botDownloadAllowed : undefined
     const themeValue = hasThemeValue ? theme.botDownloadAllowed : undefined
     if (
-        hasResponseValue && typeof responseValue !== 'boolean'
-        || hasThemeValue && typeof themeValue !== 'boolean'
-        || !hasResponseValue && !hasThemeValue
-        || hasResponseValue && hasThemeValue && responseValue !== themeValue
+        (hasResponseValue && typeof responseValue !== 'boolean') ||
+        (hasThemeValue && typeof themeValue !== 'boolean') ||
+        (!hasResponseValue && !hasThemeValue) ||
+        (hasResponseValue && hasThemeValue && responseValue !== themeValue)
     ) {
         throw new ThemeMarketClientError('theme_store_invalid_response', 502)
     }
@@ -50,10 +50,15 @@ export function resolveBotDownloadAllowed(response, theme) {
 
 /** @param {any} theme @param {boolean} botDownloadAllowed */
 function validateTheme(theme, botDownloadAllowed) {
-    if (!isRecord(theme)
-        || typeof theme.slug !== 'string' || !SLUG_RE.test(theme.slug)
-        || typeof theme.name !== 'string' || !theme.name.trim() || theme.name.length > 100
-        || !['public', 'restricted', 'bot_only'].includes(theme.downloadPolicy)) {
+    if (
+        !isRecord(theme) ||
+        typeof theme.slug !== 'string' ||
+        !SLUG_RE.test(theme.slug) ||
+        typeof theme.name !== 'string' ||
+        !theme.name.trim() ||
+        theme.name.length > 100 ||
+        !['public', 'restricted', 'bot_only'].includes(theme.downloadPolicy)
+    ) {
         throw new ThemeMarketClientError('theme_store_invalid_response', 502)
     }
     return { ...theme, name: theme.name.trim(), botDownloadAllowed }
@@ -64,10 +69,7 @@ export async function getAvailableMarketThemes() {
     if (!isRecord(response) || response.ok !== true || !Array.isArray(response.themes) || response.themes.length > 500) {
         throw new ThemeMarketClientError('theme_store_invalid_response', 502)
     }
-    return response.themes.map((/** @type {any} */ theme) => validateTheme(
-        theme,
-        resolveBotDownloadAllowed(response, theme),
-    ))
+    return response.themes.map((/** @type {any} */ theme) => validateTheme(theme, resolveBotDownloadAllowed(response, theme)))
 }
 
 /** @param {string} themeId */
@@ -96,7 +98,7 @@ function retryDelay(error, attempt) {
         const value = Number.isFinite(seconds) ? seconds * 1000 : date - Date.now()
         if (Number.isFinite(value)) return Math.max(0, Math.min(value, 15_000))
     }
-    return 250 * (2 ** attempt) + Math.floor(Math.random() * 150)
+    return 250 * 2 ** attempt + Math.floor(Math.random() * 150)
 }
 
 /** @param {any} error */
@@ -129,30 +131,30 @@ function validateDownload(value, themeId) {
         throw new ThemeMarketClientError('theme_store_invalid_response', 502)
     }
     if (
-        value?.ok !== true
-        || typeof download?.downloadId !== 'string'
-        || download.downloadId.length < 1
-        || download.downloadId.length > 128
-        || download.themeId !== themeId
-        || typeof download.version !== 'string'
-        || download.version.length < 1
-        || download.version.length > 64
-        || typeof download.fileName !== 'string'
-        || download.fileName.length < 1
-        || download.fileName.length > 255
-        || /[\\/\u0000-\u001f\u007f]/.test(download.fileName)
-        || download.contentType !== 'application/zip'
-        || !Number.isSafeInteger(download.size)
-        || download.size <= 0
-        || download.size > MAX_ARCHIVE_BYTES
-        || !/^[a-f0-9]{64}$/.test(download.sha256)
-        || !Number.isFinite(Date.parse(download.expiresAt))
-        || Date.parse(download.expiresAt) <= Date.now()
-        || url.protocol !== 'https:'
-        || url.origin !== configuredDownloadOrigin()
-        || url.username
-        || url.password
-        || url.hash
+        value?.ok !== true ||
+        typeof download?.downloadId !== 'string' ||
+        download.downloadId.length < 1 ||
+        download.downloadId.length > 128 ||
+        download.themeId !== themeId ||
+        typeof download.version !== 'string' ||
+        download.version.length < 1 ||
+        download.version.length > 64 ||
+        typeof download.fileName !== 'string' ||
+        download.fileName.length < 1 ||
+        download.fileName.length > 255 ||
+        /[\\/\u0000-\u001f\u007f]/.test(download.fileName) ||
+        download.contentType !== 'application/zip' ||
+        !Number.isSafeInteger(download.size) ||
+        download.size <= 0 ||
+        download.size > MAX_ARCHIVE_BYTES ||
+        !/^[a-f0-9]{64}$/.test(download.sha256) ||
+        !Number.isFinite(Date.parse(download.expiresAt)) ||
+        Date.parse(download.expiresAt) <= Date.now() ||
+        url.protocol !== 'https:' ||
+        url.origin !== configuredDownloadOrigin() ||
+        url.username ||
+        url.password ||
+        url.hash
     ) {
         throw new ThemeMarketClientError('theme_store_invalid_response', 502)
     }
@@ -280,13 +282,15 @@ export async function downloadThemeArchive(download, targetPath, options = {}) {
             await fs.promises.rm(targetPath, { force: true }).catch(() => {})
             const caught = /** @type {any} */ (error)
             const status = Number(caught?.status || 0)
-            const retryable = !(error instanceof ThemeMarketClientError)
-                || error.code === 'theme_download_unavailable' && ([408, 425, 429].includes(status) || status >= 500)
+            const retryable =
+                !(error instanceof ThemeMarketClientError) ||
+                (error.code === 'theme_download_unavailable' && ([408, 425, 429].includes(status) || status >= 500))
             if (!retryable || attempt + 1 >= DOWNLOAD_ATTEMPTS) throw error
             const rawRetryAfter = caught?.retryAfter
-            const delay = rawRetryAfter && Number.isFinite(Number(rawRetryAfter))
-                ? Math.min(Number(rawRetryAfter) * 1000, 15_000)
-                : 250 * (2 ** attempt) + Math.floor(Math.random() * 150)
+            const delay =
+                rawRetryAfter && Number.isFinite(Number(rawRetryAfter))
+                    ? Math.min(Number(rawRetryAfter) * 1000, 15_000)
+                    : 250 * 2 ** attempt + Math.floor(Math.random() * 150)
             await sleep(delay)
         }
     }

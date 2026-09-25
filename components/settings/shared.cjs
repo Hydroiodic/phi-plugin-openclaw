@@ -34,8 +34,7 @@ const fields = new Set(editable.map(item => item.key))
 function readGeneratedSettings() {
     const file = path.join(__dirname, '../../config/config/config.yaml')
     const local = fs.existsSync(file) ? YAML.parse(fs.readFileSync(file, 'utf8')) : {}
-    return Object.fromEntries(definitions.filter(item => item.generated)
-        .map(item => [item.key, local?.[item.key] ?? defaults[item.key]]))
+    return Object.fromEntries(definitions.filter(item => item.generated).map(item => [item.key, local?.[item.key] ?? defaults[item.key]]))
 }
 
 /** @param {Record<string, any>} input */
@@ -54,7 +53,9 @@ function validateSettings(input) {
     for (const item of editable) {
         const value = result[item.key]
         if (value === undefined) continue
-        const invalid = () => { throw new TypeError(`配置项「${item.label}」的值无效`) }
+        const invalid = () => {
+            throw new TypeError(`配置项「${item.label}」的值无效`)
+        }
         if (item.type === 'number') {
             if (typeof value !== 'number' || !Number.isFinite(value)) invalid()
             if (item.format === 'integer' && !Number.isSafeInteger(value)) invalid()
@@ -69,7 +70,11 @@ function validateSettings(input) {
         }
         if (item.format === 'https-origin') {
             let url
-            try { url = new URL(value) } catch { invalid() }
+            try {
+                url = new URL(value)
+            } catch {
+                invalid()
+            }
             if (!url || url.protocol !== 'https:' || url.origin !== value) invalid()
         }
     }

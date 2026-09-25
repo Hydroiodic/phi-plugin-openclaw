@@ -4,12 +4,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import test from 'node:test'
 import JSZip from 'jszip'
-import {
-    installMarketArchive,
-    marketWorkPath,
-    recoverAllMarketInstalls,
-    recoverMarketInstall,
-} from '../model/theme/installer.js'
+import { installMarketArchive, marketWorkPath, recoverAllMarketInstalls, recoverMarketInstall } from '../model/theme/installer.js'
 import { cleanStaleMarketWork } from '../model/theme/recovery.js'
 import { themesDir } from '../model/theme/paths.js'
 import { addThemesToBackup, restoreThemesFromBackup } from '../model/save/getBackup.js'
@@ -29,13 +24,16 @@ async function writeMarketTheme(directory, themeId, marker) {
     await fs.promises.mkdir(directory, { recursive: true })
     await fs.promises.writeFile(path.join(directory, 'info.yaml'), `id: ${themeId}\nname: ${marker}\n`)
     await fs.promises.writeFile(path.join(directory, 'marker.txt'), marker)
-    await fs.promises.writeFile(path.join(directory, '.phi-market.json'), `${JSON.stringify({
-        installedAt: new Date().toISOString(),
-        sha256: SHA256,
-        slug: themeId,
-        source: 'phi-theme-marketplace',
-        version: '1.0.0',
-    })}\n`)
+    await fs.promises.writeFile(
+        path.join(directory, '.phi-market.json'),
+        `${JSON.stringify({
+            installedAt: new Date().toISOString(),
+            sha256: SHA256,
+            slug: themeId,
+            source: 'phi-theme-marketplace',
+            version: '1.0.0',
+        })}\n`,
+    )
 }
 
 /** @param {string} themeId */
@@ -66,8 +64,7 @@ test('market recovery matches the complete slug and keeps similarly prefixed bac
         assert.equal(fs.existsSync(ownBackup), false)
         assert.equal(fs.existsSync(otherBackup), true)
     } finally {
-        await Promise.all([target, otherTarget, ownBackup, otherBackup].map(item =>
-            fs.promises.rm(item, { recursive: true, force: true })))
+        await Promise.all([target, otherTarget, ownBackup, otherBackup].map(item => fs.promises.rm(item, { recursive: true, force: true })))
     }
 })
 
@@ -86,8 +83,7 @@ test('market recovery replaces a damaged marketplace target with a healthy backu
         assert.equal(await fs.promises.readFile(path.join(target, 'marker.txt'), 'utf8'), 'healthy-backup')
         assert.equal(fs.existsSync(backup), false)
     } finally {
-        await Promise.all([target, backup].map(item =>
-            fs.promises.rm(item, { recursive: true, force: true })))
+        await Promise.all([target, backup].map(item => fs.promises.rm(item, { recursive: true, force: true })))
     }
 })
 
@@ -98,11 +94,13 @@ test('startup recovery discovers interrupted installs without another install re
     try {
         await writeMarketTheme(backup, themeId, 'startup-backup')
         const failures = await recoverAllMarketInstalls()
-        assert.equal(failures.some(item => item.themeId === themeId), false)
+        assert.equal(
+            failures.some(item => item.themeId === themeId),
+            false,
+        )
         assert.equal(await fs.promises.readFile(path.join(target, 'marker.txt'), 'utf8'), 'startup-backup')
     } finally {
-        await Promise.all([target, backup].map(item =>
-            fs.promises.rm(item, { recursive: true, force: true })))
+        await Promise.all([target, backup].map(item => fs.promises.rm(item, { recursive: true, force: true })))
     }
 })
 
@@ -165,29 +163,33 @@ test('theme backup includes installed themes and restore preserves an existing t
     }
 })
 
-test('a POSIX theme backup streams and restores locally valid file names', {
-    skip: process.platform === 'win32',
-}, async () => {
-    const themeId = `portable${Date.now()}${crypto.randomBytes(2).toString('hex')}`
-    const target = path.join(themesDir, themeId)
-    try {
-        await fs.promises.mkdir(target, { recursive: true })
-        await fs.promises.writeFile(path.join(target, 'info.yaml'), `id: ${themeId}\nname: Portable\n`)
-        for (const fileName of ['palette:night.css', 'trailing.', 'CON.asset']) {
-            await fs.promises.writeFile(path.join(target, fileName), fileName)
-        }
+test(
+    'a POSIX theme backup streams and restores locally valid file names',
+    {
+        skip: process.platform === 'win32',
+    },
+    async () => {
+        const themeId = `portable${Date.now()}${crypto.randomBytes(2).toString('hex')}`
+        const target = path.join(themesDir, themeId)
+        try {
+            await fs.promises.mkdir(target, { recursive: true })
+            await fs.promises.writeFile(path.join(target, 'info.yaml'), `id: ${themeId}\nname: Portable\n`)
+            for (const fileName of ['palette:night.css', 'trailing.', 'CON.asset']) {
+                await fs.promises.writeFile(path.join(target, fileName), fileName)
+            }
 
-        const backup = new JSZip()
-        addThemesToBackup(backup)
-        const bytes = await backup.generateAsync({ type: 'nodebuffer', streamFiles: true })
-        await fs.promises.rm(target, { recursive: true, force: true })
-        const loaded = await JSZip.loadAsync(bytes)
-        const result = await restoreThemesFromBackup(loaded)
-        assert.ok(result.restored >= 1)
-        for (const fileName of ['palette:night.css', 'trailing.', 'CON.asset']) {
-            assert.equal(await fs.promises.readFile(path.join(target, fileName), 'utf8'), fileName)
+            const backup = new JSZip()
+            addThemesToBackup(backup)
+            const bytes = await backup.generateAsync({ type: 'nodebuffer', streamFiles: true })
+            await fs.promises.rm(target, { recursive: true, force: true })
+            const loaded = await JSZip.loadAsync(bytes)
+            const result = await restoreThemesFromBackup(loaded)
+            assert.ok(result.restored >= 1)
+            for (const fileName of ['palette:night.css', 'trailing.', 'CON.asset']) {
+                assert.equal(await fs.promises.readFile(path.join(target, fileName), 'utf8'), fileName)
+            }
+        } finally {
+            await fs.promises.rm(target, { recursive: true, force: true })
         }
-    } finally {
-        await fs.promises.rm(target, { recursive: true, force: true })
-    }
-})
+    },
+)

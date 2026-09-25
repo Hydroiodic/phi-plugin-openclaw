@@ -3,8 +3,8 @@ import Config from '../../components/Config.js'
 import logger from '../../components/Logger.js'
 import getInfo from '../../model/game/getInfo.js'
 import send from '../../model/render/send.js'
-import picmodle from "../../model/render/picmodle.js";
-import SongsInfo from '../../model/game/SongsInfo.js'
+import picmodle from '../../model/render/picmodle.js'
+/** @import SongsInfo from '../../model/game/SongsInfo.js' */
 import fCompute from '../../model/game/fCompute.js'
 import getPic from '../../model/render/getPic.js'
 
@@ -13,7 +13,7 @@ let songIdList = getInfo.illlist || [] //所有有曲绘的曲目列表
 /**
  * @type {Record<string, Record<idString, number>>}
  */
-let songweights = {} //存储每首歌曲被抽取的权重
+const songweights = {} //存储每首歌曲被抽取的权重
 
 /** @type {Record<string, NodeJS.Timeout>} */
 const songweightCleanupTimers = {}
@@ -36,12 +36,11 @@ songIdList = fCompute.randArray(songIdList)
  * 答案列表
  * @type {Record<string, idString>}
  */
-let ansList = {}
+const ansList = {}
 /**
  * @type {Record<string, any>}
  */
 const eList = {}
-
 
 /**
  * @typedef {Object} guessIllData
@@ -75,14 +74,12 @@ const eList = {}
  * @import { botEvent } from '../../components/baseClass.js'
  */
 
-
-
 const ifeCNMap = {
-    'blur': '模糊',
-    'saturate': '饱和',
-    'invert': '反相',
-    'hueRotate': '色相',
-    'lineMode': '线稿'
+    blur: '模糊',
+    saturate: '饱和',
+    invert: '反相',
+    hueRotate: '色相',
+    lineMode: '线稿',
 }
 
 /**
@@ -93,7 +90,7 @@ function groupKey(e) {
     return String(e.group_id || e.chatId || e.user_id)
 }
 
-export default new class guessIll {
+export default new (class guessIll {
     /**
      * 猜曲绘
      * @param {botEvent} e
@@ -102,7 +99,7 @@ export default new class guessIll {
     async start(e, gameList) {
         const group_id = groupKey(e)
         if (ansList[group_id]) {
-            send.reply(e, "请不要重复发起哦！", true)
+            send.reply(e, '请不要重复发起哦！', true)
             return true
         }
         if (songIdList.length == 0) {
@@ -136,21 +133,28 @@ export default new class guessIll {
         }
 
         ansList[group_id] = songs_info.id
-        gameList[group_id] = { gameType: "guessIll" }
+        gameList[group_id] = { gameType: 'guessIll' }
         eList[group_id] = e
 
-        let w_ = fCompute.randInt(100, 140)
-        let h_ = fCompute.randInt(100, 140)
-        let x_ = fCompute.randInt(0, 2048 - w_)
-        let y_ = fCompute.randInt(0, 1080 - h_)
+        const w_ = fCompute.randInt(100, 140)
+        const h_ = fCompute.randInt(100, 140)
+        const x_ = fCompute.randInt(0, 2048 - w_)
+        const y_ = fCompute.randInt(0, 1080 - h_)
 
-        let lvMsg = e.msg.match(/-[lL]\s*(\d+)/)?.[0]?.match(/(\d+)/)?.[0]
+        const lvMsg = e.msg.match(/-[lL]\s*(\d+)/)?.[0]?.match(/(\d+)/)?.[0]
 
         // 根据难度等级生成干扰组合
-        const level = lvMsg ? Number(lvMsg) : fCompute.randFromArray([[0, 2], [1, 5], [2, 2], [3, 1]]);
-        const interference = generateInterference(level);
+        const level = lvMsg
+            ? Number(lvMsg)
+            : fCompute.randFromArray([
+                  [0, 2],
+                  [1, 5],
+                  [2, 2],
+                  [3, 1],
+              ])
+        const interference = generateInterference(level)
 
-        let data = {
+        const data = {
             illustration: getInfo.getill(songs_info.id),
             width: w_,
             height: h_,
@@ -180,12 +184,12 @@ export default new class guessIll {
          * 3: 显示区域位置
          * 4: 干扰减弱(非模糊类干扰减弱)
          */
-        let fnc = [0, 1, 2, 3]
+        const fnc = [0, 1, 2, 3]
 
         /**
          * 返回带有权重的随机干扰操作列表
-         * @param {number[]} fnc 
-         * @param {guessIllData} data 
+         * @param {number[]} fnc
+         * @param {guessIllData} data
          */
         function genRandFncArr(fnc, data) {
             /**
@@ -195,27 +199,28 @@ export default new class guessIll {
             fnc.forEach(f => {
                 switch (f) {
                     case 0:
-                        res.push([0, Math.floor((1 - (data.width * data.height) / (1080 * 2048)) * 100)]);
-                        break;
+                        res.push([0, Math.floor((1 - (data.width * data.height) / (1080 * 2048)) * 100)])
+                        break
                     case 1:
-                        res.push([1, Math.floor((data.blur / 16) * 30)]);
-                        break;
+                        res.push([1, Math.floor((data.blur / 16) * 30)])
+                        break
                     case 2:
-                        res.push([2, Math.floor(remain_info.length / 6 * 50)]);
-                        break;
+                        res.push([2, Math.floor((remain_info.length / 6) * 50)])
+                        break
                     case 3:
-                        res.push([3, fCompute.randInt(10, 50)]);
-                        break;
-                    case 4:
+                        res.push([3, fCompute.randInt(10, 50)])
+                        break
+                    case 4: {
                         let interferenceCount = 0
                         if (data.saturate !== 1) interferenceCount += 15
                         if (data.invert) interferenceCount += 5
                         if (data.hueRotate !== 0) interferenceCount += 20
                         if (data.lineMode) interferenceCount += 5
-                        res.push([4, interferenceCount]);
+                        res.push([4, interferenceCount])
+                    }
                 }
             })
-            return res;
+            return res
         }
 
         // 如果初始没有模糊干扰，移除类型1
@@ -228,21 +233,21 @@ export default new class guessIll {
         }
         logger.info(data)
 
-        send.reply(e, 
-            [`下面开始进行猜曲绘哦！回答可以直接发送哦！每过${Config.getUserCfg('config', 'GuessTipCd')}秒后将会给出进一步提示。`,
-            `发送 /${Config.getUserCfg('config', 'cmdhead')} ans 结束游戏`,
-            `本局难度：${level}，当前干扰类型：${data.chosenInterferences.length ? data.chosenInterferences.join('、') : '无干扰'}`].join('\n')
+        send.reply(
+            e,
+            [
+                `下面开始进行猜曲绘哦！回答可以直接发送哦！每过${Config.getUserCfg('config', 'GuessTipCd')}秒后将会给出进一步提示。`,
+                `发送 /${Config.getUserCfg('config', 'cmdhead')} ans 结束游戏`,
+                `本局难度：${level}，当前干扰类型：${data.chosenInterferences.length ? data.chosenInterferences.join('、') : '无干扰'}`,
+            ].join('\n'),
         )
         if (Config.getUserCfg('config', 'GuessTipRecall'))
             await send.reply(e, await picmodle.guess(e, data), false, { recallMsg: Config.getUserCfg('config', 'GuessTipCd') })
-        else
-            await send.reply(e, await picmodle.guess(e, data))
+        else await send.reply(e, await picmodle.guess(e, data))
 
         /**单局时间不超过4分半 */
         const time = Config.getUserCfg('config', 'GuessTipCd')
         for (let i = 0; i < Math.min(270 / time, 30); ++i) {
-
-
             for (let j = 0; j < time; ++j) {
                 await common.sleep(1000)
 
@@ -257,9 +262,8 @@ export default new class guessIll {
                     return true
                 }
             }
-            let remsg = [] //回复内容
             let tipmsg = '' //这次干了什么
-            const select = fCompute.randFromArray(genRandFncArr(fnc, data));
+            const select = fCompute.randFromArray(genRandFncArr(fnc, data))
 
             switch (select) {
                 case 0: {
@@ -305,9 +309,7 @@ export default new class guessIll {
             if (known_info.length) tipmsg += `\n该曲目的时长为 ${known_info.length}`
             if (known_info.illustrator) tipmsg += `\n该曲目曲绘的作者为 ${known_info.illustrator}`
             if (known_info.chart) tipmsg += known_info.chart
-            remsg = []
-            remsg.push(await picmodle.guess(e, data))
-            remsg.push(tipmsg)
+            const remsg = [await picmodle.guess(e, data), tipmsg]
 
             e = eList[group_id]
 
@@ -323,9 +325,7 @@ export default new class guessIll {
 
             if (Config.getUserCfg('config', 'GuessTipRecall'))
                 send.reply(e, remsg, false, { recallMsg: Config.getUserCfg('config', 'GuessTipCd') + 1 })
-            else
-                send.reply(e, remsg)
-
+            else send.reply(e, remsg)
         }
 
         for (let j = 0; j < time; ++j) {
@@ -349,7 +349,7 @@ export default new class guessIll {
         const t = ansList[group_id]
         delete ansList[group_id]
         delete gameList[group_id]
-        await send.reply(e, "呜，怎么还没有人答对啊QAQ！只能说答案了喵……")
+        await send.reply(e, '呜，怎么还没有人答对啊QAQ！只能说答案了喵……')
 
         await send.reply(e, await getPic.GetSongsInfoAtlas(e, t))
         await gameover(e, data)
@@ -371,7 +371,7 @@ export default new class guessIll {
                 const ans = msg.replace(/[#/](我)?猜(\s*)/g, '')
                 const ids = getInfo.fuzzysongsnick(ans, 0.95)
                 if (ids[0]) {
-                    for (let i in ids) {
+                    for (const i in ids) {
                         if (ansList[group_id] == ids[i]) {
                             const t = ansList[group_id]
                             delete ansList[group_id]
@@ -396,9 +396,9 @@ export default new class guessIll {
 
     /**
      * 获取答案
-     * @param {any} e 
-     * @param {GameList} gameList 
-     * @returns 
+     * @param {any} e
+     * @param {GameList} gameList
+     * @returns
      */
     async ans(e, gameList) {
         const group_id = groupKey(e)
@@ -440,13 +440,11 @@ export default new class guessIll {
         await send.reply(e, `洗牌成功了www`, true)
         return true
     }
-}()
-
-
+})()
 
 /**
  * 游戏结束，发送相应位置
- * @param {import('../../components/baseClass.js').botEvent} e 
+ * @param {import('../../components/baseClass.js').botEvent} e
  * @param {any} data
  */
 async function gameover(e, data) {
@@ -470,8 +468,8 @@ function randbt(top, bottom = 0) {
 /**
  * 区域扩增
  * @param {number} size 增大的像素值
- * @param {guessIllData} data 
- * @param {number[]} fnc 
+ * @param {guessIllData} data
+ * @param {number[]} fnc
  */
 function area_increase(size, data, fnc) {
     if (data.height < 1080) {
@@ -504,7 +502,7 @@ function area_increase(size, data, fnc) {
 /**
  * 降低模糊度
  * @param {number} size 降低值
- * @param {guessIllData} data 
+ * @param {guessIllData} data
  * @param {number[]} fnc
  */
 function blur_down(size, data, fnc) {
@@ -521,9 +519,9 @@ function blur_down(size, data, fnc) {
 
 /**
  * 获得一个歌曲信息的提示
- * @param {Record<string, string>} known_info 
- * @param {remainInfoType} remain_info 
- * @param {SongsInfo} songs_info 
+ * @param {Record<string, string>} known_info
+ * @param {remainInfoType} remain_info
+ * @param {SongsInfo} songs_info
  * @param {number[]} fnc
  */
 function gave_a_tip(known_info, remain_info, songs_info, fnc) {
@@ -542,9 +540,9 @@ function gave_a_tip(known_info, remain_info, songs_info, fnc) {
             /**
              * @type {levelKind[]}
              */
-            let charts = /**@type {levelKind[]} */(Object.keys(songs_info.chart))
+            const charts = /**@type {levelKind[]} */ (Object.keys(songs_info.chart))
 
-            let t1 = charts[fCompute.randInt(0, charts.length - 1)]
+            const t1 = charts[fCompute.randInt(0, charts.length - 1)]
 
             known_info[aim] = `\n该曲目的 ${t1} 谱面的`
 
@@ -577,11 +575,11 @@ function gave_a_tip(known_info, remain_info, songs_info, fnc) {
 
 /**
  * 根据干扰数据构建 CSS filter 字符串
- * @param {guessIllData} data 
+ * @param {guessIllData} data
  * @returns {string}
  */
 function buildFilterStyle(data) {
-    let filters = []
+    const filters = []
     if (data.lineMode) {
         // 线稿模式：使用 SVG 边缘检测滤镜 (#phiLineArt)
         filters.push('url(#phiLineArt)')
@@ -601,28 +599,22 @@ function buildFilterStyle(data) {
  * Level 2: blur + 任一其他干扰
  * Level 3: blur + 两种颜色干扰, 或 blur + lineMode
  * 规则: lineMode 与颜色类干扰(saturate/invert/hueRotate)不可共存
- * 
+ *
  * @param {number} level 难度等级 1-3
  * @returns {guessIllData} 干扰数据
  */
 function generateInterference(level) {
-    /** 
+    /**
      * 颜色类干扰
      * @type {(keyof ifeCNMap)[]}
      */
     const colorTypes = ['saturate', 'invert', 'hueRotate']
 
-    /** 
-     * 所有干扰类型 
-     * @type {(keyof ifeCNMap)[]}
-     */
-    const allTypes = ['blur', 'saturate', 'invert', 'hueRotate', 'lineMode']
-
     /** @type {(keyof ifeCNMap)[]} */
     const commonTypes = ['blur', 'saturate', 'invert', 'hueRotate']
 
     /** @type {(keyof ifeCNMap)[]} */
-    let chosen = []
+    let chosen
 
     switch (level) {
         case 0: {
@@ -659,7 +651,7 @@ function generateInterference(level) {
     }
 
     /** @type {guessIllData} */
-    let result = {
+    const result = {
         illustration: '',
         width: 0,
         height: 0,
@@ -682,12 +674,10 @@ function generateInterference(level) {
                 break
             case 'saturate':
                 // 0(灰度) ~ 0.3(低饱和) 或 2.5~4(过饱和)，避免接近正常值1
-                result.saturate = Math.random() < 0.5
-                    ? fCompute.randFloatBetween(0, 0.3, 2)
-                    : fCompute.randFloatBetween(2.5, 4, 2)
+                result.saturate = Math.random() < 0.5 ? fCompute.randFloatBetween(0, 0.3, 2) : fCompute.randFloatBetween(2.5, 4, 2)
                 break
             case 'invert':
-                result.invert = true;
+                result.invert = true
                 break
             case 'hueRotate':
                 result.hueRotate = fCompute.randInt(60, 300)
@@ -706,7 +696,7 @@ function generateInterference(level) {
 
 /**
  * 减弱非模糊类干扰
- * @param {guessIllData} data 
+ * @param {guessIllData} data
  * @param {number[]} fnc
  * @returns {string} 被减弱的干扰名称
  */
@@ -776,14 +766,11 @@ function interference_reduce(data, fnc) {
 
 /**
  * 检查是否还有非模糊类干扰，没有则从fnc中移除类型4
- * @param {guessIllData} data 
- * @param {number[]} fnc 
+ * @param {guessIllData} data
+ * @param {number[]} fnc
  */
 function checkRemainingInterferences(data, fnc) {
-    const hasOtherInterference = data.lineMode
-        || (data.saturate !== 1)
-        || (data.invert)
-        || (data.hueRotate !== 0)
+    const hasOtherInterference = data.lineMode || data.saturate !== 1 || data.invert || data.hueRotate !== 0
     if (!hasOtherInterference) {
         const idx = fnc.indexOf(4)
         if (idx !== -1) fnc.splice(idx, 1)
@@ -806,7 +793,7 @@ function getRandomSong(e) {
     const randomWeight = fCompute.randFloatBetween(0, totalWeight, 6)
 
     let accumulatedWeight = 0
-    const ids = /** @type {idString[]} */(Object.keys(songweights[group_id]))
+    const ids = /** @type {idString[]} */ (Object.keys(songweights[group_id]))
     for (const id of ids) {
         const weight = songweights[group_id][id]
         accumulatedWeight += weight

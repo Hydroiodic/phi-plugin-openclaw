@@ -72,8 +72,7 @@ const encodeThemeUrlPath = value => value.split('/').map(encodeURIComponent).joi
  * 主题管理器：内置主题与 resources/themes/<themeId>/ 下自定义主题的统一注册表，
  * 提供主题列表/选项/渲染配置解析，并支持目录热更新（无需重启 bot）。
  */
-export default await new class themeManager {
-
+export default await new (class themeManager {
     constructor() {
         /** @type {Map<string, CustomTheme>} 自定义主题注册表（key 为 id） */
         this.customThemes = new Map()
@@ -100,16 +99,24 @@ export default await new class themeManager {
         }
         this.scan()
         // 监听主题目录：info.yaml 及主题目录的增删改均触发重新扫描（目录不存在时 chokidar 会等待其出现）
-        const lease = fileWatcherRegistry.watch('b19:themes', THEMES_DIR, () => {
-            this.scan()
-        }, ['add', 'addDir', 'change', 'unlink', 'unlinkDir'], {
-            ignoreInitial: true,
-            // 安装暂存、锁和备份必须与主题目录位于同一文件系统以支持原子改名，
-            // 但不能让 Windows 文件监听器持有这些路径，否则提交阶段可能 EPERM。
-            ignored: watchedPath => path.relative(THEMES_DIR, watchedPath)
-                .split(path.sep)
-                .some(part => part.startsWith('.phi-market-')),
-        })
+        const lease = fileWatcherRegistry.watch(
+            'b19:themes',
+            THEMES_DIR,
+            () => {
+                this.scan()
+            },
+            ['add', 'addDir', 'change', 'unlink', 'unlinkDir'],
+            {
+                ignoreInitial: true,
+                // 安装暂存、锁和备份必须与主题目录位于同一文件系统以支持原子改名，
+                // 但不能让 Windows 文件监听器持有这些路径，否则提交阶段可能 EPERM。
+                ignored: watchedPath =>
+                    path
+                        .relative(THEMES_DIR, watchedPath)
+                        .split(path.sep)
+                        .some(part => part.startsWith('.phi-market-')),
+            },
+        )
         // ignoreInitial 会丢弃初始扫描完成前的变更，等 watcher 就绪后补扫一次兜底
         await lease.ready
         this.scan()
@@ -136,7 +143,7 @@ export default await new class themeManager {
                     try {
                         // 主题根目录必须是实体目录，避免通过目录链接绕过资源根边界。
                         isDir = fs.lstatSync(dir).isDirectory()
-                    } catch { }
+                    } catch {}
                     if (!isDir) continue
                     const entry = this.parseThemeDir(dir, dirName, themes)
                     if (entry) themes.set(entry.id, entry)
@@ -183,7 +190,7 @@ export default await new class themeManager {
         }
 
         /** 校验 id：缺失/非法时回退目录名，仍非法则跳过 */
-        let id = typeof yamlData.id === 'string' && yamlData.id ? yamlData.id : dirName
+        const id = typeof yamlData.id === 'string' && yamlData.id ? yamlData.id : dirName
         if (!ID_RE.test(id)) {
             logger.warn(`[phi-plugin][主题] ${dirName} 的 id「${id}」非法（须匹配 /^[a-zA-Z0-9_-]+$/），跳过该主题`)
             return null
@@ -205,10 +212,11 @@ export default await new class themeManager {
             entry.marketInstalled = true
             try {
                 const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8'))
-                const validReceipt = receipt?.source === 'phi-theme-marketplace'
-                    && receipt?.slug === id
-                    && typeof receipt?.version === 'string'
-                    && /^[a-f0-9]{64}$/.test(receipt?.sha256)
+                const validReceipt =
+                    receipt?.source === 'phi-theme-marketplace' &&
+                    receipt?.slug === id &&
+                    typeof receipt?.version === 'string' &&
+                    /^[a-f0-9]{64}$/.test(receipt?.sha256)
                 if (validReceipt) entry.marketVersion = receipt.version
                 else logger.warn(`[phi-plugin][主题] ${dirName} 的市场安装收据无效，仍从普通主题列表隐藏`)
             } catch {
@@ -349,7 +357,7 @@ export default await new class themeManager {
             }
             /** 仅解析主题目录内的普通文件，缺失或越界资源均走默认回退。 */
             /** @param {string | undefined} name */
-            const resolveAsset = (name) => {
+            const resolveAsset = name => {
                 if (!name) return null
                 const candidate = path.resolve(custom.dir, name)
                 const relative = path.relative(custom.dir, candidate)
@@ -368,11 +376,13 @@ export default await new class themeManager {
                 }
             }
             /** @param {{relative: string}} asset */
-            const assetUrl = (asset) => baseUrl + encodeThemeUrlPath(asset.relative)
+            const assetUrl = asset => baseUrl + encodeThemeUrlPath(asset.relative)
             /** @type {any} */
             const themeInfo = { id: custom.id, name: custom.name, baseUrl }
             const cssNames = custom.legacyCss
-                ? (renderTarget === 'b19/b19' ? [custom.css?.['b19/b19']] : [])
+                ? renderTarget === 'b19/b19'
+                    ? [custom.css?.['b19/b19']]
+                    : []
                 : [custom.css?.[renderTarget], custom.css?.[app]]
             const pageCss = cssNames.map(resolveAsset).find(Boolean)
             if (pageCss) {
@@ -405,4 +415,4 @@ export default await new class themeManager {
         }
         return null
     }
-}().init()
+})().init()

@@ -6,8 +6,8 @@ export default {
      * @param {import('./platform/types.js').PlatformMessageInput} msg
      * @param {import('./platform/types.js').PlatformUserId} [botId]
      */
-    relpyPrivate(userId, msg, botId) {
-        if (platform.relpyPrivate) return platform.relpyPrivate(userId, msg, botId)
+    replyPrivate(userId, msg, botId) {
+        if (platform.replyPrivate) return platform.replyPrivate(userId, msg, botId)
         return false
     },
 

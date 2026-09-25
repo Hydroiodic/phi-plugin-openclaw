@@ -111,7 +111,7 @@ class AliasProposalService {
      * @returns {Promise<boolean>} 是否实际替换了快照
      */
     async syncApprovedSnapshot(force = false) {
-        const last = Number(await redis.get(lastApprovedSyncKey) || 0)
+        const last = Number((await redis.get(lastApprovedSyncKey)) || 0)
         if (!force && Date.now() - last < 6 * 60 * 60 * 1000) return false
         const parsed = validateApprovedAliasSnapshot(await makeRequest.getApprovedAliasSnapshot())
         fs.mkdirSync(path.dirname(snapshotPath), { recursive: true })

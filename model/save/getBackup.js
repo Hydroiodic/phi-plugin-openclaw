@@ -1,18 +1,18 @@
-import JSZip from "jszip";
-import fs from 'node:fs';
-import path from "node:path";
-import { Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
-import { randomUUID } from 'node:crypto';
-import { backupPath, pluginDataPath, savePath } from "../filesystem/path.js";
+import JSZip from 'jszip'
+import fs from 'node:fs'
+import path from 'node:path'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+import { randomUUID } from 'node:crypto'
+import { backupPath, pluginDataPath, savePath } from '../filesystem/path.js'
 import fCompute from '../game/fCompute.js'
-import send from "../render/send.js";
-import logger from "../../components/Logger.js";
-import userCredentialStore from '../user/userCredentialStore.js';
-import { themesDir } from '../theme/paths.js';
-import { withMarketInstallLock } from '../theme/installLock.js';
-import { BackupArchive, BackupRestoreService } from './backupRestoreService.js';
-import { isSessionToken } from '../../lib/sessionToken.js';
+import send from '../render/send.js'
+import logger from '../../components/Logger.js'
+import userCredentialStore from '../user/userCredentialStore.js'
+import { themesDir } from '../theme/paths.js'
+import { withMarketInstallLock } from '../theme/installLock.js'
+import { BackupArchive, BackupRestoreService } from './backupRestoreService.js'
+import { isSessionToken } from '../../lib/sessionToken.js'
 
 const MaxNum = 1e4
 const THEME_DIR_RE = /^[a-zA-Z0-9_-]+$/
@@ -104,11 +104,18 @@ function parseThemeArchivePath(name, directory) {
     const relative = name.slice('themes/'.length)
     const segments = relative.split('/')
     if (directory && segments.at(-1) === '') segments.pop()
-    if (segments.length < (directory ? 1 : 2)
-        || !THEME_DIR_RE.test(segments[0])
-        || segments.some(segment => !segment || segment === '.' || segment === '..'
-            || (process.platform === 'win32'
-                && (segment.includes(':') || /[. ]$/.test(segment) || WINDOWS_RESERVED.test(segment))))) return null
+    if (
+        segments.length < (directory ? 1 : 2) ||
+        !THEME_DIR_RE.test(segments[0]) ||
+        segments.some(
+            segment =>
+                !segment ||
+                segment === '.' ||
+                segment === '..' ||
+                (process.platform === 'win32' && (segment.includes(':') || /[. ]$/.test(segment) || WINDOWS_RESERVED.test(segment))),
+        )
+    )
+        return null
     return segments
 }
 
@@ -149,7 +156,10 @@ async function restoreThemesFromBackupUnlocked(zip) {
         for (const themeName of [...themeNames].sort()) {
             const source = path.join(stage, themeName)
             const target = path.join(themesDir, themeName)
-            const exists = await fs.promises.lstat(target).then(() => true, () => false)
+            const exists = await fs.promises.lstat(target).then(
+                () => true,
+                () => false,
+            )
             if (exists) {
                 skipped++
                 continue
@@ -170,10 +180,9 @@ export function restoreThemesFromBackup(zip) {
 
 /**@import {botEvent} from "../../components/baseClass.js" */
 export default class getBackup {
-
     /**
      * 备份
-     * @param {botEvent} e 
+     * @param {botEvent} e
      * @param {{saveRoot?:string,pluginDataRoot?:string,outputRoot?:string,includeThemes?:boolean}} [options]
      */
     static async backup(e, { saveRoot = savePath, pluginDataRoot = pluginDataPath, outputRoot = backupPath, includeThemes = true } = {}) {
@@ -233,19 +242,23 @@ export default class getBackup {
 
     /**
      * 从zip中恢复
-     * @param {string} zipPath 
+     * @param {string} zipPath
      */
     static async restore(zipPath) {
         const stat = await fs.promises.lstat(zipPath)
         if (!stat.isFile() || stat.size > 512 * 1024 * 1024) throw new Error('备份必须是小于 512 MiB 的普通 ZIP 文件')
         const zip = await JSZip.loadAsync(await fs.promises.readFile(zipPath))
         const archive = new BackupArchive(zip)
-        const service = new BackupRestoreService({ saveRoot: savePath, pluginDataRoot: pluginDataPath, credentialStore: userCredentialStore })
+        const service = new BackupRestoreService({
+            saveRoot: savePath,
+            pluginDataRoot: pluginDataPath,
+            credentialStore: userCredentialStore,
+        })
         const plan = await service.prepare(archive)
         const themeRestore = await restoreThemesFromBackup(zip)
         if (themeRestore.restored || themeRestore.skipped) {
             logger.info(`[phi-plugin][backup] 主题恢复完成：恢复 ${themeRestore.restored} 个，保留现有 ${themeRestore.skipped} 个`)
         }
-        return { ...await service.apply(plan), themes: themeRestore }
+        return { ...(await service.apply(plan)), themes: themeRestore }
     }
 }

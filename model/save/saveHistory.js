@@ -1,7 +1,7 @@
-import { allLevel, LevelNum, MAX_DIFFICULTY } from "../game/constNum.js"
-import Save from "./Save.js"
-import fCompute from "../game/fCompute.js";
-import LevelRecordInfo from "../game/LevelRecordInfo.js";
+import { allLevel, LevelNum, MAX_DIFFICULTY } from '../game/constNum.js'
+/** @import Save from "./Save.js" */
+import fCompute from '../game/fCompute.js'
+import LevelRecordInfo from '../game/LevelRecordInfo.js'
 
 /**
  * @template T
@@ -10,23 +10,21 @@ import LevelRecordInfo from "../game/LevelRecordInfo.js";
  * @property {T} value - 值
  */
 export default class saveHistory {
-
     /**
-     * 
-     * @param { (saveHistoryObject & {version?: number}) } data 
+     *
+     * @param { (saveHistoryObject & {version?: number}) } data
      */
     constructor(data) {
-
         const ids = fCompute.objectKeys(data?.scoreHistory || {})
 
         for (const id of ids) {
-            const record = data?.scoreHistory?.[id];
-            if (!record) continue;
+            const record = data?.scoreHistory?.[id]
+            if (!record) continue
             for (const level of allLevel) {
-                if (!record[level]) continue;
+                if (!record[level]) continue
                 record[level].forEach(item => {
                     //@ts-ignore
-                    item[2] = new Date(item[2]);
+                    item[2] = new Date(item[2])
                 })
             }
         }
@@ -36,17 +34,17 @@ export default class saveHistory {
          * @property {Array<[number, number, Date, boolean]>} [acc, score, date, fc] acc为4位小数，score为整数，date为日期，fc为boolean
          */
         //@ts-ignore
-        this.scoreHistory = data?.scoreHistory || {};
+        this.scoreHistory = data?.scoreHistory || {}
         /**
          * @type {formatedHistoryBaseObject<number[]>[]}
-         * @description data货币变更记录 
-        */
-        this.data = [];
+         * @description data货币变更记录
+         */
+        this.data = []
 
         data?.data?.forEach(item => {
             this.data.push({
                 date: new Date(item.date),
-                value: item.value
+                value: item.value,
             })
         })
 
@@ -54,27 +52,27 @@ export default class saveHistory {
          * @type {formatedHistoryBaseObject<number>[]}
          * @description rks变更记录
          */
-        this.rks = [];
+        this.rks = []
 
         data?.rks?.forEach(item => {
             this.rks.push({
                 date: new Date(item.date),
-                value: item.value
+                value: item.value,
             })
-        });
+        })
 
         /**
          * @type {formatedHistoryBaseObject<number>[]}
          * @description 课题模式成绩
          */
-        this.challengeModeRank = [];
+        this.challengeModeRank = []
 
         data?.challengeModeRank?.forEach(item => {
             this.challengeModeRank.push({
                 date: new Date(item.date),
-                value: item.value
+                value: item.value,
             })
-        });
+        })
         /**v1.0,取消对当次更新内容的存储，取消对task的记录，更正scoreHistory */
         /**v1.1,更正scoreHistory */
         /**v2,由于曲名错误，删除所有记录，曲名使用id记录 */
@@ -86,7 +84,7 @@ export default class saveHistory {
         /**检查版本 */
         if (!this.version || this.version < 2) {
             if (this.scoreHistory) {
-                for (let i in this.scoreHistory) {
+                for (const i in this.scoreHistory) {
                     if (!i.includes('.0')) {
                         this.scoreHistory = {}
                     }
@@ -110,9 +108,9 @@ export default class saveHistory {
         this.rks = merge(this.rks, data.rks)
         this.challengeModeRank = merge(this.challengeModeRank, data.challengeModeRank)
         const ids = fCompute.objectKeys(data.scoreHistory || {})
-        for (let id of ids) {
+        for (const id of ids) {
             if (!this.scoreHistory[id]) this.scoreHistory[id] = {}
-            for (let dif of allLevel) {
+            for (const dif of allLevel) {
                 if (this.scoreHistory[id] && this.scoreHistory[id][dif]) {
                     if (data.scoreHistory[id][dif]) {
                         this.scoreHistory[id][dif] = [...this.scoreHistory[id][dif], ...data.scoreHistory[id][dif]]
@@ -126,10 +124,9 @@ export default class saveHistory {
                 if (!this.scoreHistory[id][dif]) continue
                 let i = 1
                 while (i < this.scoreHistory[id][dif].length) {
-                    let last = openHistory(this.scoreHistory[id][dif][i - 1])
-                    let now = openHistory(this.scoreHistory[id][dif][i])
+                    const last = openHistory(this.scoreHistory[id][dif][i - 1])
+                    const now = openHistory(this.scoreHistory[id][dif][i])
                     if (last.score == now.score && last.acc == now.acc && last.fc == now.fc) {
-                        // console.info(last.date.toISOString(), now.date.toISOString())
                         this.scoreHistory[id][dif].splice(i, 1)
                     } else {
                         ++i
@@ -146,11 +143,11 @@ export default class saveHistory {
     update(save) {
         /**更新单曲成绩 */
         const ids = fCompute.objectKeys(save.gameRecord || {})
-        for (let id of ids) {
+        for (const id of ids) {
             if (!this.scoreHistory[id]) this.scoreHistory[id] = {}
-            for (let i in save.gameRecord[id]) {
+            for (const i in save.gameRecord[id]) {
                 /**难度映射 */
-                let level = allLevel[i]
+                const level = allLevel[i]
                 /**
                  * 提取成绩
                  * @type {LevelRecordInfo & {date?: Date} | null}
@@ -160,7 +157,7 @@ export default class saveHistory {
                 now.date = save.saveInfo.modifiedAt.iso
                 /**本地无记录 */
                 if (!this.scoreHistory[id][level] || !this.scoreHistory[id][level].length) {
-                    this.scoreHistory[id][level] = [createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc)];
+                    this.scoreHistory[id][level] = [createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc)]
                     continue
                 }
                 /**新存档该难度无成绩 */
@@ -168,8 +165,7 @@ export default class saveHistory {
                 /**本地记录日期为递增 */
                 for (let i = this.scoreHistory[id][level].length - 1; i >= 0; --i) {
                     /**第i项记录 */
-                    let old = openHistory(this.scoreHistory[id][level][i])
-                    // console.info(old.date.toISOString(), new Date(now.date).toISOString(), old.date.toISOString() == new Date(now.date).toISOString())
+                    const old = openHistory(this.scoreHistory[id][level][i])
                     /**日期完全相同则认为已存储 */
                     if (old.score == now.score && old.acc == now.acc && old.fc == now.fc) {
                         /**标记已处理 */
@@ -181,7 +177,11 @@ export default class saveHistory {
                         /**历史记录acc仅保存4位，检查是否与第一个小于该日期的记录一致 */
                         if (old.acc != Number(now.acc.toFixed(4)) || old.score != now.score || old.fc != now.fc) {
                             /**不一致在第i项插入 */
-                            this.scoreHistory[id][level].splice(i, 0, createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc))
+                            this.scoreHistory[id][level].splice(
+                                i,
+                                0,
+                                createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc),
+                            )
                         }
                         /**标记已处理 */
                         now = null
@@ -190,16 +190,14 @@ export default class saveHistory {
                 }
                 /**未被处理，有该难度记录，说明日期早于本地记录 */
                 if (now) {
-                    // console.info(11)
                     this.scoreHistory[id][level].unshift(createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc))
                 }
                 /**查重 */
                 let j = 1
                 while (j < this.scoreHistory[id][level].length) {
-                    let last = openHistory(this.scoreHistory[id][level][j - 1])
-                    let now = openHistory(this.scoreHistory[id][level][j])
+                    const last = openHistory(this.scoreHistory[id][level][j - 1])
+                    const now = openHistory(this.scoreHistory[id][level][j])
                     if (last.score == now.score && last.acc == now.acc && last.fc == now.fc) {
-                        // console.info(last.date.toISOString(), now.date.toISOString())
                         this.scoreHistory[id][level].splice(j, 1)
                     } else {
                         ++j
@@ -210,10 +208,14 @@ export default class saveHistory {
         /**更新rks记录 */
         for (let i = this.rks.length - 1; i >= 0; i--) {
             if (save.saveInfo.modifiedAt.iso > new Date(this.rks[i].date)) {
-                if (!this.rks[i + 1] || (this.rks[i].value != save.saveInfo.summary.rankingScore || this.rks[i + 1]?.value != save.saveInfo.summary.rankingScore)) {
+                if (
+                    !this.rks[i + 1] ||
+                    this.rks[i].value != save.saveInfo.summary.rankingScore ||
+                    this.rks[i + 1]?.value != save.saveInfo.summary.rankingScore
+                ) {
                     this.rks.splice(i + 1, 0, {
                         date: save.saveInfo.modifiedAt.iso,
-                        value: save.saveInfo.summary.rankingScore
+                        value: save.saveInfo.summary.rankingScore,
                     })
                 }
                 break
@@ -222,16 +224,20 @@ export default class saveHistory {
         if (!this.rks.length) {
             this.rks.push({
                 date: save.saveInfo.modifiedAt.iso,
-                value: save.saveInfo.summary.rankingScore
+                value: save.saveInfo.summary.rankingScore,
             })
         }
         /**更新data记录 */
         for (let i = this.data.length - 1; i >= 0; i--) {
             if (save.saveInfo.modifiedAt.iso > new Date(this.data[i].date)) {
-                if (!this.data[i + 1] || (checkValue(this.data[i].value, save.gameProgress.money) && checkValue(this.data[i + 1]?.value, save.gameProgress.money))) {
+                if (
+                    !this.data[i + 1] ||
+                    (checkValue(this.data[i].value, save.gameProgress.money) &&
+                        checkValue(this.data[i + 1]?.value, save.gameProgress.money))
+                ) {
                     this.data.splice(i + 1, 0, {
                         date: save.saveInfo.modifiedAt.iso,
-                        value: save.gameProgress.money
+                        value: save.gameProgress.money,
                     })
                 }
                 break
@@ -240,17 +246,17 @@ export default class saveHistory {
         if (!this.data.length) {
             this.data.push({
                 date: save.saveInfo.modifiedAt.iso,
-                value: save.gameProgress.money
+                value: save.gameProgress.money,
             })
         }
         /**更新课题模式记录 */
         for (let i = this.challengeModeRank.length - 1; i >= 0; i--) {
             if (save.saveInfo.modifiedAt.iso > new Date(this.challengeModeRank[i].date)) {
-                let clg = save.saveInfo.summary.challengeModeRank
-                if (clg != this.challengeModeRank[i].value && (this.challengeModeRank[i + 1]?.value != clg)) {
+                const clg = save.saveInfo.summary.challengeModeRank
+                if (clg != this.challengeModeRank[i].value && this.challengeModeRank[i + 1]?.value != clg) {
                     this.challengeModeRank.splice(i + 1, 0, {
                         date: save.saveInfo.modifiedAt.iso,
-                        value: save.saveInfo.summary.challengeModeRank
+                        value: save.saveInfo.summary.challengeModeRank,
                     })
                 }
                 break
@@ -259,7 +265,7 @@ export default class saveHistory {
         if (!this.challengeModeRank.length) {
             this.challengeModeRank.push({
                 date: save.saveInfo.modifiedAt.iso,
-                value: save.saveInfo.summary.challengeModeRank
+                value: save.saveInfo.summary.challengeModeRank,
             })
         }
     }
@@ -302,11 +308,7 @@ export default class saveHistory {
 
                 if (selected) {
                     const opened = openHistory(selected)
-                    gameRecord[id][levelIdx] = new LevelRecordInfo(
-                        { acc: opened.acc, score: opened.score, fc: opened.fc },
-                        id,
-                        levelIdx
-                    )
+                    gameRecord[id][levelIdx] = new LevelRecordInfo({ acc: opened.acc, score: opened.score, fc: opened.fc }, id, levelIdx)
                 } else {
                     gameRecord[id][levelIdx] = null
                 }
@@ -346,26 +348,26 @@ export default class saveHistory {
             money,
             rks,
             challengeModeRank,
-            version: this.version
+            version: this.version,
         }
     }
 
     /**
      * 获取歌曲最新的历史记录
      * @param {idString} id 曲目id
-     * @returns 
+     * @returns
      */
     async getSongsLastRecord(id) {
-        let t = { ...this.scoreHistory[id] }
+        const t = { ...this.scoreHistory[id] }
         /**
          * @type {Partial<Record<allLevelKind, LevelRecordInfo & {date?: Date}>>}
          */
         const result = {}
-        for (let level of allLevel) {
+        for (const level of allLevel) {
             if (!t[level]) continue
             const lastRecord = t[level] ? openHistory(t[level][t[level].length - 1]) : null
             if (!lastRecord) continue
-            let date = lastRecord?.date
+            const date = lastRecord?.date
             result[level] = new LevelRecordInfo(lastRecord, id, LevelNum[level])
             result[level].date = date
         }
@@ -387,20 +389,19 @@ export default class saveHistory {
      * @returns {rksAndDataLineObject}
      */
     getRksAndDataLine() {
-        let rks = this.getRksLine()
-        let data = this.getDataLine()
+        const rks = this.getRksLine()
+        const data = this.getDataLine()
         return { ...rks, ...data }
     }
 
     getRksLine() {
-
         /**@type {formatedHistoryBaseObject<number>[]} */
-        let rks_history_ = []
-        let user_rks_data = this.rks
-        let rks_range = [MAX_DIFFICULTY, 0]
+        const rks_history_ = []
+        const user_rks_data = this.rks
+        const rks_range = [MAX_DIFFICULTY, 0]
         /** @type {[dateBegin: number, dateAfter: number]} */
-        let rks_date = [0, 0];
-        let rks_history = []
+        let rks_date = [0, 0]
+        const rks_history = []
 
         if (user_rks_data.length) {
             rks_date = [new Date(user_rks_data[0].date).getTime(), 0]
@@ -417,21 +418,19 @@ export default class saveHistory {
             })
 
             rks_history_.forEach((item, i) => {
-
                 i = Number(i)
 
                 if (!rks_history_[i + 1]) return
-                let x1 = fCompute.range(item.date.getTime(), rks_date)
-                let y1 = fCompute.range(item.value, rks_range)
-                let x2 = fCompute.range(rks_history_[i + 1].date.getTime(), rks_date)
-                let y2 = fCompute.range(rks_history_[i + 1].value, rks_range)
+                const x1 = fCompute.range(item.date.getTime(), rks_date)
+                const y1 = fCompute.range(item.value, rks_range)
+                const x2 = fCompute.range(rks_history_[i + 1].date.getTime(), rks_date)
+                const y2 = fCompute.range(rks_history_[i + 1].value, rks_range)
                 rks_history.push([x1, y1, x2, y2])
-            });
+            })
             if (!rks_history.length) {
                 rks_history.push([0, 50, 100, 50])
             }
         }
-
 
         return {
             rks_history,
@@ -441,16 +440,15 @@ export default class saveHistory {
     }
 
     getDataLine() {
-
         /**@type {formatedHistoryBaseObject<number>[]} */
-        let data_history_ = []
-        let user_data_data = this.data
+        const data_history_ = []
+        const user_data_data = this.data
         const data_range_num = [1e16, 0]
         const data_range = ['', '']
         /** @type {[dateBegin: number, dateAfter: number] | []} */
         let data_date = []
         /** @type {[x1: number, y1: number, x2: number, y2: number][]} */
-        let data_history = []
+        const data_history = []
 
         if (user_data_data.length) {
             data_date = [new Date(user_data_data[0].date).getTime(), 0]
@@ -460,7 +458,7 @@ export default class saveHistory {
                 item.date = new Date(item.date)
                 const temObj = {
                     date: item.date,
-                    value: totValue
+                    value: totValue,
                 }
                 if (i <= 1 || temObj.value != data_history_[data_history_.length - 2].value) {
                     data_history_.push(temObj)
@@ -473,36 +471,32 @@ export default class saveHistory {
             })
 
             data_history_.forEach((item, i) => {
-
                 i = Number(i)
 
                 if (!data_history_[i + 1]) return
-                let x1 = fCompute.range(item.date.getTime(), data_date)
-                let y1 = fCompute.range(item.value, data_range_num)
-                let x2 = fCompute.range(data_history_[i + 1].date.getTime(), data_date)
-                let y2 = fCompute.range(data_history_[i + 1].value, data_range_num)
+                const x1 = fCompute.range(item.date.getTime(), data_date)
+                const y1 = fCompute.range(item.value, data_range_num)
+                const x2 = fCompute.range(data_history_[i + 1].date.getTime(), data_date)
+                const y2 = fCompute.range(data_history_[i + 1].value, data_range_num)
                 data_history.push([x1, y1, x2, y2])
             })
             if (!data_history.length) {
                 data_history.push([0, 50, 100, 50])
             }
 
-
-            let unit = ["KiB", "MiB", "GiB", "TiB", "Pib"]
-
-
+            const unit = ['KiB', 'MiB', 'GiB', 'TiB', 'Pib']
 
             for (const i of [4, 3, 2, 1, 0]) {
-                if (data_range_num[0] / (Math.pow(1024, i)) < 1024) {
-                    data_range[0] = `${Math.floor(data_range_num[0] / (Math.pow(1024, i)))}${unit[i]}`
-                    break;
+                if (data_range_num[0] / Math.pow(1024, i) < 1024) {
+                    data_range[0] = `${Math.floor(data_range_num[0] / Math.pow(1024, i))}${unit[i]}`
+                    break
                 }
             }
 
             for (const i of [4, 3, 2, 1, 0]) {
-                if (data_range_num[1] / (Math.pow(1024, i)) < 1024) {
-                    data_range[1] = `${Math.floor(data_range_num[1] / (Math.pow(1024, i)))}${unit[i]}`
-                    break;
+                if (data_range_num[1] / Math.pow(1024, i) < 1024) {
+                    data_range[1] = `${Math.floor(data_range_num[1] / Math.pow(1024, i))}${unit[i]}`
+                    break
                 }
             }
         }
@@ -510,19 +504,18 @@ export default class saveHistory {
         return {
             data_history,
             data_range: data_range_num,
-            data_date
+            data_date,
         }
     }
-
 }
 
 /**
  * 数组合并按照 date 排序并去重
- * @param {formatedHistoryBaseObject<any>[]} m 
- * @param {formatedHistoryBaseObject<any>[]} n 
+ * @param {formatedHistoryBaseObject<any>[]} m
+ * @param {formatedHistoryBaseObject<any>[]} n
  */
 function merge(m, n) {
-    let t = m.concat(n)
+    const t = m.concat(n)
     t.sort((a, b) => {
         return new Date(a.date).getTime() - new Date(b.date).getTime()
     })
@@ -539,17 +532,16 @@ function merge(m, n) {
 }
 
 /**
- * 
- * @param {number} acc 
- * @param {number} score 
- * @param {Date} date 
- * @param {boolean} fc 
+ *
+ * @param {number} acc
+ * @param {number} score
+ * @param {Date} date
+ * @param {boolean} fc
  * @returns {ScoreDetail}
  */
 function createHistory(acc, score, date, fc) {
     return [acc.toFixed(4), score, date.toISOString(), fc]
 }
-
 
 /**
  * 展开信息
@@ -560,14 +552,14 @@ function openHistory(data) {
         acc: Number(data[0]),
         score: Number(data[1]),
         date: new Date(data[2]),
-        fc: Boolean(data[3])
+        fc: Boolean(data[3]),
     }
 }
 
 /**
  * 比较两个数组
- * @param {any} a 
- * @param {any} b 
+ * @param {any} a
+ * @param {any} b
  * @returns {boolean}
  */
 function checkValue(a, b) {
@@ -579,7 +571,7 @@ function checkValue(a, b) {
         return false
     }
     /**数组 */
-    for (let i in a) {
+    for (const i in a) {
         if (a[i] != b[i]) return false
     }
     return true

@@ -92,7 +92,9 @@ test('remote API ID bind failures preserve local state', async () => {
     store.sessions.set('local-user', 'old-token')
     store.apiIds.set('local-user', 'old-api-id')
     const originalRequest = phiApiClient.request
-    phiApiClient.request = async () => { throw new Error('API unavailable') }
+    phiApiClient.request = async () => {
+        throw new Error('API unavailable')
+    }
     try {
         const credentials = UserCredentials.fromEvent(event(), { store: /** @type {any} */ (store) })
         assert.equal(await credentials.bindWithApiId('new-api-id'), null)
@@ -116,7 +118,10 @@ test('local unbind clears local credentials and never calls the API', async () =
     store.apiIds.set('local-user', 'old-api-id')
     const originalDelSave = getSave.deleteSaveBySessionToken
     /** @type {string[]} */ const deletedUsers = []
-    getSave.deleteSaveBySessionToken = async sessionToken => { deletedUsers.push(String(sessionToken)); return true }
+    getSave.deleteSaveBySessionToken = async sessionToken => {
+        deletedUsers.push(String(sessionToken))
+        return true
+    }
     try {
         const credentials = UserCredentials.fromEvent(event(), { store: /** @type {any} */ (store) })
         assert.deepEqual(await credentials.unbindLocal(), { hadBinding: true })
@@ -130,10 +135,7 @@ test('local unbind clears local credentials and never calls the API', async () =
 test('platformParams rejects authentication when local credentials are missing', async () => {
     const store = fakeStore()
     const credentials = UserCredentials.fromEvent(event(), { store: /** @type {any} */ (store) })
-    await assert.rejects(
-        credentials.platformParams(true),
-        (/** @type {any} */ error) => error.code === 'binding_not_found',
-    )
+    await assert.rejects(credentials.platformParams(true), (/** @type {any} */ error) => error.code === 'binding_not_found')
 })
 
 test('credential API methods inject the instance platform and local SSTK', async () => {
@@ -142,13 +144,15 @@ test('credential API methods inject the instance platform and local SSTK', async
     store.apiIds.set('local-user', '12345')
     /** @type {any[]} */ const calls = []
     const originalRequest = phiApiClient.request
-    phiApiClient.request = /** @type {any} */ (async function (/** @type {string} */ path, /** @type {any} */ params, /** @type {any} */ _method) {
-        calls.push([path, params, arguments.length])
-        if (path === '/token/list') return { data: { platform_data: [] } }
-        if (path === '/getPgrToken') return { data: { token: 'sstk-from-api' } }
-        if (path === '/bot/bindings/bind') return { apiUserId: '67890' }
-        return { message: 'ok' }
-    })
+    phiApiClient.request = /** @type {any} */ (
+        async function (/** @type {string} */ path, /** @type {any} */ params, /** @type {any} */ _method) {
+            calls.push([path, params, arguments.length])
+            if (path === '/token/list') return { data: { platform_data: [] } }
+            if (path === '/getPgrToken') return { data: { token: 'sstk-from-api' } }
+            if (path === '/bot/bindings/bind') return { apiUserId: '67890' }
+            return { message: 'ok' }
+        }
+    )
     try {
         const credentials = UserCredentials.fromEvent(event(), { store: /** @type {any} */ (store) })
         await credentials.listPlatformBindings()
@@ -156,7 +160,10 @@ test('credential API methods inject the instance platform and local SSTK', async
         await credentials.deleteApiAccount()
         await credentials.authenticateApiToken('api-token')
         assert.equal(await credentials.getSessionToken(), 'sstk-from-api')
-        assert.deepEqual(calls.map(([path]) => path), ['/token/list', '/setApiToken', '/clear', '/getPgrToken', '/bot/bindings/bind'])
+        assert.deepEqual(
+            calls.map(([path]) => path),
+            ['/token/list', '/setApiToken', '/clear', '/getPgrToken', '/bot/bindings/bind'],
+        )
         for (const [path, params, argumentCount] of calls) {
             if (path === '/getPgrToken') {
                 assert.deepEqual(params, { api_token: 'api-token' })
@@ -207,8 +214,14 @@ test('save and history operations are exposed through the user instance', async 
         cloudHistoryRecord: makeRequest.getHistoryRecord,
     }
     /** @type {any[]} */ const calls = []
-    getSave.getSaveBySessionToken = async sessionToken => { calls.push(['localSave', sessionToken]); return /** @type {any} */ ({}) }
-    getSave.getHistoryBySessionToken = async sessionToken => { calls.push(['localHistory', sessionToken]); return /** @type {any} */ ({}) }
+    getSave.getSaveBySessionToken = async sessionToken => {
+        calls.push(['localSave', sessionToken])
+        return /** @type {any} */ ({})
+    }
+    getSave.getHistoryBySessionToken = async sessionToken => {
+        calls.push(['localHistory', sessionToken])
+        return /** @type {any} */ ({})
+    }
     makeRequest.getHistory = async (/** @type {any} */ params) => {
         calls.push(['cloudHistory', params._local_user_id, params.request])
         return /** @type {any} */ ({})
@@ -274,11 +287,16 @@ test('local unbind reports the unbind back to the API using the event platform',
         const credentials = UserCredentials.fromEvent(event(), { store: /** @type {any} */ (store) })
         const result = await credentials.unbindAndReport()
         assert.deepEqual(result, { hadBinding: true, reported: true })
-        assert.deepEqual(calls, [['/bot/bindings/unbind', {
-            platform: 'openclaw',
-            platformId: 'local-user',
-            reason: 'user_unbind',
-        }]])
+        assert.deepEqual(calls, [
+            [
+                '/bot/bindings/unbind',
+                {
+                    platform: 'openclaw',
+                    platformId: 'local-user',
+                    reason: 'user_unbind',
+                },
+            ],
+        ])
         assert.deepEqual(await credentials.getLocalCredentials(), { sessionToken: undefined, apiId: undefined })
     } finally {
         phiApiClient.request = originalRequest
@@ -291,7 +309,10 @@ test('reportUnbind skips the API when no platform identity is available', async 
     const credentials = new UserCredentials('local-user', { store: /** @type {any} */ (store) })
     const originalRequest = phiApiClient.request
     let called = false
-    phiApiClient.request = async () => { called = true; return {} }
+    phiApiClient.request = async () => {
+        called = true
+        return {}
+    }
     try {
         assert.equal(await credentials.reportUnbind(), false)
         assert.equal(called, false)
@@ -304,7 +325,9 @@ test('reportUnbind swallows API failures so local unbinding is never blocked', a
     const store = fakeStore()
     const credentials = new UserCredentials('local-user', { store: /** @type {any} */ (store) })
     const originalRequest = phiApiClient.request
-    phiApiClient.request = async () => { throw new Error('API unavailable') }
+    phiApiClient.request = async () => {
+        throw new Error('API unavailable')
+    }
     try {
         assert.equal(await credentials.reportUnbind({ platform: 'openclaw', platformId: '20002' }), false)
     } finally {
@@ -317,14 +340,18 @@ test('failed API session binding can commit the new sessionToken through local b
     store.sessions.set('local-user', 'old-token')
     store.apiIds.set('local-user', 'old-api-id')
     const originalRequest = phiApiClient.request
-    phiApiClient.request = async () => { throw new Error('API unavailable') }
+    phiApiClient.request = async () => {
+        throw new Error('API unavailable')
+    }
     /** @type {any[]} */ const localUpdates = []
     const credentials = UserCredentials.fromEvent(event(), { store: /** @type {any} */ (store) })
     const originalUpdateLocal = credentials.getUpdatedSaveFromLocal
-    credentials.getUpdatedSaveFromLocal = /** @type {any} */ (async (/** @type {any} */ token, /** @type {any} */ isGlobal) => {
-        localUpdates.push([credentials.userId, token, isGlobal])
-        return { save: { session: token } }
-    })
+    credentials.getUpdatedSaveFromLocal = /** @type {any} */ (
+        async (/** @type {any} */ token, /** @type {any} */ isGlobal) => {
+            localUpdates.push([credentials.userId, token, isGlobal])
+            return { save: { session: token } }
+        }
+    )
     try {
         assert.equal(await credentials.bindWithSessionToken(/** @type {phigrosToken} */ ('new-token')), null)
         const result = await credentials.bindLocallyWithSessionToken(/** @type {phigrosToken} */ ('new-token'), true)

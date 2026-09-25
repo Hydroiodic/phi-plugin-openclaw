@@ -56,7 +56,11 @@ export class FileWatcherRegistry {
     watch(key, file, onChange, events = ['change'], watchOptions = {}) {
         const normalizedFile = path.resolve(file)
         const current = this.entries.get(key)
-        if (current?.file === normalizedFile && isDeepStrictEqual(current.events, events) && isDeepStrictEqual(current.options, watchOptions)) {
+        if (
+            current?.file === normalizedFile &&
+            isDeepStrictEqual(current.events, events) &&
+            isDeepStrictEqual(current.options, watchOptions)
+        ) {
             current.onChange = onChange
             current.lease = this.createLease(key, current.watcher, current.ready)
             return current.lease
@@ -80,7 +84,7 @@ export class FileWatcherRegistry {
         }
         entry.watcher = this.createWatcher(normalizedFile, watchOptions)
         entry.ready = new Promise((resolve, reject) => {
-            entry.settleReady = error => error ? reject(error) : resolve()
+            entry.settleReady = error => (error ? reject(error) : resolve())
         })
         // A consumer may never await ready; still observe initialization errors.
         entry.ready.catch(() => {})
@@ -91,10 +95,18 @@ export class FileWatcherRegistry {
         })
         const watcher = /** @type {any} */ (entry.watcher)
         for (const event of events) {
-            watcher.on(event, /** @type {(...args: any[]) => void} */ ((...args) => {
-                try { Promise.resolve(entry.onChange(...args)).catch(error => this.reportError(error)) }
-                catch (error) { this.reportError(error) }
-            }))
+            watcher.on(
+                event,
+                /** @type {(...args: any[]) => void} */ (
+                    (...args) => {
+                        try {
+                            Promise.resolve(entry.onChange(...args)).catch(error => this.reportError(error))
+                        } catch (error) {
+                            this.reportError(error)
+                        }
+                    }
+                ),
+            )
         }
         entry.lease = this.createLease(key, entry.watcher, entry.ready)
         this.entries.set(key, entry)
@@ -143,19 +155,26 @@ export class FileWatcherRegistry {
         const task = Promise.resolve().then(() => entry.watcher.close())
         entry.closing = task
         this.closing.add(task)
-        task.then(() => this.closing.delete(task), error => { this.closing.delete(task); this.reportError(error) })
+        task.then(
+            () => this.closing.delete(task),
+            error => {
+                this.closing.delete(task)
+                this.reportError(error)
+            },
+        )
         return task
     }
 
     /** @param {unknown} error */
     reportError(error) {
-        try { this.onError(error) }
-        catch { console.warn('[phi-plugin] 文件监听错误处理失败。') }
+        try {
+            this.onError(error)
+        } catch {
+            console.warn('[phi-plugin] 文件监听错误处理失败。')
+        }
     }
 }
 
-const fileWatcherRegistry = /** @type {FileWatcherRegistry} */ (
-    globalStore[registrySymbol] ||= new FileWatcherRegistry()
-)
+const fileWatcherRegistry = /** @type {FileWatcherRegistry} */ (globalStore[registrySymbol] ||= new FileWatcherRegistry())
 
 export default fileWatcherRegistry
