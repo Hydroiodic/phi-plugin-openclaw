@@ -7,4 +7,5 @@ data/
 backup/
 temp/
 dist-resources/
+dist/
 *.tgz

@@ -64,5 +64,11 @@ npm pack --dry-run
 ```
 
 单元与回归测试覆盖全部启用命令的入口和真实方法存在性。图片冒烟测试执行实际模板渲染；宿主冒烟测试使用独立状态目录验证 OpenClaw 启动与消息队列。
-GitHub Actions 使用锁文件安装依赖，执行类型检查、测试、图片冒烟和打包检查。宿主冒烟需要另行安装 OpenClaw，在开发机或集成环境运行。
+GitHub Actions 有三个工作流，都用锁文件安装依赖：
+
+- `Checks`（`ci.yml`）：ESLint、类型检查、测试、图片冒烟和打包检查。
+- `Format`（`format.yml`）：推送后运行 Prettier 和 `eslint --fix`，有改动就以 `github-actions[bot]` 提交回同一分支，再为新提交触发 `Checks` 和 `Package`；来自 fork 的 PR 无法推送，只检查格式。推送后如果看到这条提交，先 `git pull` 再继续开发。
+- `Package`（`package.yml`）：推送或打 `v*` 标签后执行 `npm pack`，把 `.tgz` 作为构建产物上传，保留 30 天。
+
+宿主冒烟需要另行安装 OpenClaw，在开发机或集成环境运行。
 自动化测试不替代真实账号的扫码授权和 QQ 客户端显示验收。

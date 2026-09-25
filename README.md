@@ -286,6 +286,8 @@ CLI 会明确联网刷新索引；安装后重启 Gateway。若锁定了 `resour
 
 ```bash
 pnpm install --frozen-lockfile --ignore-scripts
+npm run format        # Prettier 格式化；推送后 GitHub Actions 也会自动格式化并提交
+npm run lint
 npm test
 npm run typecheck
 npm run smoke
