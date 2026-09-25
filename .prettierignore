@@ -1,0 +1,10 @@
+# Third-party or generated assets
+resources/
+pnpm-lock.yaml
+node_modules/
+# Runtime data (see .gitignore)
+data/
+backup/
+temp/
+dist-resources/
+*.tgz
