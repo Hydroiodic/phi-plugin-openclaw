@@ -1,28 +1,29 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { createHash } from 'node:crypto'
 import { inspect } from 'node:util'
 import { SqliteStore } from './sqlite.mjs'
 import { TemplateRenderer } from './renderer.mjs'
 import { ReplyQueue } from './reply-queue.mjs'
 import { ConversationContexts } from './conversation-contexts.mjs'
 import { MessagePayloadEncoder } from './message-payload.mjs'
+import { identity, userIdentity } from './identity.mjs'
 
 const packageVersion = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
-/** @param {...unknown} parts */
-const identity = (...parts) => createHash('sha256').update(JSON.stringify(parts)).digest('hex')
-/** @param {string} channel @param {string} account @param {string} sender */
-export const userIdentity = (channel, account, sender) => identity(channel, account || 'default', sender)
+export { userIdentity }
 
 /** @param {string} value */
 export const redactLog = value => value
   .replace(/\b[A-Za-z0-9]{25}\b/g, '[sessionToken redacted]')
   .replace(/(\b(?:authorization|access_token|refresh_token|apiKey)\b["']?\s*[:=]\s*["']?)(?:Bearer\s+)?[^\s,"'}]+/gi, '$1[redacted]')
 
+// Without a host logger (tests and standalone use) diagnostics go to stderr, so they never
+// interleave with stdout, which the Node test runner uses for its serialized protocol.
+const STDERR_LOGGER = { info: console.error, warn: console.error, error: console.error, debug: console.error }
+
 /** OpenClaw-facing facade; queue, payload and conversation lifecycles have owners. */
 export class OpenClawPlatform {
   /** @param {{dataRoot?: string, logger?: any, config?: any, mediaRoot?: string}} [options] */
-  constructor({ dataRoot, logger = console, config = {}, mediaRoot } = {}) {
+  constructor({ dataRoot, logger = STDERR_LOGGER, config = {}, mediaRoot } = {}) {
     this.name = 'openclaw'
     this.dataRoot = dataRoot
     this.rootPath = dataRoot || process.cwd()
@@ -35,7 +36,7 @@ export class OpenClawPlatform {
     this.redis = new SqliteStore(dataRoot ? path.join(dataRoot, 'phi.sqlite') : ':memory:')
     this.logger = Object.fromEntries(['info', 'warn', 'error', 'debug', 'mark'].map(name => [name, (/** @type {unknown[]} */ ...args) => {
       const method = name === 'mark' ? 'info' : name
-      const sink = typeof logger[method] === 'function' ? logger[method] : typeof logger.info === 'function' ? logger.info : console.log
+      const sink = typeof logger[method] === 'function' ? logger[method] : typeof logger.info === 'function' ? logger.info : console.error
       sink.call(logger, redactLog(args.map(value => typeof value === 'string' ? value : inspect(value)).join(' ')))
     }]))
     this.logger.green = this.logger.red = value => value

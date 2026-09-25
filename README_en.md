@@ -22,12 +22,18 @@ Use `/phi` for text help or `/phi help` for image help.
 Regular lookup commands do not require OpenClaw control-command authorization. Plugin administration remains protected by the
 plugin's own `admins` list. Score commands do not call a language model.
 If a model answers that `/phi` is unknown, check the plugin configuration and restart the Gateway, then check its startup log for
-`Phigros ready: commands and reply_dispatch registered.`; CLI runtime inspection alone does not prove Gateway loading.
+`Phigros ready: commands and reply_dispatch registered` (followed by `, save tools enabled` when save editing is on); CLI runtime inspection alone does not prove Gateway loading.
 `npm run smoke:gateway` tests the host startup planner and buffered message dispatcher with isolated state and captured delivery.
 
 Project: https://github.com/Hydroiodic/phi-plugin-openclaw
 
 See the [complete command inventory](docs/COMMANDS.md) for commands, aliases, and permissions.
+
+The bundled `phigros-save` skill and `phigros_save_*` tools let the OpenClaw assistant fetch, decrypt, inspect, edit, and upload
+the cloud save of **the user it is talking to**, and nobody else. Identity comes only from the host's sender information; the tools
+work only in per-user direct sessions (set `session.dmScope` to `per-channel-peer`, or `per-account-channel-peer` for several bot
+accounts), and uploads run only after the user sends `/phi 确认上传 <code>` themselves. The original save is backed up under
+`backup/saves/` and the upload is verified afterwards. Set `saveEditing: false` to disable these tools.
 
 Based on Catrong/phi-plugin, licensed under GPL-3.0-only; see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
 

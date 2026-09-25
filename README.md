@@ -41,7 +41,7 @@ openclaw plugins inspect phi-plugin-openclaw --runtime --json
 
 检查结果应包含 `status: "loaded"`、`b30` 等 commands 和 `reply_dispatch` hook。
 `inspect --runtime` 验证当前 CLI 进程的注册结果；重启后的实际 QQ 消息才验证正在运行的 Gateway。
-Gateway 日志中应包含 `phi-plugin-openclaw` 和 `Phigros ready: commands and reply_dispatch registered.`。
+Gateway 日志中应包含 `phi-plugin-openclaw` 和 `Phigros ready: commands and reply_dispatch registered`（开启存档工具时后面还有 `, save tools enabled`）。
 
 ### 从 Git 仓库安装
 
@@ -111,6 +111,30 @@ QQ 官方 Bot 不保证支持撤回、私聊转发、合并转发或群文件等
 从群聊转发凭据到私聊的操作会提示改到私聊执行。自动超时提醒和游戏提示受当前 QQ 回复窗口及 OpenClaw dispatcher 生命周期限制。
 管理备份保存在服务器的数据目录中；`/phi restore` 可选择 ZIP 恢复业务存档，完整数据迁移请使用下方停机备份流程。插件更新由 OpenClaw 管理。
 
+### 让 AI 助手查看和修改自己的存档
+
+插件自带 `phigros-save` skill 和 `phigros_save_fetch`、`phigros_save_read`、`phigros_save_edit`、`phigros_save_upload` 四个工具。
+在私聊里对助手说“看看我 IN 难度的成绩”“把我的简介改成今天也要 AP 然后上传”，助手会下载并解密**你自己绑定的**云存档，
+查看或修改成绩、Data、课题等级、头像、背景、简介和游戏设置，然后准备上传。
+
+- **只能操作自己的存档。** 身份只来自 OpenClaw 提供的消息发送者，工具没有“指定用户”或凭据参数，助手无法读取或修改别人的存档。
+- **只在按用户隔离的私聊会话中可用。** 群聊和多人共用的会话里工具直接拒绝，存档内容不会进入别人能看到的对话。
+  OpenClaw 默认 `session.dmScope` 为 `main`，所有私聊共用一个会话，此时工具会拒绝工作；需要改为按用户隔离：
+
+  ```bash
+  openclaw config set session.dmScope per-channel-peer   # 一个 channel 接多个 Bot 账号时用 per-account-channel-peer
+  openclaw gateway restart
+  ```
+
+- **上传必须由本人确认。** 插件把修改清单和 6 位确认码直接发给用户，用户自己发送 `/phi 确认上传 <确认码>` 才会上传，
+  `/phi 取消上传` 放弃；确认码 10 分钟内有效，助手无法代为确认。
+- **不写入不合理的数据。** 分数、acc 与 Full Combo 必须能同时出现；插件无法无损重建的存档（例如游戏更新了存档格式）只读不写。
+- **可以恢复。** 上传前原存档备份到数据目录的 `backup/saves/`；读取之后云端若出现新存档（例如在游戏里同步过）则取消上传；
+  上传后重新下载校验，校验失败时把云端记录指回原文件。
+
+上传流程按社区公开的 TapTap 云存档接口实现，仓库中的测试使用模拟服务端。第一次使用前建议先在游戏内同步一次，确认原存档已备份。
+不需要此功能时在配置中设置 `saveEditing: false`。
+
 ## 配置
 
 默认即可查分，无需填写数据库地址、用户名或密码。以下示例合并到已有 `openclaw.json` 的对应位置，保留已有的其他字段：
@@ -140,6 +164,7 @@ QQ 官方 Bot 不保证支持撤回、私聊转发、合并转发或群文件等
 | `channels` | 允许的 channel ID；未配置或空数组表示全部，QQ Bot 是 `qqbot` |
 | `admins` | 管理员身份列表，格式 `channel:accountId:senderId`，从 `/phi identity` 获取；普通命令授权不等于管理员权限 |
 | `enableApi` | 是否启用外部联合查分服务，默认 `false` |
+| `saveEditing` | 是否允许 AI 助手在私聊中读取、修改用户本人的云存档，默认 `true`；上传始终需要用户本人确认 |
 | `dataDir` | 可选，自定义持久数据目录；建议绝对路径 |
 | `resourceBaseUrl` | 自建资源仓库的根 HTTPS 地址，默认 `https://hydroiodic.site/phi-plugin-openclaw/resources/v1/` |
 | `resourceVersion` | `latest`（默认）或游戏版本，如 `3.20.0`；首次解析 latest 后缓存，手动更新 |
@@ -175,7 +200,7 @@ phi-plugin-openclaw/
   themes/                本地主题与可选下载主题
   resource-cache/        按镜像隔离：v/<版本>/song-data/ 保存元数据，illustrations/ 保存共享曲绘
   otherill/              用户曲绘
-  backup/                管理命令生成的备份
+  backup/                管理命令生成的备份；saves/ 是 AI 助手上传前保存的原云存档
   browser/               没有系统 Chrome 时下载的浏览器
   temp/                  临时渲染文件和浏览器 profile
 ```

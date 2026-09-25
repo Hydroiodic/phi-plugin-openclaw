@@ -5,8 +5,12 @@
   "description": "Phigros 查分、绑定、曲目信息与娱乐。OpenClaw 专用，本地 SQLite。",
   "activation": {
     "onStartup": true,
-    "onCapabilities": ["hook"]
+    "onCapabilities": ["hook", "tool"]
   },
+  "contracts": {
+    "tools": ["phigros_save_fetch", "phigros_save_read", "phigros_save_edit", "phigros_save_upload"]
+  },
+  "skills": ["./skills"],
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
@@ -19,6 +23,7 @@
       "admins": { "type": "array", "items": { "type": "string" }, "default": [], "description": "管理员身份 channel:accountId:senderId，使用 /phi identity 获取。" },
       "channels": { "type": "array", "items": { "type": "string" }, "description": "允许的 channel ID，空数组为全部；QQ Bot 为 qqbot。" },
       "enableApi": { "type": "boolean", "default": false, "description": "启用上游联合查分 API；基本查分无需此服务。" },
+      "saveEditing": { "type": "boolean", "default": true, "description": "允许 AI 助手在私聊中读取、修改用户本人的云存档；上传必须由用户本人发送确认命令。" },
       "renderScale": { "type": "number", "minimum": 50, "maximum": 200, "default": 100 },
       "renderNum": { "type": "integer", "minimum": 1, "maximum": 4, "default": 1 },
       "timeout": { "type": "integer", "minimum": 1000, "maximum": 120000, "default": 20000 }

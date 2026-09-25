@@ -8,6 +8,7 @@ export const HELP = `phi-plugin-openclaw · Phigros 查分
 | 绑定 | /gbbind qrcode | 明确绑定国际服 |
 | 存档 | /phi update | 更新游戏存档 |
 | 存档 | /unbind | 解除本地绑定 |
+| 存档 | /phi 确认上传 <确认码> | 确认 AI 助手准备好的存档修改（仅私聊） |
 | 成绩 | /b30 | Best30 成绩图 |
 | 成绩 | /p30、/fc30、/x30 | 其他成绩列表 |
 | 成绩 | /score <曲名> | 查询单曲成绩 |
@@ -42,6 +43,7 @@ const SHORT_HEADS = new Set(('bind cnbind gbbind unbind 绑定 cn绑定 gb绑定
   + 'b B p P x X fc FC rks pgr lmtacc best score score1 score2 单曲成绩 单曲成绩1 单曲成绩2 suggest 推分 推分建议 chap achievement ahv '
   + 'song 曲 search 查找 检索 setnic setnick 设置别名 ill 曲绘 randclg rand random 随机 alias com 计算 tips newlog live table 定数表 difhis difhistory 历史定数 '
   + 'comment cmt 评论 评价 recmt mycmt addtag subtag retag newnotice chart tag settag '
+  + 'saveupload 确认上传 savecancel 取消上传 '
   + 'sign 签到 打卡 task 我的任务 retask 刷新任务 theme jrrp 今日人品 送 转 '
   + 'tipgame 提示猜曲 ltr letter 开字母 guess 猜曲绘 tip 提示 ans 答案 结束 '
   + 'ranklist 排行榜 rankfind 查询排名 market nx pr 上一页 下一页 mysetting myset 用户设置 个人设置 set 设置 '
@@ -69,7 +71,7 @@ export function normalizeCommand(text) {
   return value
 }
 
-const PRIVATE_COMMAND = /^\/phi\s+(?:(?:cn|gb)?(?:bind|绑定)|unbind|解绑|sessiontoken|auth|setApiToken|tkls|lstk|clearApiData|clean)/i
+const PRIVATE_COMMAND = /^\/phi\s+(?:(?:cn|gb)?(?:bind|绑定)|unbind|解绑|sessiontoken|auth|setApiToken|tkls|lstk|clearApiData|clean|确认上传|saveupload)/i
 const ADMIN_MODULES = new Set(['manage', 'botClient', 'update'])
 
 /** Resource-independent replies and privacy checks shared by both host entry paths. */

@@ -7,7 +7,7 @@
 
 | 模块 | 命令与主要别名 |
 | --- | --- |
-| 绑定与存档 | `bind` / `绑定`、`cnbind` / `cn绑定`、`gbbind` / `gb绑定`：后接 `qrcode` 或 `<sessionToken>`；`update` / `更新存档`；`unbind` / `解绑`；`clean`；`sessionToken` |
+| 绑定与存档 | `bind` / `绑定`、`cnbind` / `cn绑定`、`gbbind` / `gb绑定`：后接 `qrcode` 或 `<sessionToken>`；`update` / `更新存档`；`unbind` / `解绑`；`clean`；`sessionToken`；`确认上传 <确认码>` / `saveupload`、`取消上传` / `savecancel`（确认或放弃 AI 助手准备的存档上传，仅私聊） |
 | 成绩 | `b<N>` / `rks` / `pgr`；`p<N>`、`x<N>`、`fc<N>`；`a b30`（趣味成绩图）；`lmtacc <ACC>`；`best <序号>`；`score[1或2] <曲名>` / `单曲成绩`；`suggest` / `推分` / `推分建议`；`chap [章节]`；`achievement` / `ahv` |
 | 个人数据 | `data`；`info[1或2]`；`lvsco` / `lvscore` / `scolv`；`list [筛选条件]`；`年度总结` / `2025history`；`hisb30` |
 | 排行榜 | `ranklist` / `排行榜`；`rankfind <名次>` / `查询排名` |
@@ -32,7 +32,7 @@
 - `/phi b30`、`/phib30`、`#phi b30`、`/pgr b30`、`/屁股肉 b30` 均能进入相同处理函数。趣味成绩命令也保留 `杠phi啊比三零` 等写法。
 - 无歧义的短命令如 `/b30`、`/gbbind`、`/ranklist`、`/api help` 可直接使用。**`/help`、`/send` 等宿主保留命令不能用于调用 Phigros**，请用 `/phi help`、`/phi send`。
 - `phisign`、`phitask`、`phiretask`、`phitheme1` 等无斜杠写法仍可使用。
-- 国服用 `/cnbind`，国际服用 `/gbbind`；`/bind` 使用 `defaultGlobal` 配置。扫码与 token 两种方式均保留。绑定、解绑和凭据管理请私聊，不能在群中发送 token。
+- 国服用 `/cnbind`，国际服用 `/gbbind`；`/bind` 使用 `defaultGlobal` 配置。扫码与 token 两种方式均保留。绑定、解绑、凭据管理和存档上传确认请私聊，不能在群中发送 token。
 - Notes 转赠：`/phi send <用户ID> <数量>`，用户ID可直接使用对方 `/phi identity` 显示的完整 ID，不一定是 QQ 号。接收方先在同一个 Bot 使用一次 `/b30`（无需绑定）以登记身份；已有结构化 @ 也可识别。不同 channel 或 Bot 账号之间不允许转赠。
 - 管理员由 OpenClaw 插件配置的 `admins` 指定；获得宿主普通命令权限不等于成为插件管理员。恢复、删存档、清除 API 账号等操作会改变数据，请仔细核对后执行。
 
@@ -48,7 +48,7 @@ QQ channel 的撤回、合并转发、主动消息和回复时限由宿主与平
 
 ## 覆盖检查
 
-对照迁移前代码，目前 16 个启用模块的 87 条业务规则均有对应入口。`Dan.js`、删除别名和封神榜在迁移前就是注释停用状态，不算可用命令。
+对照迁移前代码，目前 17 个启用模块的 89 条业务规则均有对应入口。`Dan.js`、删除别名和封神榜在迁移前就是注释停用状态，不算可用命令。
 
 `tests/openclaw-command-coverage.test.mjs` 逐项核对模块、处理函数和中英文别名，覆盖完整前缀、紧凑写法、短命令、游戏回答和命令冲突；新增或移除规则时必须同步清单。
 `npm run smoke:gateway` 使用本机 OpenClaw 的真实启动规划和消息分发器验证接入，以模拟账号替代外部登录，不发送真实 QQ 消息。

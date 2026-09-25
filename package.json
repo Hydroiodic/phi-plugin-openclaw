@@ -64,6 +64,7 @@
     "resources/html/",
     "resources/themes/milthm/",
     "scripts/",
+    "skills/",
     "tests/",
     "types/",
     "tsconfig.json",

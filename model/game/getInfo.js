@@ -13,6 +13,18 @@ import fileWatcherRegistry from '../../components/FileWatcherRegistry.js'
 /** @import Save from '../save/Save.js' */
 
 
+/**
+ * 存档 user.background 中与曲名不一致的写法
+ * @type {Record<string, string>}
+ */
+const SAVE_BACKGROUND_ALIASES = {
+    'Another Me ': 'Another Me (KALPA)',
+    'Another Me': 'Another Me (Rising Sun Traxx)',
+    'Re_Nascence (Psystyle Ver.) ': 'Re_Nascence (Psystyle Ver.)',
+    'Energy Synergy Matrix': 'ENERGY SYNERGY MATRIX',
+    'Le temps perdu-': 'Le temps perdu',
+}
+
 export default new class getInfo {
 
 
@@ -814,6 +826,17 @@ export default new class getInfo {
     }
 
     /**
+     * 曲目在存档 user.background 中的写法（个别曲目与曲名不同）
+     * @param {idString} id
+     * @returns {string | undefined}
+     */
+    backgroundName(id) {
+        const song = this.info(id, true)?.song
+        if (!song) return undefined
+        return Object.keys(SAVE_BACKGROUND_ALIASES).find(key => SAVE_BACKGROUND_ALIASES[key] === song) || song
+    }
+
+    /**
      * 随机选一张曲绘作为背景
      * @param {'common'|'blur'|'low'} [kind]
      */
@@ -880,31 +903,7 @@ export default new class getInfo {
      */
     getBackground(save_background) {
         try {
-            switch (save_background) {
-                case 'Another Me ': {
-                    save_background = 'Another Me (KALPA)'
-                    break
-                }
-                case 'Another Me': {
-                    save_background = 'Another Me (Rising Sun Traxx)'
-                    break
-                }
-                case 'Re_Nascence (Psystyle Ver.) ': {
-                    save_background = 'Re_Nascence (Psystyle Ver.)'
-                    break
-                }
-                case 'Energy Synergy Matrix': {
-                    save_background = 'ENERGY SYNERGY MATRIX'
-                    break
-                }
-                case 'Le temps perdu-': {
-                    save_background = 'Le temps perdu'
-                    break
-                }
-                default: {
-                    break
-                }
-            }
+            if (Object.hasOwn(SAVE_BACKGROUND_ALIASES, save_background)) save_background = SAVE_BACKGROUND_ALIASES[save_background]
             // @ts-ignore
             return this.getill(this.SongGetId(save_background) || save_background)
         } catch (err) {

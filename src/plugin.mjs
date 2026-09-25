@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { homedir } from 'node:os'
 import { immediateReply, isPhigrosCommand, isForeignCommand } from './commands.mjs'
+import { SAVE_TOOL_NAMES, createSaveTools } from './save-tools.mjs'
 
 export const PLUGIN_ID = 'phi-plugin-openclaw'
 const NATIVE_COMMANDS = ['phi', 'phihelp', 'b30', 'b19', 'p30', 'x30', 'fc30', 'bind', 'cnbind', 'gbbind', 'unbind', 'score', 'suggest', 'song']
@@ -94,8 +95,13 @@ export class PhigrosPlugin {
         acceptsArgs: true, requireAuth: false, handler: ctx => this.handleNative(ctx) })
     }
     this.api.on('reply_dispatch', (event, hook) => this.handleDispatch(event, hook), { priority: 100 })
+    const saveTools = this.config.saveEditing !== false && typeof this.api.registerTool === 'function'
+    if (saveTools) {
+      this.api.registerTool(ctx => this.allowed(ctx.messageChannel) ? createSaveTools(ctx,
+        async (...args) => (await this.ensureRuntime()).runSaveTool(...args), this.api.logger) : null, { names: SAVE_TOOL_NAMES })
+    }
     this.api.registerService({ id: PLUGIN_ID,
-      start: () => this.api.logger.info('Phigros ready: commands and reply_dispatch registered.'),
+      start: () => this.api.logger.info(`Phigros ready: commands and reply_dispatch registered${saveTools ? ', save tools enabled' : ''}.`),
       stop: () => this.close() })
   }
 
