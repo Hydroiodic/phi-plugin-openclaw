@@ -128,7 +128,7 @@
  * @typedef {'apiBotClientId'} apiBotClientId API签发的Bot clientId
  * @typedef {'apiBotClientSecret'} apiBotClientSecret API签发的Bot HMAC secret
  * @typedef {'apiBotSecretVersion'} apiBotSecretVersion Bot HMAC secret版本
- * 
+ *
  * @typedef {renderScale
  * |randerQuality
  * |timeout
@@ -176,9 +176,8 @@
  * |apiBotClientId
  * |apiBotClientSecret
  * |apiBotSecretVersion
-* } configName 全部设置
-*/
-
+ * } configName 全部设置
+ */
 
 /**
  * @typedef {object} ori_record
@@ -213,7 +212,7 @@
  * @property {string} shortId
  * @property {string} updatedAt
  * @property {string} username
- * 
+ *
  * @typedef {object} gameFile
  * @property {string} __type 文件类型
  * @property {string} bucket 存档bucket
@@ -226,11 +225,11 @@
  * @property {string} provider provider
  * @property {string} updatedAt 存档更新时间 2023-10-05T07:41:24.503Z
  * @property {string} url https://rak3ffdi.tds1.tapfiles.cn/gamesaves/{32}/.save
- * 
+ *
  * @typedef {object} modifiedAt
  * @property {string} __type
  * @property {Date} iso
- * 
+ *
  * @typedef {object} summary
  * @property {string} updatedAt 插件获取存档时间 2023 Oct.06 11:46:33
  * @property {number} saveVersion 存档版本
@@ -241,7 +240,7 @@
  * @property {number[]} cleared 完成曲目数量
  * @property {number[]} fullCombo FC曲目数量
  * @property {number[]} phi AP曲目数量
- * 
+ *
  * @typedef {object} saveInfo
  * @property {Date} createdAt 账户创建时间 2022-09-03T10:21:48.613Z
  * @property {gameFile} gameFile
@@ -252,7 +251,7 @@
  * @property {Date} updatedAt 存档更新时间 2023-10-06T03:46:33.000Z
  * @property {{'__type': "Pointer", 'className': "_User", 'objectId': string}} user
  * @property {string} PlayerId
- * 
+ *
  * @typedef {object} gameProgress
  * @property {boolean} isFirstRun
  * @property {boolean} legacyChapterFinished
@@ -271,7 +270,7 @@
  * @property {boolean} chapter8UnlockSecondPhase
  * @property {boolean} chapter8Passed
  * @property {number} chapter8SongUnlocked
- * 
+ *
  * @typedef {object} gameuser
  * @property {string} name
  * @property {string} version
@@ -280,9 +279,9 @@
  * @property {string} avatar
  * @property {string} background
  * @property {string} CLGMOD
- * 
+ *
  * @typedef {Record<idString, (ori_record | null)[]>} gameRecord
- * 
+ *
  * @typedef {object} oriSave
  * @property {phigrosToken} session
  * @property {apiUserId} [apiId]
@@ -313,7 +312,7 @@
  */
 
 /**
- * 
+ *
  * @typedef {Partial<Record<allLevelKind, ScoreDetail[]>>} songRecordHistory
  */
 
@@ -346,7 +345,7 @@
  * @property {boolean} success
  */
 
-/** 
+/**
  * @typedef {Object} TapTapNoticeItem
  * @property {'moment'} type
  * @property {string} identification

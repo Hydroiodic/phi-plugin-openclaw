@@ -33,9 +33,7 @@ export class UserCredentials {
         const normalizedUserId = String(userId ?? '').trim()
         if (!normalizedUserId) throw new TypeError('UserCredentials requires e.userId')
         this.userId = normalizedUserId
-        this.event = event
-            ? { ...event, user_id: normalizedUserId, userId: normalizedUserId }
-            : undefined
+        this.event = event ? { ...event, user_id: normalizedUserId, userId: normalizedUserId } : undefined
         this.store = store
     }
 
@@ -117,7 +115,7 @@ export class UserCredentials {
      * @param {apiUserId | string | number} apiId API 用户 ID
      */
     async setApiId(apiId) {
-        return this.store.setApiId(this.userId, /** @type {apiUserId} */(String(apiId)))
+        return this.store.setApiId(this.userId, /** @type {apiUserId} */ (String(apiId)))
     }
 
     /** 删除当前用户本地保存的 API ID。 */
@@ -130,10 +128,7 @@ export class UserCredentials {
      * @returns {Promise<{sessionToken: phigrosToken, apiId: apiUserId}>} 本地凭证快照
      */
     async getLocalCredentials() {
-        const [sessionToken, apiId] = await Promise.all([
-            this.getSessionToken(),
-            this.getApiId(),
-        ])
+        const [sessionToken, apiId] = await Promise.all([this.getSessionToken(), this.getApiId()])
         return { sessionToken, apiId }
     }
 
@@ -169,10 +164,7 @@ export class UserCredentials {
      * @returns 绑定结果；失败返回 `null`
      */
     async bindWithApiId(apiId, options = {}) {
-        return this.bindPlatform(
-            { api_user_id: apiId },
-            { ...options, ignoreUnboundError: true },
-        )
+        return this.bindPlatform({ api_user_id: apiId }, { ...options, ignoreUnboundError: true })
     }
 
     /**
@@ -204,9 +196,7 @@ export class UserCredentials {
             {
                 event: this.requireEvent(),
                 ignoreUnboundError: options.ignoreUnboundError === true,
-                errorPrefix: binding.token
-                    ? 'API绑定暂时不可用，将仅更新当前 Bot 的本地绑定状态。'
-                    : undefined,
+                errorPrefix: binding.token ? 'API绑定暂时不可用，将仅更新当前 Bot 的本地绑定状态。' : undefined,
                 notifyUser: Boolean(binding.token),
             },
         )
@@ -284,14 +274,17 @@ export class UserCredentials {
     async createAliasProposal(input, options = {}) {
         const token = await this.getSessionToken()
         if (!token) throw new PhiApiError('请先绑定 sessionToken。', 404, 'binding_not_found')
-        return makeRequest.createAliasProposal({
-            ...(await this.platformParams()),
-            token,
-            alias: input.alias,
-            songId: input.songId,
-            note: input.note || undefined,
-            source: 'bot',
-        }, this.endpointOptions(options))
+        return makeRequest.createAliasProposal(
+            {
+                ...(await this.platformParams()),
+                token,
+                alias: input.alias,
+                songId: input.songId,
+                note: input.note || undefined,
+                source: 'bot',
+            },
+            this.endpointOptions(options),
+        )
     }
 
     /**
@@ -361,10 +354,7 @@ export class UserCredentials {
     async getUserAPIBanStatus(options = {}) {
         const endpointOptions = this.endpointOptions(options)
         try {
-            return await makeRequest.getUserBan(
-                await this.platformParams(true),
-                endpointOptions,
-            )
+            return await makeRequest.getUserBan(await this.platformParams(true), endpointOptions)
         } catch (error) {
             if (makeRequest.shouldIgnoreError(error, endpointOptions)) return null
             throw error
@@ -386,10 +376,7 @@ export class UserCredentials {
      * @returns {Promise<any[] | null>} 用户投票记录；请求失败或被忽略时返回 `null`
      */
     async getChartsUsersVote(data, options = {}) {
-        return makeRequest.getChartsUsersVote(
-            { ...(await this.platformParams(true)), data },
-            this.endpointOptions(options),
-        )
+        return makeRequest.getChartsUsersVote({ ...(await this.platformParams(true)), data }, this.endpointOptions(options))
     }
 
     /**
@@ -398,10 +385,7 @@ export class UserCredentials {
      * @returns 排行榜数据；请求失败或被忽略时返回 `null`
      */
     async getRanklistUser(options = {}) {
-        return makeRequest.getRanklistUser(
-            await this.platformParams(true),
-            this.endpointOptions(options),
-        )
+        return makeRequest.getRanklistUser(await this.platformParams(true), this.endpointOptions(options))
     }
 
     /**
@@ -410,10 +394,7 @@ export class UserCredentials {
      * @returns {Promise<any[] | null>} 评论列表；请求失败或被忽略时返回 `null`
      */
     async getCommentsByUserId(options = {}) {
-        return makeRequest.getCommentsByUserId(
-            await this.platformParams(true),
-            this.endpointOptions(options),
-        )
+        return makeRequest.getCommentsByUserId(await this.platformParams(true), this.endpointOptions(options))
     }
 
     /**
@@ -423,10 +404,7 @@ export class UserCredentials {
      * @returns 成绩排行数据；请求失败或被忽略时返回 `null`
      */
     async getScoreRanklistByUser(query, options = {}) {
-        return makeRequest.getScoreRanklistByUser(
-            { ...(await this.platformParams(true)), ...query },
-            this.endpointOptions(options),
-        )
+        return makeRequest.getScoreRanklistByUser({ ...(await this.platformParams(true)), ...query }, this.endpointOptions(options))
     }
 
     /**
@@ -435,10 +413,7 @@ export class UserCredentials {
      * @returns 标签分析；请求失败或被忽略时返回 `null`
      */
     async getB30TagAnalysis(options = {}) {
-        return makeRequest.getB30TagAnalysis(
-            await this.platformParams(true),
-            this.endpointOptions(options),
-        )
+        return makeRequest.getB30TagAnalysis(await this.platformParams(true), this.endpointOptions(options))
     }
 
     /**
@@ -614,10 +589,7 @@ export class UserCredentials {
      * @returns {Promise<Save | null>} 初始化后的云存档；失败返回 `null`
      */
     async getCloudSave(options = {}) {
-        const cloudSave = await makeRequest.getCloudSaves(
-            await this.platformParams(true),
-            this.endpointOptions(options),
-        )
+        const cloudSave = await makeRequest.getCloudSaves(await this.platformParams(true), this.endpointOptions(options))
         if (!cloudSave) return null
         const result = new Save(cloudSave)
         await result.init()
@@ -631,10 +603,7 @@ export class UserCredentials {
      * @returns {Promise<Save | null>} 已初始化的云存档
      */
     async getCloudSaveByApiId(apiId, options = {}) {
-        const cloudSave = await makeRequest.getCloudSaves(
-            { api_user_id: apiId },
-            this.endpointOptions(options),
-        )
+        const cloudSave = await makeRequest.getCloudSaves({ api_user_id: apiId }, this.endpointOptions(options))
         if (!cloudSave) return null
         const result = new Save(cloudSave)
         await result.init()
@@ -714,7 +683,7 @@ export class UserCredentials {
         if (new Date(newSaveInfo.modifiedAt.iso).getTime() != old?.saveInfo?.modifiedAt?.iso?.getTime()) {
             const newSave = await makeRequest.getCloudSaves(
                 {
-                    ...(await this.platformParams(true))
+                    ...(await this.platformParams(true)),
                 },
                 this.endpointOptions(options),
             )
@@ -746,13 +715,14 @@ export class UserCredentials {
         try {
             await user.buildRecord()
             if (getInfo.badSave && new Save(user).equalRecord(getInfo.badSave)) {
-                notifyUser(event, '请注意，TapTap目前的云存档API疑似存在问题，已阻止本次更新，请在确保游戏内数据正常的情况下，覆盖云存档并尝试更新，如若依旧失败请耐心等待恢复。')
+                notifyUser(
+                    event,
+                    '请注意，TapTap目前的云存档API疑似存在问题，已阻止本次更新，请在确保游戏内数据正常的情况下，覆盖云存档并尝试更新，如若依旧失败请耐心等待恢复。',
+                )
                 return old ? { save: old, added_rks_notes: [0, 0] } : undefined
             }
         } catch (error) {
-            const message = platform.getAdapterName(event) === 'QQBot'
-                ? '更新失败！QAQ\n请稍后重试'
-                : `更新失败！QAQ\n${error}`
+            const message = platform.getAdapterName(event) === 'QQBot' ? '更新失败！QAQ\n请稍后重试' : `更新失败！QAQ\n${error}`
             notifyUser(event, message)
             logger.error(error)
             return undefined
@@ -767,7 +737,10 @@ export class UserCredentials {
         }
 
         if (old?.session && old.session !== user.session) {
-            notifyUser(event, `检测到新的sessionToken，将自动更换本地绑定。如果需要删除当前 Bot 本地保存的存档和历史，请使用 ⌈/${Config.getUserCfg('config', 'cmdhead')} unbind⌋。`)
+            notifyUser(
+                event,
+                `检测到新的sessionToken，将自动更换本地绑定。如果需要删除当前 Bot 本地保存的存档和历史，请使用 ⌈/${Config.getUserCfg('config', 'cmdhead')} unbind⌋。`,
+            )
         }
 
         const now = new Save(user)
@@ -803,7 +776,7 @@ export class UserCredentials {
         const event = this.requireEvent()
         const sessionToken = await this.getSessionToken()
         if (!sessionToken) {
-            if (!await canUseApi(event)) {
+            if (!(await canUseApi(event))) {
                 notifyUser(event, '请先绑定sessionToken哦！')
                 return null
             }
@@ -827,22 +800,23 @@ export class UserCredentials {
 }
 
 /**
-     * 更新存档
-     * @param {botEvent} e
-     * @param {Save | oriSave | undefined} old
-     * @param {Save | oriSave} now
-     * @returns {Promise<[number,number]>} [rks变化值，note变化值]，失败返回 false
-     */
+ * 更新存档
+ * @param {botEvent} e
+ * @param {Save | oriSave | undefined} old
+ * @param {Save | oriSave} now
+ * @returns {Promise<[number,number]>} [rks变化值，note变化值]，失败返回 false
+ */
 export async function buildingRecord(old = undefined, now, e) {
     const { result: addedNotes } = await getNotes.update(e.user_id, notesData => {
         let awarded = 0
         for (const task of notesData.task || []) {
-            if (!task || task.finished || !task.request
-                || !Number.isSafeInteger(task.reward) || task.reward < 0) continue
+            if (!task || task.finished || !task.request || !Number.isSafeInteger(task.reward) || task.reward < 0) continue
             const record = now.gameRecord?.[task.song]?.[LevelNum[task.request.rank]]
             if (!record) continue
-            const achieved = task.request.type === 'acc' ? record.acc >= task.request.value
-                : task.request.type === 'score' && record.score >= task.request.value
+            const achieved =
+                task.request.type === 'acc'
+                    ? record.acc >= task.request.value
+                    : task.request.type === 'score' && record.score >= task.request.value
             if (!achieved) continue
             task.finished = true
             notesData.money += task.reward

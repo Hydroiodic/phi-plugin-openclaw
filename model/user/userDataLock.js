@@ -23,7 +23,9 @@ export class UserDataLock {
                 const previous = this.pending.get(key) || Promise.resolve()
                 /** @type {()=>void} */
                 let release = () => {}
-                const gate = new Promise(resolve => { release = () => resolve(undefined) })
+                const gate = new Promise(resolve => {
+                    release = () => resolve(undefined)
+                })
                 const tail = previous.then(() => gate)
                 this.pending.set(key, tail)
                 await previous

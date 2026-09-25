@@ -27,13 +27,20 @@ test('user credential modules keep a one-way dependency structure', () => {
     assert.doesNotMatch(request, /(?:from\s+|import\()['"]\.\.\/render\/send\.js/)
 
     assert.doesNotMatch(localSave, /(?:from\s+|import\()['"](?:\.\.\/user\/userCredentials|\.\/getSaveFromApi|\.\.\/api\/makeRequest)\.js/)
-    assert.doesNotMatch(apiSaveCache, /(?:from\s+|import\()['"](?:\.\.\/user\/(?:userCredentials|userCredentialStore)|\.\.\/api\/makeRequest)\.js/)
-    assert.doesNotMatch(credentialStore, /(?:from\s+|import\()['"](?:\.\/userCredentials|\.\.\/save\/(?:getSave|getSaveFromApi)|\.\.\/api\/makeRequest)\.js/)
+    assert.doesNotMatch(
+        apiSaveCache,
+        /(?:from\s+|import\()['"](?:\.\.\/user\/(?:userCredentials|userCredentialStore)|\.\.\/api\/makeRequest)\.js/,
+    )
+    assert.doesNotMatch(
+        credentialStore,
+        /(?:from\s+|import\()['"](?:\.\/userCredentials|\.\.\/save\/(?:getSave|getSaveFromApi)|\.\.\/api\/makeRequest)\.js/,
+    )
     assert.doesNotMatch(fileRepository, /(?:from\s+|import\()['"]\.\.\/save\/getSave\.js/)
 })
 
 test('model root only contains its directory guide', () => {
-    const rootFiles = fs.readdirSync(path.join(root, 'model'), { withFileTypes: true })
+    const rootFiles = fs
+        .readdirSync(path.join(root, 'model'), { withFileTypes: true })
         .filter(entry => entry.isFile())
         .map(entry => entry.name)
 

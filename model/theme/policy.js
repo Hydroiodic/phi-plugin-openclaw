@@ -18,7 +18,9 @@ export class ThemePolicyCache {
         try {
             const value = JSON.parse(fs.readFileSync(this.filePath, 'utf8'))
             this.apply(value, false)
-        } catch { /* empty blacklist is the safe, documented default */ }
+        } catch {
+            /* empty blacklist is the safe, documented default */
+        }
     }
 
     /** @param {any} value @param {boolean} [persist=true] */

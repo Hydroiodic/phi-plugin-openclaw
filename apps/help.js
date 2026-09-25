@@ -4,8 +4,8 @@ import picmodle from '../model/render/picmodle.js'
 import getFile from '../model/filesystem/getFile.js'
 import path from 'path'
 import { infoPath } from '../model/filesystem/path.js'
-import getBanGroup from '../model/user/getBanGroup.js';
-import phiPluginBase from '../components/baseClass.js';
+import getBanGroup from '../model/user/getBanGroup.js'
+import phiPluginBase from '../components/baseClass.js'
 import getNotes from '../model/user/getNotes.js'
 import getInfo from '../model/game/getInfo.js'
 import { getApiAccessState } from '../model/user/apiPermission.js'
@@ -15,7 +15,6 @@ import { sendQuickCommands, helpQuickCommands, apiHelpQuickCommands } from '../m
 
 const helpGroup = await getFile.FileReader(path.join(infoPath, 'help.json'))
 const apiHelp = await getFile.FileReader(path.join(infoPath, 'help', 'api.json'))
-
 
 export class phihelp extends phiPluginBase {
     constructor() {
@@ -27,82 +26,91 @@ export class phihelp extends phiPluginBase {
             rule: [
                 {
                     reg: `^[#/](pgr|PGR|屁股肉|phi|Phi|(${Config.getUserCfg('config', 'cmdhead')}))(\\s*)(命令|帮助|菜单|help|说明|功能|指令|使用说明)$`,
-                    fnc: 'help'
+                    fnc: 'help',
                 },
                 {
                     reg: `^[#/](pgr|PGR|屁股肉|phi|Phi|(${Config.getUserCfg('config', 'cmdhead')}))(\\s*)to?k(en)?(\\s*)(命令|帮助|菜单|help|说明|功能|指令|使用说明)$`,
-                    fnc: 'tkhelp'
+                    fnc: 'tkhelp',
                 },
                 {
                     reg: `^[#/](pgr|PGR|屁股肉|phi|Phi|(${Config.getUserCfg('config', 'cmdhead')}))(\\s*)api(\\s*)(命令|帮助|菜单|help|说明|功能|指令|使用说明)$`,
-                    fnc: 'apihelp'
-                }
-
-            ]
+                    fnc: 'apihelp',
+                },
+            ],
         })
-
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async help(e) {
-
         if (await getBanGroup.get(e, 'help')) return false
 
         const head = displayCmdHead()
         const pluginData = await getNotes.getNotesData(e.user_id)
-        send.reply(e, await picmodle.help(e, {
-            helpGroup: helpGroup,
-            cmdHead: head || null,
-            isMaster: e.isMaster,
-            background: getInfo.randomBackground(),
-            theme: pluginData?.theme || 'star'
-        }), true)
+        send.reply(
+            e,
+            await picmodle.help(e, {
+                helpGroup: helpGroup,
+                cmdHead: head || null,
+                isMaster: e.isMaster,
+                background: getInfo.randomBackground(),
+                theme: pluginData?.theme || 'star',
+            }),
+            true,
+        )
         await sendQuickCommands(e, helpQuickCommands(head), '帮助页常用操作')
         return true
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async tkhelp(e) {
-
         if (await getBanGroup.get(e, 'tkhelp')) return false
 
-        send.send_with_At(e, `sessionToken有关帮助：\n【推荐】：扫码登录TapTap获取token\n指令：/${Config.getUserCfg('config', 'cmdhead')} bind qrcode\n【基础方法】详见《Phigros非官方查分指引》：https://kdocs.cn/l/cvMDjWPTNaz4\n绑定sessionToken指令：\n/${Config.getUserCfg('config', 'cmdhead')} bind <sessionToken>`)
+        send.send_with_At(
+            e,
+            `sessionToken有关帮助：\n【推荐】：扫码登录TapTap获取token\n指令：/${Config.getUserCfg('config', 'cmdhead')} bind qrcode\n【基础方法】详见《Phigros非官方查分指引》：https://kdocs.cn/l/cvMDjWPTNaz4\n绑定sessionToken指令：\n/${Config.getUserCfg('config', 'cmdhead')} bind <sessionToken>`,
+        )
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async apihelp(e) {
-
         const apiAccess = await getApiAccessState(e)
         if (!apiAccess.enabled) {
-            send.send_with_At(e, !apiAccess.globalEnabled
-                ? '这里没有连接查分平台哦！'
-                : !apiAccess.capabilityEnabled
-                    ? 'Bot 主人已关闭在线查分功能。'
-                    : '你已在本地用户设置中禁用 API 功能，可在 /myset 中重新开启。')
+            send.send_with_At(
+                e,
+                !apiAccess.globalEnabled
+                    ? '这里没有连接查分平台哦！'
+                    : !apiAccess.capabilityEnabled
+                      ? 'Bot 主人已关闭在线查分功能。'
+                      : '你已在本地用户设置中禁用 API 功能，可在 /myset 中重新开启。',
+            )
             return false
         }
 
         const head = displayCmdHead()
         const pluginData = await getNotes.getNotesData(e.user_id)
-        send.reply(e, await picmodle.help(e, {
-            helpGroup: apiHelp,
-            cmdHead: head || null,
-            isMaster: e.isMaster,
-            background: getInfo.randomBackground(),
-            theme: pluginData?.theme || 'star'
-        }), true)
+        send.reply(
+            e,
+            await picmodle.help(e, {
+                helpGroup: apiHelp,
+                cmdHead: head || null,
+                isMaster: e.isMaster,
+                background: getInfo.randomBackground(),
+                theme: pluginData?.theme || 'star',
+            }),
+            true,
+        )
         await sendQuickCommands(e, apiHelpQuickCommands(head), 'API帮助快捷操作')
     }
 }

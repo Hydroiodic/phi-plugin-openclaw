@@ -18,9 +18,15 @@ export class BackupArchive {
         for (const entry of this.entries) {
             const original = /** @type {any} */ (entry).unsafeOriginalName ?? entry.name
             const name = entry.dir ? original.replace(/\/$/, '') : original
-            if (original !== entry.name || !name || name.includes('\0') || name.includes('\\')
-                || name.split('/').some((/** @type {string} */ part) => !part || part === '.' || part === '..')
-                || /^[a-z]:/i.test(name)) throw new Error('备份包含不安全的路径')
+            if (
+                original !== entry.name ||
+                !name ||
+                name.includes('\0') ||
+                name.includes('\\') ||
+                name.split('/').some((/** @type {string} */ part) => !part || part === '.' || part === '..') ||
+                /^[a-z]:/i.test(name)
+            )
+                throw new Error('备份包含不安全的路径')
             const mode = Number(entry.unixPermissions) & 0o170000
             if (mode === 0o120000) throw new Error('备份不能包含符号链接')
         }
@@ -112,18 +118,26 @@ export class BackupRestoreService {
             if (entry.name === 'user_token.json') {
                 const data = await archive.readJson(entry)
                 for (const [userId, token] of Object.entries(data)) {
-                    if (!userId || userId.length > 512 || /[\u0000-\u001f\u007f]/.test(userId)
-                        || !isSessionToken(token)) throw new Error('备份中的用户凭证格式无效')
+                    if (!userId || userId.length > 512 || /[\u0000-\u001f\u007f]/.test(userId) || !isSessionToken(token))
+                        throw new Error('备份中的用户凭证格式无效')
                     credentials.push([userId, /** @type {phigrosToken} */ (token)])
                 }
                 continue
             }
             let root
-            if (parts[0] === 'saveData' && parts.length === 3 && isSessionToken(parts[1])
-                && ['save.json', 'history.json'].includes(parts[2])) {
+            if (
+                parts[0] === 'saveData' &&
+                parts.length === 3 &&
+                isSessionToken(parts[1]) &&
+                ['save.json', 'history.json'].includes(parts[2])
+            ) {
                 root = this.saveRoot
-            } else if (parts[0] === 'pluginData' && parts.length === 2 && parts[1].endsWith('.json')
-                && !/[\u0000-\u001f\u007f:]/.test(parts[1])) {
+            } else if (
+                parts[0] === 'pluginData' &&
+                parts.length === 2 &&
+                parts[1].endsWith('.json') &&
+                !/[\u0000-\u001f\u007f:]/.test(parts[1])
+            ) {
                 root = this.pluginDataRoot
             } else {
                 throw new Error('备份包含无法识别的数据路径')

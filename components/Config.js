@@ -1,4 +1,3 @@
-
 import YAML from 'yaml'
 import fs from 'node:fs'
 import YamlReader from './YamlReader.js'
@@ -81,13 +80,13 @@ export class Config {
      * @param {'config'|'nickconfig'|'otherinfo'} name 文件名
      * @param {any} [style] key值
      * @description 默认配置和用户配置
-    */
+     */
     getUserCfg(name, style = undefined) {
         const def = this.getdefSet(name)
         const config = this.getConfig(name)
         if (name == 'otherinfo' && config) {
             for (const i in config) {
-                config[i].sp_vis = true;
+                config[i].sp_vis = true
             }
         }
         if (style) {
@@ -100,9 +99,7 @@ export class Config {
                 }
                 return def[style]
             }
-        }
-        else
-            return (config ? config : def)
+        } else return config ? config : def
     }
 
     /** 默认配置 */

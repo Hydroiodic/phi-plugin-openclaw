@@ -1,6 +1,5 @@
-import fCompute from "../game/fCompute.js"
-import getInfo from "../game/getInfo.js"
-
+import fCompute from '../game/fCompute.js'
+import getInfo from '../game/getInfo.js'
 
 /**
  * @typedef {object} extendedScoreHistoryDetail
@@ -18,13 +17,12 @@ import getInfo from "../game/getInfo.js"
  * @property {Date} [date_old] 旧成绩的日期
  */
 export default class ScoreHistory {
-
     /**
      * 生成成绩记录数组
-     * @param {number} acc 
-     * @param {number} score 
+     * @param {number} acc
+     * @param {number} score
      * @param {Date} date
-     * @param {boolean} fc 
+     * @param {boolean} fc
      * @returns []
      */
     static create(acc, score, date, fc) {
@@ -35,7 +33,7 @@ export default class ScoreHistory {
      * 扩充信息
      * @param {idString} songId 曲目id
      * @param {allLevelKind} level 难度
-     * @param {ScoreDetail} now 
+     * @param {ScoreDetail} now
      * @param {ScoreDetail} [old=undefined]
      * @returns {extendedScoreHistoryDetail} 扩展后的成绩信息
      */
@@ -58,7 +56,7 @@ export default class ScoreHistory {
                 score_new: now[1],
                 score_old: old ? old[1] : undefined,
                 date_new: new Date(now[2]),
-                date_old: old ? new Date(old[2]) : undefined
+                date_old: old ? new Date(old[2]) : undefined,
             }
         } else {
             /**无难度信息 */
@@ -72,7 +70,7 @@ export default class ScoreHistory {
                 score_new: now[1],
                 score_old: old ? old[1] : undefined,
                 date_new: new Date(now[2]),
-                date_old: old ? new Date(old[2]) : undefined
+                date_old: old ? new Date(old[2]) : undefined,
             }
         }
     }
@@ -86,7 +84,7 @@ export default class ScoreHistory {
             acc: Number(data[0]),
             score: data[1],
             date: new Date(data[2]),
-            fc: Boolean(data[3])
+            fc: Boolean(data[3]),
         }
     }
 

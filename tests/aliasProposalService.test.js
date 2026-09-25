@@ -14,9 +14,13 @@ test('provides a callable scheduled-task handler for the runtime', async () => {
     const originalBotScheduledTask = botSyncService.scheduledTask
     let calls = 0
     aliasProposalService.initialize = async () => {}
-    aliasProposalService.scheduledTask = async () => { calls++ }
+    aliasProposalService.scheduledTask = async () => {
+        calls++
+    }
     botSyncService.initialize = async () => {}
-    botSyncService.scheduledTask = async () => { calls++ }
+    botSyncService.scheduledTask = async () => {
+        calls++
+    }
     try {
         const plugin = new aliasProposal()
         const task = /** @type {import('../components/platform/types.js').PlatformTask} */ (plugin.task)
@@ -62,7 +66,9 @@ test('uses the stored sessionToken through the concrete makeRequest proposal met
     }
     try {
         const proposal = await aliasProposalService.create(/** @type {any} */ ({ userId: 'proposal-user' }), {
-            songId: 'song.0', alias: 'nick', note: 'note',
+            songId: 'song.0',
+            alias: 'nick',
+            note: 'note',
         })
         assert.ok(proposal)
         assert.equal(proposal.id, 'proposal')

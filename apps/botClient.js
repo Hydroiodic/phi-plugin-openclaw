@@ -1,10 +1,10 @@
-import Config from '../components/Config.js';
-import Version from '../components/Version.js';
-import phiPluginBase from '../components/baseClass.js';
-import logger from '../components/Logger.js';
-import send from '../model/render/send.js';
-import botApiAuth from '../model/api/botApiAuth.js';
-import { getPhiApiUserMessage } from '../model/api/phiApiErrors.js';
+import Config from '../components/Config.js'
+import Version from '../components/Version.js'
+import phiPluginBase from '../components/baseClass.js'
+import logger from '../components/Logger.js'
+import send from '../model/render/send.js'
+import botApiAuth from '../model/api/botApiAuth.js'
+import { getPhiApiUserMessage } from '../model/api/phiApiErrors.js'
 
 export class phiBotClient extends phiPluginBase {
     constructor() {
@@ -23,42 +23,42 @@ export class phiBotClient extends phiPluginBase {
                     fnc: 'claimLink',
                 },
             ],
-        });
+        })
     }
 
     /** @param {import('../components/baseClass.js').botEvent} e */
     async resetApiBot(e) {
-        if (!e.isMaster) return false;
+        if (!e.isMaster) return false
         try {
-            const issued = await botApiAuth.reset(Version.ver);
-            logger.mark(`[phi-plugin] API Bot身份已由master重置：${issued.clientId}`);
-            const message = `API Bot身份已重置。\nclientId: ${issued.clientId}\n认领链接: ${issued.claimUrl || '请重新获取'}`;
+            const issued = await botApiAuth.reset(Version.ver)
+            logger.mark(`[phi-plugin] API Bot身份已由master重置：${issued.clientId}`)
+            const message = `API Bot身份已重置。\nclientId: ${issued.clientId}\n认领链接: ${issued.claimUrl || '请重新获取'}`
             if (e.isGroup) {
-                send.send_with_At(e, 'API Bot身份已重置，clientId与认领链接仅在控制台输出。');
-                logger.mark(message);
+                send.send_with_At(e, 'API Bot身份已重置，clientId与认领链接仅在控制台输出。')
+                logger.mark(message)
             } else {
-                send.send_with_At(e, message);
+                send.send_with_At(e, message)
             }
         } catch (/** @type {any} */ error) {
-            send.send_with_At(e, `重置失败：${getPhiApiUserMessage(error)}`);
+            send.send_with_At(e, `重置失败：${getPhiApiUserMessage(error)}`)
         }
-        return true;
+        return true
     }
 
     /** @param {import('../components/baseClass.js').botEvent} e */
     async claimLink(e) {
-        if (!e.isMaster) return false;
+        if (!e.isMaster) return false
         try {
-            const claim = await botApiAuth.getClaimLink();
+            const claim = await botApiAuth.getClaimLink()
             if (e.isGroup) {
-                send.send_with_At(e, '认领链接仅在私聊或控制台输出。');
-                logger.mark(`[phi-plugin] Bot认领链接：${claim.claimUrl}`);
+                send.send_with_At(e, '认领链接仅在私聊或控制台输出。')
+                logger.mark(`[phi-plugin] Bot认领链接：${claim.claimUrl}`)
             } else {
-                send.send_with_At(e, `Bot认领链接（15分钟有效）：\n${claim.claimUrl}`);
+                send.send_with_At(e, `Bot认领链接（15分钟有效）：\n${claim.claimUrl}`)
             }
         } catch (/** @type {any} */ error) {
-            send.send_with_At(e, `获取失败：${getPhiApiUserMessage(error)}`);
+            send.send_with_At(e, `获取失败：${getPhiApiUserMessage(error)}`)
         }
-        return true;
+        return true
     }
 }

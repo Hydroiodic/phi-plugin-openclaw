@@ -5,25 +5,25 @@
 
 ## 全部功能入口
 
-| 模块 | 命令与主要别名 |
-| --- | --- |
-| 绑定与存档 | `bind` / `绑定`、`cnbind` / `cn绑定`、`gbbind` / `gb绑定`：后接 `qrcode` 或 `<sessionToken>`；`update` / `更新存档`；`unbind` / `解绑`；`clean`；`sessionToken`；`确认上传 <确认码>` / `saveupload`、`取消上传` / `savecancel`（确认或放弃 AI 助手准备的存档上传，仅私聊） |
-| 成绩 | `b<N>` / `rks` / `pgr`；`p<N>`、`x<N>`、`fc<N>`；`a b30`（趣味成绩图）；`lmtacc <ACC>`；`best <序号>`；`score[1或2] <曲名>` / `单曲成绩`；`suggest` / `推分` / `推分建议`；`chap [章节]`；`achievement` / `ahv` |
-| 个人数据 | `data`；`info[1或2]`；`lvsco` / `lvscore` / `scolv`；`list [筛选条件]`；`年度总结` / `2025history`；`hisb30` |
-| 排行榜 | `ranklist` / `排行榜`；`rankfind <名次>` / `查询排名` |
-| 曲目与计算 | `song <曲名>` / `曲`；`search` / `查找` / `检索`；`setnick` / `setnic` / `设置别名`；`ill <曲名>` / `曲绘`；`randclg`；`rand` / `random` / `随机`；`alias <曲名>`；`com` / `计算`；`tips`；`newlog`；`live`；`table <定数> [-v <版本>]` / `定数表`；`difHis` / `difHistory` / `历史定数` |
-| 评论与标签 | `comment` / `cmt` / `评论` / `评价`：后接曲名，可换行填写评论；`recmt <评论ID>`；`mycmt`；`addtag`、`subtag`、`retag`；`newnotice` |
-| 谱面 | `chart <曲名>`；`tag <曲名>`；`settag <曲名>` |
-| 别名提案 | `alias submit` / `alias 提案`；`alias mine` / `alias 我的`；`alias public` / `alias 公审`；`alias appeal` / `alias 申诉`；`alias vote` / `alias 投票`；`alias unvote` / `alias 撤票` |
-| 签到与任务 | `sign` / `sign in` / `签到` / `打卡`；`task` / `我的任务`；`retask` / `刷新任务`；`send` / `送` / `转`；`theme <数字>`；`jrrp` / `今日人品` |
-| 猜曲游戏 | `guess` / `猜曲绘`；`tipgame` / `提示猜曲`；`ltr` / `letter` / `开字母`；`tip` / `提示`；`ans` / `答案` / `结束`；普通消息回答曲名。开字母用 **`/开 a`**（不加 phi），也支持 `/出`、`/翻`、`/揭`、`/看`、`/翻开`、`/打开`、`/揭开`、`/open` 后接一个字符 |
-| 个人设置 | `myset` / `mysetting` / `用户设置` / `个人设置`；`set` / `设置`（管理员） |
-| 主题市场 | `market [子命令或参数]`；`nx` / `下一页`；`pr` / `上一页` |
-| API 账号 | `setApiToken <token>`；`tkls` / `lstk`；`auth <token>`；`clearApiData`；`updateHistory`；`updateUserToken`（管理员）；`updateComment`；`apiset` |
-| API Bot 管理 | `resetApiBot` / `重置API Bot身份`；`botClaimLink` / `获取Bot认领链接`（管理员） |
-| 部署管理 | `repu`；`backup [back]`；`restore`；`get <名次>`；`del <sessionToken>`；`allow <sessionToken>`；`ban <功能或all>`；`unban <功能或all>`（管理员） |
-| 更新 | `更新` / `gx`，也识别 `强制更新`、`qzgx` 等写法；`下载曲绘` / `更新曲绘` / `gxill` / `down ill` / `up ill`（管理员） |
-| 帮助 | `help` / `命令` / `帮助` / `菜单` / `说明` / `功能` / `指令` / `使用说明`；`tk help` / `token help`；`api help` |
+| 模块         | 命令与主要别名                                                                                                                                                                                                                                                                           |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 绑定与存档   | `bind` / `绑定`、`cnbind` / `cn绑定`、`gbbind` / `gb绑定`：后接 `qrcode` 或 `<sessionToken>`；`update` / `更新存档`；`unbind` / `解绑`；`clean`；`sessionToken`；`确认上传 <确认码>` / `saveupload`、`取消上传` / `savecancel`（确认或放弃 AI 助手准备的存档上传，仅私聊）               |
+| 成绩         | `b<N>` / `rks` / `pgr`；`p<N>`、`x<N>`、`fc<N>`；`a b30`（趣味成绩图）；`lmtacc <ACC>`；`best <序号>`；`score[1或2] <曲名>` / `单曲成绩`；`suggest` / `推分` / `推分建议`；`chap [章节]`；`achievement` / `ahv`                                                                          |
+| 个人数据     | `data`；`info[1或2]`；`lvsco` / `lvscore` / `scolv`；`list [筛选条件]`；`年度总结` / `2025history`；`hisb30`                                                                                                                                                                             |
+| 排行榜       | `ranklist` / `排行榜`；`rankfind <名次>` / `查询排名`                                                                                                                                                                                                                                    |
+| 曲目与计算   | `song <曲名>` / `曲`；`search` / `查找` / `检索`；`setnick` / `setnic` / `设置别名`；`ill <曲名>` / `曲绘`；`randclg`；`rand` / `random` / `随机`；`alias <曲名>`；`com` / `计算`；`tips`；`newlog`；`live`；`table <定数> [-v <版本>]` / `定数表`；`difHis` / `difHistory` / `历史定数` |
+| 评论与标签   | `comment` / `cmt` / `评论` / `评价`：后接曲名，可换行填写评论；`recmt <评论ID>`；`mycmt`；`addtag`、`subtag`、`retag`；`newnotice`                                                                                                                                                       |
+| 谱面         | `chart <曲名>`；`tag <曲名>`；`settag <曲名>`                                                                                                                                                                                                                                            |
+| 别名提案     | `alias submit` / `alias 提案`；`alias mine` / `alias 我的`；`alias public` / `alias 公审`；`alias appeal` / `alias 申诉`；`alias vote` / `alias 投票`；`alias unvote` / `alias 撤票`                                                                                                     |
+| 签到与任务   | `sign` / `sign in` / `签到` / `打卡`；`task` / `我的任务`；`retask` / `刷新任务`；`send` / `送` / `转`；`theme <数字>`；`jrrp` / `今日人品`                                                                                                                                              |
+| 猜曲游戏     | `guess` / `猜曲绘`；`tipgame` / `提示猜曲`；`ltr` / `letter` / `开字母`；`tip` / `提示`；`ans` / `答案` / `结束`；普通消息回答曲名。开字母用 **`/开 a`**（不加 phi），也支持 `/出`、`/翻`、`/揭`、`/看`、`/翻开`、`/打开`、`/揭开`、`/open` 后接一个字符                                 |
+| 个人设置     | `myset` / `mysetting` / `用户设置` / `个人设置`；`set` / `设置`（管理员）                                                                                                                                                                                                                |
+| 主题市场     | `market [子命令或参数]`；`nx` / `下一页`；`pr` / `上一页`                                                                                                                                                                                                                                |
+| API 账号     | `setApiToken <token>`；`tkls` / `lstk`；`auth <token>`；`clearApiData`；`updateHistory`；`updateUserToken`（管理员）；`updateComment`；`apiset`                                                                                                                                          |
+| API Bot 管理 | `resetApiBot` / `重置API Bot身份`；`botClaimLink` / `获取Bot认领链接`（管理员）                                                                                                                                                                                                          |
+| 部署管理     | `repu`；`backup [back]`；`restore`；`get <名次>`；`del <sessionToken>`；`allow <sessionToken>`；`ban <功能或all>`；`unban <功能或all>`（管理员）                                                                                                                                         |
+| 更新         | `更新` / `gx`，也识别 `强制更新`、`qzgx` 等写法；`下载曲绘` / `更新曲绘` / `gxill` / `down ill` / `up ill`（管理员）                                                                                                                                                                     |
+| 帮助         | `help` / `命令` / `帮助` / `菜单` / `说明` / `功能` / `指令` / `使用说明`；`tk help` / `token help`；`api help`                                                                                                                                                                          |
 
 额外的接入命令：`/phi` 文本帮助、`/phi identity` 查看管理员配置 ID、`/phi license` 打开项目说明、`/phi reply <内容>` 回答多轮选择。多轮流程可回复 `取消`。
 

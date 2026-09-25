@@ -11,12 +11,7 @@ export class PhiApiError extends Error {
     }
 }
 
-const FATAL_IDENTITY_ERROR_CODES = new Set([
-    'bot_client_unknown',
-    'bot_client_revoked',
-    'bot_key_version_invalid',
-    'bot_signature_invalid',
-])
+const FATAL_IDENTITY_ERROR_CODES = new Set(['bot_client_unknown', 'bot_client_revoked', 'bot_key_version_invalid', 'bot_signature_invalid'])
 
 const CONNECTION_ERROR_CODES = new Set([
     'api_timeout',
@@ -78,19 +73,19 @@ export function classifyApiConnectionError(error) {
         return new PhiApiError('API拒绝连接', 0, 'api_connection_refused')
     }
     if (
-        nativeCode.startsWith('ERR_TLS_')
-        || nativeCode.startsWith('CERT_')
-        || nativeCode === 'DEPTH_ZERO_SELF_SIGNED_CERT'
-        || nativeCode === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE'
-        || nativeMessage.includes('certificate')
-        || nativeMessage.includes('tls')
+        nativeCode.startsWith('ERR_TLS_') ||
+        nativeCode.startsWith('CERT_') ||
+        nativeCode === 'DEPTH_ZERO_SELF_SIGNED_CERT' ||
+        nativeCode === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' ||
+        nativeMessage.includes('certificate') ||
+        nativeMessage.includes('tls')
     ) {
         return new PhiApiError('API证书校验失败', 0, 'api_tls_error')
     }
     if (
-        ['ECONNRESET', 'ENETUNREACH', 'EHOSTUNREACH', 'ENETDOWN', 'ERR_NETWORK'].includes(nativeCode)
-        || nativeMessage.includes('network error')
-        || nativeMessage.includes('socket hang up')
+        ['ECONNRESET', 'ENETUNREACH', 'EHOSTUNREACH', 'ENETDOWN', 'ERR_NETWORK'].includes(nativeCode) ||
+        nativeMessage.includes('network error') ||
+        nativeMessage.includes('socket hang up')
     ) {
         return new PhiApiError('API网络连接异常', 0, 'api_network_error')
     }

@@ -13,21 +13,61 @@ export const GROUP_BANNED_MESSAGE = '这里被管理员禁止使用这个功能�
  * @type {Partial<Record<allFnc | string, string>>}
  */
 const FEATURE_GROUPS = {
-    help: 'help', tkhelp: 'help',
-    bind: 'bind', unbind: 'bind',
-    b19: 'b19', p30: 'b19', lmtAcc: 'b19', arcgrosB19: 'b19', update: 'b19', info: 'b19', list: 'b19',
-    singlescore: 'b19', lvscore: 'b19', chap: 'b19', achievement: 'b19', suggest: 'b19',
-    analyze2025SaveHistory: 'b19', hisb30: 'b19',
-    bestn: 'wb19', data: 'wb19',
-    song: 'song', ill: 'song', chart: 'song', tag: 'song', addtag: 'song', retag: 'song', search: 'song',
-    alias: 'song', randmic: 'song', randClg: 'song', table: 'song', comment: 'song', recallComment: 'song', myComment: 'song',
-    rankList: 'ranklist', godList: 'ranklist',
-    comrks: 'fnc', tips: 'fnc', newSong: 'fnc',
-    tipgame: 'tipgame', guessgame: 'guessgame', ltrgame: 'ltrgame',
-    sign: 'sign', send: 'sign', tasks: 'sign', retask: 'sign', jrrp: 'sign',
+    help: 'help',
+    tkhelp: 'help',
+    bind: 'bind',
+    unbind: 'bind',
+    b19: 'b19',
+    p30: 'b19',
+    lmtAcc: 'b19',
+    arcgrosB19: 'b19',
+    update: 'b19',
+    info: 'b19',
+    list: 'b19',
+    singlescore: 'b19',
+    lvscore: 'b19',
+    chap: 'b19',
+    achievement: 'b19',
+    suggest: 'b19',
+    analyze2025SaveHistory: 'b19',
+    hisb30: 'b19',
+    bestn: 'wb19',
+    data: 'wb19',
+    song: 'song',
+    ill: 'song',
+    chart: 'song',
+    tag: 'song',
+    addtag: 'song',
+    retag: 'song',
+    search: 'song',
+    alias: 'song',
+    randmic: 'song',
+    randClg: 'song',
+    table: 'song',
+    comment: 'song',
+    recallComment: 'song',
+    myComment: 'song',
+    rankList: 'ranklist',
+    godList: 'ranklist',
+    comrks: 'fnc',
+    tips: 'fnc',
+    newSong: 'fnc',
+    tipgame: 'tipgame',
+    guessgame: 'guessgame',
+    ltrgame: 'ltrgame',
+    sign: 'sign',
+    send: 'sign',
+    tasks: 'sign',
+    retask: 'sign',
+    jrrp: 'sign',
     theme: 'setting',
-    dan: 'dan', danupdate: 'dan',
-    auth: 'apiSetting', clearApiData: 'apiSetting', updateHistory: 'apiSetting', setApiToken: 'apiSetting', tokenList: 'apiSetting',
+    dan: 'dan',
+    danupdate: 'dan',
+    auth: 'apiSetting',
+    clearApiData: 'apiSetting',
+    updateHistory: 'apiSetting',
+    setApiToken: 'apiSetting',
+    tokenList: 'apiSetting',
 }
 
 export default class getBanGroup {
@@ -49,7 +89,7 @@ export default class getBanGroup {
      */
     static async get(e, fnc, message = GROUP_BANNED_MESSAGE) {
         const credentials = UserCredentials.fromEvent(e)
-        if (await canUseApi(e) && await credentials.getUserAPIBanStatus({ ignoreUnboundError: true })) {
+        if ((await canUseApi(e)) && (await credentials.getUserAPIBanStatus({ ignoreUnboundError: true }))) {
             send.send_with_At(e, '当前账户被加入黑名单，详情请联系管理员(1)。')
             return true
         }
@@ -58,7 +98,7 @@ export default class getBanGroup {
             return true
         }
         const feature = FEATURE_GROUPS[fnc]
-        if (!e.group_id || !feature || !await this.redis(e.group_id, feature)) return false
+        if (!e.group_id || !feature || !(await this.redis(e.group_id, feature))) return false
         send.send_with_At(e, message)
         return true
     }

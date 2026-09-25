@@ -46,10 +46,12 @@ test('用户设置页把当前主题传给完整页面渲染目标', async () =>
     getBanGroup.get = async () => false
     getNotes.getNotesData = async () => /** @type {any} */ ({ ...pluginData(), theme: currentTheme })
     getInfo.getill = () => 'background.png'
-    picmodle.common = /** @type {any} */ (async (/** @type {any[]} */ ...args) => {
-        renders.push(args)
-        return 'image'
-    })
+    picmodle.common = /** @type {any} */ (
+        async (/** @type {any[]} */ ...args) => {
+            renders.push(args)
+            return 'image'
+        }
+    )
     send.send_with_At = /** @type {any} */ (async () => undefined)
 
     try {
@@ -60,7 +62,10 @@ test('用户设置页把当前主题传给完整页面渲染目标', async () =>
         assert.equal(renders[0][2].theme, 'milthm')
         assert.equal(renders[0][3], 'userSetting')
         const themedOptions = renders[0][2].items.find((/** @type {any} */ item) => item.key === 'theme').options
-        assert.deepEqual(themedOptions.slice(0, 4).map((/** @type {any} */ option) => option.value), ['default', 'snow', 'star', 'dss2'])
+        assert.deepEqual(
+            themedOptions.slice(0, 4).map((/** @type {any} */ option) => option.value),
+            ['default', 'snow', 'star', 'dss2'],
+        )
         assert.equal(themedOptions.length, 5)
         assert.equal(themedOptions[4].title, 'Milthm')
         assert.equal(themedOptions[4].selected, true)
@@ -98,16 +103,24 @@ test('用户按市场 slug 设置未下载主题时会自动下载并保存', as
     }
     let installed = false
     const pluginData = /** @type {any} */ ({
-        theme: 'default', b30AvgKind: 'all', b30AvgColor: 'red',
-        allowApiUsage: true, showB30Analysis: true,
+        theme: 'default',
+        b30AvgKind: 'all',
+        b30AvgColor: 'red',
+        allowApiUsage: true,
+        showB30Analysis: true,
     })
     /** @type {string[]} */ const used = []
     /** @type {any[]} */ const useOptions = []
     /** @type {any[]} */ const saved = []
-    Config.getUserCfg = /** @type {any} */ ((_name = '', key = '') => key === 'cmdhead' ? 'phi' : ['openPhiPluginApi', 'enableCustomThemeApi'].includes(key))
+    Config.getUserCfg = /** @type {any} */ (
+        (_name = '', key = '') => (key === 'cmdhead' ? 'phi' : ['openPhiPluginApi', 'enableCustomThemeApi'].includes(key))
+    )
     getBanGroup.get = async () => false
     getNotes.getNotesData = async () => pluginData
-    getNotes.putNotesData = (userId, data) => { saved.push({ userId, data: { ...data } }); return true }
+    getNotes.putNotesData = (userId, data) => {
+        saved.push({ userId, data: { ...data } })
+        return true
+    }
     themeManager.getThemeOptions = () => ({
         default: { title: '[0]默认', description: '' },
         ...(installed ? { 'ocean-salt': { title: '[1]Ocean Salt', description: 'market' } } : {}),
@@ -167,16 +180,17 @@ test('用户重新选择已安装市场主题时仍会在线校验并更新', as
         default: { title: '[0]默认', description: '' },
         'ocean-salt': { title: '[1]Ocean Salt', description: 'market' },
     })
-    themeManager.getTheme = themeId => themeId === 'ocean-salt'
-        ? /** @type {any} */ ({ id: themeId, marketInstalled: true })
-        : null
+    themeManager.getTheme = themeId => (themeId === 'ocean-salt' ? /** @type {any} */ ({ id: themeId, marketInstalled: true }) : null)
     themeUseService.use = async slug => {
         used.push(slug)
         return /** @type {any} */ ({ cached: false, version: '2.0.0' })
     }
     getInfo.getill = () => 'background.png'
     picmodle.common = /** @type {any} */ (async () => 'image')
-    send.send_with_At = async (_event, message) => { messages.push(String(message)); return undefined }
+    send.send_with_At = async (_event, message) => {
+        messages.push(String(message))
+        return undefined
+    }
 
     try {
         const command = new UserSettings()
@@ -217,9 +231,7 @@ test('旧 theme 命令切换市场主题时也会校验更新', async () => {
         { id: 'default', src: '默认' },
         { id: 'ocean-salt', src: 'Ocean Salt' },
     ]
-    themeManager.getTheme = themeId => themeId === 'ocean-salt'
-        ? /** @type {any} */ ({ id: themeId, marketInstalled: true })
-        : null
+    themeManager.getTheme = themeId => (themeId === 'ocean-salt' ? /** @type {any} */ ({ id: themeId, marketInstalled: true }) : null)
     themeUseService.use = async (slug, options) => {
         useOptions.push({ slug, options })
         return /** @type {any} */ ({ cached: false, version: '2.0.0' })
@@ -255,8 +267,14 @@ test('主题功能被禁用时 myset 不能下载或保存主题', async () => {
     let saves = 0
     getBanGroup.get = async (_event, feature) => feature === 'theme'
     getNotes.getNotesData = async () => /** @type {any} */ ({ ...pluginData(), theme: 'default' })
-    getNotes.putNotesData = () => { saves++; return true }
-    themeUseService.use = async () => { downloads++; return /** @type {any} */ ({}) }
+    getNotes.putNotesData = () => {
+        saves++
+        return true
+    }
+    themeUseService.use = async () => {
+        downloads++
+        return /** @type {any} */ ({})
+    }
     send.send_with_At = async () => undefined
 
     try {
@@ -286,7 +304,10 @@ test('仅禁用主题功能时 myset 仍可修改其他个人设置', async () =
     let saves = 0
     getBanGroup.get = async (_event, feature) => feature === 'theme'
     getNotes.getNotesData = async () => data
-    getNotes.putNotesData = () => { saves++; return true }
+    getNotes.putNotesData = () => {
+        saves++
+        return true
+    }
     getInfo.getill = () => 'background.png'
     picmodle.common = /** @type {any} */ (async () => 'image')
     send.send_with_At = async () => undefined
@@ -317,10 +338,12 @@ test('API 用户设置页把当前主题传给完整页面渲染目标', async (
 
     getNotes.getNotesData = async () => /** @type {any} */ (pluginData())
     getInfo.getill = () => 'background.png'
-    picmodle.common = /** @type {any} */ (async (/** @type {any[]} */ ...args) => {
-        renders.push(args)
-        return 'image'
-    })
+    picmodle.common = /** @type {any} */ (
+        async (/** @type {any[]} */ ...args) => {
+            renders.push(args)
+            return 'image'
+        }
+    )
     send.send_with_At = /** @type {any} */ (async () => undefined)
 
     try {
@@ -388,14 +411,18 @@ test('info 命令传递用户主题并正确区分新版和旧版渲染', async 
     fCompute.getBackground = () => 'player-background.png'
     send.getsave_result = /** @type {any} */ (async () => save)
     send.send_with_At = /** @type {any} */ (async () => undefined)
-    picmodle.user_info = /** @type {any} */ (async (/** @type {any} */ e, /** @type {any} */ data, /** @type {any} */ kind) => {
-        renders.push({ e, data, kind })
-        return 'image'
-    })
-    UserCredentials.fromEvent = /** @type {any} */ (() => ({
-        getLocalHistory: async () => history,
-        getCloudHistory: async () => history,
-    }))
+    picmodle.user_info = /** @type {any} */ (
+        async (/** @type {any} */ e, /** @type {any} */ data, /** @type {any} */ kind) => {
+            renders.push({ e, data, kind })
+            return 'image'
+        }
+    )
+    UserCredentials.fromEvent = /** @type {any} */ (
+        () => ({
+            getLocalHistory: async () => history,
+            getCloudHistory: async () => history,
+        })
+    )
 
     try {
         const command = new UserInfo()

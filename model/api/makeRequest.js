@@ -1,9 +1,9 @@
 /** @import saveHistory from '../save/saveHistory.js' */
-import phiApiClient from './phiApiClient.js';
-import logger from '../../components/Logger.js';
-import platform from '../../components/platform/index.js';
-import { APII18NCN } from '../game/constNum.js';
-import { getPhiApiUserMessage, hasPhiApiUserMessage } from './phiApiErrors.js';
+import phiApiClient from './phiApiClient.js'
+import logger from '../../components/Logger.js'
+import platform from '../../components/platform/index.js'
+import { APII18NCN } from '../game/constNum.js'
+import { getPhiApiUserMessage, hasPhiApiUserMessage } from './phiApiErrors.js'
 
 /**
  * API 请求的统一错误处理选项。
@@ -41,7 +41,6 @@ function endpointErrorLogging(path) {
     }
     return ENDPOINT_ERROR_LOGGING[path] || { logTag: `API错误 ${path}`, loggerLevel: 'warn' }
 }
-
 
 /**
  * @typedef {Object} platformAuth
@@ -322,12 +321,12 @@ function endpointErrorLogging(path) {
 
 /**
  * 谱面标签统计响应，data 为平铺有效票数，tree 为分类/细分树。
-* @typedef {object} ChartTagSongRankResponse
-* @property {chartsTagVoteCountMap} data 平铺有效票数
+ * @typedef {object} ChartTagSongRankResponse
+ * @property {chartsTagVoteCountMap} data 平铺有效票数
  * @property {chartsTagVoteCountMap} [normalized] 每张选票总质量归一后的标签质量
  * @property {chartsTagVoteCountMap} [support] 选择该标签的独立选票数
  * @property {number} [ballotCount] 当前谱面的有效选票数
-* @property {chartsTagVoteCountMap} [primary] 主要票统计
+ * @property {chartsTagVoteCountMap} [primary] 主要票统计
  * @property {chartsTagVoteCountMap} [secondary] 次要票统计
  * @property {ChartTagTreeNode[]} tree 标签树
  */
@@ -356,7 +355,6 @@ function endpointErrorLogging(path) {
  */
 
 export default class makeRequest {
-
     /**
      * 从未知异常中提取可读错误消息。
      * @param {any} error 捕获到的异常
@@ -378,10 +376,9 @@ export default class makeRequest {
         const errorMessage = makeRequest.getErrorMessage(error)
         if (options.ignoreCodes?.includes(errorCode)) return true
         if (options.ignoreMessages?.includes(errorMessage)) return true
-        return options.ignoreUnboundError !== false && (
-            errorCode === 'binding_not_found'
-            || errorMessage === 'binding_not_found'
-            || errorMessage === APII18NCN.userNotFound
+        return (
+            options.ignoreUnboundError !== false &&
+            (errorCode === 'binding_not_found' || errorMessage === 'binding_not_found' || errorMessage === APII18NCN.userNotFound)
         )
     }
 
@@ -395,12 +392,7 @@ export default class makeRequest {
     static handleApiError(event, error, options = {}) {
         if (makeRequest.shouldIgnoreError(error, options)) return true
 
-        const {
-            errorPrefix = '',
-            notifyUser = false,
-            logTag = '',
-            loggerLevel = 'warn',
-        } = options
+        const { errorPrefix = '', notifyUser = false, logTag = '', loggerLevel = 'warn' } = options
         const errorMessage = makeRequest.getErrorMessage(error)
         let userMessage = hasPhiApiUserMessage(error) ? getPhiApiUserMessage(error) : null
         const status = error?.status ?? (typeof error?.code === 'number' ? error.code : undefined)
@@ -413,12 +405,7 @@ export default class makeRequest {
 
         if (notifyUser && userMessage) {
             const prefix = errorPrefix ? `${errorPrefix}\n` : ''
-            platform.sendWithAt(
-                platform.wrapEvent(event),
-                `${prefix}${userMessage || `错误信息：${errorMessage}`}`,
-                false,
-                {},
-            )
+            platform.sendWithAt(platform.wrapEvent(event), `${prefix}${userMessage || `错误信息：${errorMessage}`}`, false, {})
         }
         if (logTag) logger[loggerLevel](`[phi-plugin] ${logTag}`, error)
         return false
@@ -896,12 +883,12 @@ export default class makeRequest {
     /**
      * 批量获取谱面标签信息，按曲目和难度分别返回。
      * @param {{data: {song_id: idString, rank?: levelKind[]}[], total?: boolean}} params
-    * @returns {Promise<{
-    *  data: Record<idString, Record<levelKind, chartsTagVoteCountMap>>,
+     * @returns {Promise<{
+     *  data: Record<idString, Record<levelKind, chartsTagVoteCountMap>>,
      *  normalized: Record<idString, Record<levelKind, chartsTagVoteCountMap>>,
      *  support: Record<idString, Record<levelKind, chartsTagVoteCountMap>>,
      *  ballotCounts: Record<idString, Record<levelKind, number>>,
-    *  primary: Record<idString, Record<levelKind, chartsTagVoteCountMap>>,
+     *  primary: Record<idString, Record<levelKind, chartsTagVoteCountMap>>,
      *  secondary: Record<idString, Record<levelKind, chartsTagVoteCountMap>>,
      *  tree: Record<idString, Record<levelKind, ChartTagTreeNode[]>>
      * }>}
@@ -933,7 +920,6 @@ export default class makeRequest {
     static async getB30TagAnalysis(params, /** @type {ApiRequestExecutionOptions | undefined} */ options = undefined) {
         return (await makeFetch(burl('/chartsTag/get/b30Analysis'), params, 'POST', options))?.data ?? null
     }
-
 
     /**
      * 获取用户对谱面标签的投票记录

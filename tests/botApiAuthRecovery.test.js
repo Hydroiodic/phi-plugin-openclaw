@@ -33,7 +33,7 @@ test('API connection failures retain a specific stable error code', () => {
 test('BotApiAuth exposes only Bot identity and direct API transport responsibilities', () => {
     const auth = new BotApiAuth()
     for (const method of ['bind', 'ensureBinding', 'invalidateBinding', 'readCachedBinding', 'saveBinding', 'requestHeaders']) {
-        assert.equal(typeof /** @type {any} */ (auth)[method], 'undefined')
+        assert.equal(typeof (/** @type {any} */ (auth)[method]), 'undefined')
     }
     assert.equal(typeof auth.getClientId, 'function')
     assert.equal(typeof auth.signedRequest, 'function')
@@ -43,10 +43,7 @@ test('Bot authentication requests are stopped after an incompatible API version 
     const auth = new BotApiAuth()
     setApiVersionBlocked(true)
     try {
-        await assert.rejects(
-            auth.initialize(),
-            (/** @type {any} */ error) => error.code === 'api_version_incompatible',
-        )
+        await assert.rejects(auth.initialize(), (/** @type {any} */ error) => error.code === 'api_version_incompatible')
         await assert.rejects(
             auth.signedRequest('/bot-clients/self', undefined, 'GET'),
             (/** @type {any} */ error) => error.code === 'api_version_incompatible',
@@ -69,11 +66,14 @@ test('user-facing API errors explain the actual failure and next action', () => 
 
 test('temporary identity verification failures are retried instead of cached forever', async () => {
     const originalGetUserCfg = Config.getUserCfg
-    Config.getUserCfg = /** @type {any} */ ((/** @type {any} */ _name, /** @type {string} */ style) => /** @type {Record<string, any>} */ ({
-        apiBotClientId: 'issued-client-id',
-        apiBotClientSecret: 'issued-secret',
-        apiBotSecretVersion: 1,
-    })[style])
+    Config.getUserCfg = /** @type {any} */ (
+        (/** @type {any} */ _name, /** @type {string} */ style) =>
+            /** @type {Record<string, any>} */ ({
+                apiBotClientId: 'issued-client-id',
+                apiBotClientSecret: 'issued-secret',
+                apiBotSecretVersion: 1,
+            })[style]
+    )
 
     const auth = new BotApiAuth()
     let requests = 0
@@ -95,11 +95,14 @@ test('temporary identity verification failures are retried instead of cached for
 
 test('invalid issued credentials remain stopped until the identity changes', async () => {
     const originalGetUserCfg = Config.getUserCfg
-    Config.getUserCfg = /** @type {any} */ ((/** @type {any} */ _name, /** @type {string} */ style) => /** @type {Record<string, any>} */ ({
-        apiBotClientId: 'revoked-client-id',
-        apiBotClientSecret: 'revoked-secret',
-        apiBotSecretVersion: 1,
-    })[style])
+    Config.getUserCfg = /** @type {any} */ (
+        (/** @type {any} */ _name, /** @type {string} */ style) =>
+            /** @type {Record<string, any>} */ ({
+                apiBotClientId: 'revoked-client-id',
+                apiBotClientSecret: 'revoked-secret',
+                apiBotSecretVersion: 1,
+            })[style]
+    )
 
     const auth = new BotApiAuth()
     let requests = 0
@@ -119,11 +122,14 @@ test('invalid issued credentials remain stopped until the identity changes', asy
 
 test('a missing Bot identity is registered on reconnect and concurrent recovery is single-flight', async () => {
     const originalGetUserCfg = Config.getUserCfg
-    Config.getUserCfg = /** @type {any} */ ((/** @type {any} */ _name, /** @type {string} */ style) => /** @type {Record<string, any>} */ ({
-        apiBotClientId: '',
-        apiBotClientSecret: '',
-        apiBotSecretVersion: 0,
-    })[style])
+    Config.getUserCfg = /** @type {any} */ (
+        (/** @type {any} */ _name, /** @type {string} */ style) =>
+            /** @type {Record<string, any>} */ ({
+                apiBotClientId: '',
+                apiBotClientSecret: '',
+                apiBotSecretVersion: 0,
+            })[style]
+    )
 
     const auth = new BotApiAuth()
     let registrations = 0
@@ -135,10 +141,7 @@ test('a missing Bot identity is registered on reconnect and concurrent recovery 
     }
 
     try {
-        const [first, second] = await Promise.all([
-            auth.recoverAfterReconnect('v1.0.0'),
-            auth.recoverAfterReconnect('v1.0.0'),
-        ])
+        const [first, second] = await Promise.all([auth.recoverAfterReconnect('v1.0.0'), auth.recoverAfterReconnect('v1.0.0')])
         assert.equal(first.clientId, 'new-client-id')
         assert.equal(second.clientId, 'new-client-id')
         assert.equal(registrations, 1)

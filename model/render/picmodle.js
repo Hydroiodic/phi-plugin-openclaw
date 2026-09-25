@@ -13,8 +13,7 @@ import RenderPressureHistory from './renderPressureHistory.js'
 
 /**@import {botEvent} from '../../components/baseClass.js' */
 
-export default await new class picmodle {
-
+export default await new (class picmodle {
     constructor() {
         /**
          * 空闲渲染器下标
@@ -46,7 +45,10 @@ export default await new class picmodle {
         this.pressureHistory = new RenderPressureHistory()
         this.shuttingDown = false
         this.closePromise = null
-        registerProcessCleanup(() => this.close(), () => this.forceClose())
+        registerProcessCleanup(
+            () => this.close(),
+            () => this.forceClose(),
+        )
     }
 
     async init() {
@@ -66,12 +68,17 @@ export default await new class picmodle {
         /** 初始化渲染器槽位；Chromium 在非 Canvas 页面首次渲染时按需启动。 */
         const num = Config.getUserCfg('config', 'renderNum')
         for (let i = 0; i < num; i++) {
-            this.puppeteer.push(new puppeteer({
-                puppeteerTimeout: Config.getUserCfg('config', 'timeout')
-            }, `${i}`))
+            this.puppeteer.push(
+                new puppeteer(
+                    {
+                        puppeteerTimeout: Config.getUserCfg('config', 'timeout'),
+                    },
+                    `${i}`,
+                ),
+            )
             this.idle.push(i)
         }
-        return this;
+        return this
     }
 
     /**
@@ -82,10 +89,12 @@ export default await new class picmodle {
      */
     acquire(timeout) {
         if (this.shuttingDown) return Promise.resolve(-1)
-        if (this.idle.length) return Promise.resolve(/** @type {number} */(this.idle.shift()))
+        if (this.idle.length) return Promise.resolve(/** @type {number} */ (this.idle.shift()))
         const configuredLimit = Number(Config.getUserCfg('config', 'renderQueueLimit'))
-        const queueLimit = Number.isSafeInteger(configuredLimit) && configuredLimit >= 0 && configuredLimit <= 1000
-            ? configuredLimit : Config.getdefSet('config').renderQueueLimit
+        const queueLimit =
+            Number.isSafeInteger(configuredLimit) && configuredLimit >= 0 && configuredLimit <= 1000
+                ? configuredLimit
+                : Config.getdefSet('config').renderQueueLimit
         if (this.waiters.length >= queueLimit) return Promise.resolve(-2)
         /** @type {Promise<number>} */
         const p = new Promise(resolve => {
@@ -93,7 +102,7 @@ export default await new class picmodle {
             const waiter = {
                 settled: false,
                 timer: null,
-                done: (idx) => {
+                done: idx => {
                     if (waiter.settled) return
                     waiter.settled = true
                     clearTimeout(waiter.timer)
@@ -135,46 +144,45 @@ export default await new class picmodle {
     async alias(e, info) {
         return await this.common(e, 'atlas', {
             ...info,
-            length: info.length ? info.length.replace(':', "'") + "''" : "-",
+            length: info.length ? info.length.replace(':', "'") + "''" : '-',
         })
     }
 
-
     /**
-     * 
-     * @param {any} e 
-     * @param {any} data 
-     * @returns 
+     *
+     * @param {any} e
+     * @param {any} data
+     * @returns
      */
     async b19(e, data) {
         return await this.common(e, 'b19', data)
     }
 
     /**
-     * 
-     * @param {any} e 
-     * @param {any} data 
-     * @returns 
+     *
+     * @param {any} e
+     * @param {any} data
+     * @returns
      */
     async arcgros_b19(e, data) {
         return await this.common(e, 'arcgrosB19', data)
     }
 
     /**
-     * 
-     * @param {any} e 
-     * @param {any} data 
-     * @returns 
+     *
+     * @param {any} e
+     * @param {any} data
+     * @returns
      */
     async update(e, data) {
         return await this.common(e, 'update', data)
     }
 
     /**
-     * 
-     * @param {any} e 
-     * @param {any} data 
-     * @returns 
+     *
+     * @param {any} e
+     * @param {any} data
+     * @returns
      */
     async tasks(e, data) {
         return await this.common(e, 'tasks', data)
@@ -182,54 +190,66 @@ export default await new class picmodle {
 
     /**
      * 个人信息
-     * @param {any} e 
-     * @param {any} data 
+     * @param {any} e
+     * @param {any} data
      * @param {1|2|number} picversion 版本
      */
     async user_info(e, data, picversion) {
         switch (picversion) {
             case 1: {
-                return await this.render('userinfo/userinfo', {
-                    ...data,
-                }, {
-                    e,
-                    scale: Config.getUserCfg('config', 'renderScale') / 100
-                })
+                return await this.render(
+                    'userinfo/userinfo',
+                    {
+                        ...data,
+                    },
+                    {
+                        e,
+                        scale: Config.getUserCfg('config', 'renderScale') / 100,
+                    },
+                )
             }
             case 2: {
-                return await this.render('userinfo/userinfo-old', {
-                    ...data,
-                }, {
-                    e,
-                    scale: Config.getUserCfg('config', 'renderScale') / 100
-                })
+                return await this.render(
+                    'userinfo/userinfo-old',
+                    {
+                        ...data,
+                    },
+                    {
+                        e,
+                        scale: Config.getUserCfg('config', 'renderScale') / 100,
+                    },
+                )
             }
             default: {
-                return await this.render('userinfo/userinfo', {
-                    ...data,
-                }, {
-                    e,
-                    scale: Config.getUserCfg('config', 'renderScale') / 100
-                })
+                return await this.render(
+                    'userinfo/userinfo',
+                    {
+                        ...data,
+                    },
+                    {
+                        e,
+                        scale: Config.getUserCfg('config', 'renderScale') / 100,
+                    },
+                )
             }
         }
     }
 
     /**
-     * 
-     * @param {any} e 
-     * @param {any} data 
-     * @returns 
+     *
+     * @param {any} e
+     * @param {any} data
+     * @returns
      */
     async lvsco(e, data) {
         return await this.common(e, 'lvsco', data)
     }
 
     /**
-     * 
-     * @param {any} e 
-     * @param {any} data 
-     * @returns 
+     *
+     * @param {any} e
+     * @param {any} data
+     * @returns
      */
     async list(e, data) {
         return await this.common(e, 'list', data)
@@ -237,69 +257,75 @@ export default await new class picmodle {
 
     /**
      * 单曲成绩
-     * @param {any} e 
+     * @param {any} e
      * @param {any} data
      * @param {1|2} picversion 版本
      */
     async score(e, data, picversion) {
-
         switch (picversion) {
             case 1: {
-                return await this.render('score/score', {
-                    ...data,
-                }, {
-                    e,
-                    scale: Config.getUserCfg('config', 'renderScale') / 100
-                })
+                return await this.render(
+                    'score/score',
+                    {
+                        ...data,
+                    },
+                    {
+                        e,
+                        scale: Config.getUserCfg('config', 'renderScale') / 100,
+                    },
+                )
             }
 
             default: {
-                return await this.render('score/scoreOld', {
-                    ...data,
-                }, {
-                    e,
-                    scale: Config.getUserCfg('config', 'renderScale') / 100
-                })
+                return await this.render(
+                    'score/scoreOld',
+                    {
+                        ...data,
+                    },
+                    {
+                        e,
+                        scale: Config.getUserCfg('config', 'renderScale') / 100,
+                    },
+                )
             }
         }
     }
 
     /**
-     * 
-     * @param {any} e 
-     * @param {any} data 
-     * @returns 
+     *
+     * @param {any} e
+     * @param {any} data
+     * @returns
      */
     async ill(e, data) {
         return await this.common(e, 'ill', data)
     }
 
-
     /**
-     * 
-     * @param {any} e 
-     * @param {import('../../apps/guessGame/guessIll.js').guessIllData | import('../../apps/guessGame/guessTips.js').guessIllDataLite} data 
-     * @returns 
+     *
+     * @param {any} e
+     * @param {import('../../apps/guessGame/guessIll.js').guessIllData | import('../../apps/guessGame/guessTips.js').guessIllDataLite} data
+     * @returns
      */
     async guess(e, data) {
         return await this.common(e, 'guess', data)
     }
 
     /**
-     * 
-     * @param {any} e 
-     * @param {any} data 
-     * @returns 
+     *
+     * @param {any} e
+     * @param {any} data
+     * @returns
      */
     async rand(e, data) {
         return await this.common(e, 'rand', data)
     }
 
     /**
-     * 
-     * @param {any} e 
-     * @param {any} data 
-     * @returns 
+     *
+     * @param {any} e
+     * @param {any} data
+     * @returns
      */
     async help(e, data) {
         return await this.common(e, 'help', data)
@@ -316,26 +342,26 @@ export default await new class picmodle {
     }
 
     /**
-     * 
-     * @param {any} e 
-     * @param {any} data 
-     * @returns 
+     *
+     * @param {any} e
+     * @param {any} data
+     * @returns
      */
     async chap(e, data) {
         return await this.common(e, 'chap', data)
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @param {{stats: import('../save/analyzeSaveHistory.js').AnalyzeSaveHistoryResult} & {background: string}} data 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @param {{stats: import('../save/analyzeSaveHistory.js').AnalyzeSaveHistoryResult} & {background: string}} data
+     * @returns
      */
     async analyzeSaveHistory(e, data) {
         return await this.common(e, 'analyzeSaveHistory', data)
     }
 
-    /** 
+    /**
      * @typedef {'atlas'|'task'|'b19'|'arcgrosB19'|'update'|'tasks'|'sign'|'lvsco'|'list'|'suggest'|
      * 'ill'|'chartInfo'|'guess'|'rand'|'help'|'chap'|'rankingList'|'clg'|'chartImg'|'jrrp'|'newSong'|'market'|
      * 'setting'|'analyzeSaveHistory'|'historyB30'|'table'|'newnotice'|'difficultyHistory'
@@ -343,28 +369,32 @@ export default await new class picmodle {
      */
 
     /**
-     * 
-     * @param {*} e 
-     * @param {picKind} kind 
+     *
+     * @param {*} e
+     * @param {picKind} kind
      * @param {*} data
      * @param {string} [tplName] 模板名称，默认为kind
-     * @returns 
+     * @returns
      */
     async common(e, kind, data, tplName = kind) {
-        return await this.render(`${kind}/${tplName}`, {
-            ...data,
-        }, {
-            e,
-            scale: Config.getUserCfg('config', 'renderScale') / 100,
-        })
+        return await this.render(
+            `${kind}/${tplName}`,
+            {
+                ...data,
+            },
+            {
+                e,
+                scale: Config.getUserCfg('config', 'renderScale') / 100,
+            },
+        )
     }
 
     /**
-     * 
-     * @param {string} renderPath 
-     * @param {any} params 
-     * @param {any} cfg 
-     * @returns 
+     *
+     * @param {string} renderPath
+     * @param {any} params
+     * @param {any} cfg
+     * @returns
      */
     async render(renderPath, params, cfg) {
         const id = this.tot++
@@ -394,7 +424,6 @@ export default await new class picmodle {
             const layoutPath = pluginResources.replace(/\\/g, '/') + `/html/common/layout/`
             const resPath = pluginResources.replace(/\\/g, '/') + `/`
 
-
             /** 主题解析：自定义模板仅作用于 B19，页面样式与公共主题信息由 themeInfo 注入布局。 */
             let tplFile = path.join(pluginResources, 'html', app, `${tpl}.art`).replace(/\\/g, '/')
             let themeInfo = null
@@ -408,7 +437,7 @@ export default await new class picmodle {
             const data = {
                 ...params,
                 themeInfo,
-                saveId: (params.saveId || params.save_id || tpl),
+                saveId: params.saveId || params.save_id || tpl,
                 tplFile,
                 pluResPath: resPath,
                 _res_path: resPath,
@@ -421,7 +450,7 @@ export default await new class picmodle {
                 },
                 sys: {
                     scale: `style="transform:scale(${cfg.scale || 1})"`,
-                    copyright: `Created By OpenClaw & phi-plugin-openclaw<span class="version">${Version.ver}</span>`
+                    copyright: `Created By OpenClaw & phi-plugin-openclaw<span class="version">${Version.ver}</span>`,
                 },
                 Version: Version.toJSON(),
                 _plugin: Display_Plugin_Name,
@@ -492,8 +521,7 @@ export default await new class picmodle {
         this.shuttingDown = true
         this.idle = []
         while (this.waiters.length) this.waiters.shift()?.done(-1)
-        this.closePromise = Promise.allSettled(this.puppeteer.map(renderer => renderer.shutdown()))
-            .then(() => undefined)
+        this.closePromise = Promise.allSettled(this.puppeteer.map(renderer => renderer.shutdown())).then(() => undefined)
         return this.closePromise
     }
 
@@ -503,5 +531,4 @@ export default await new class picmodle {
         this.idle = []
         for (const renderer of this.puppeteer) renderer.forceShutdown()
     }
-
-}().init()
+})().init()

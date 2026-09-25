@@ -2,7 +2,6 @@ import { Config, logger, segment } from '../../components/index.js'
 import send from '../render/send.js'
 import platform from '../../components/platform/index.js'
 
-
 /** @import {botEvent} from '../../components/baseClass.js' */
 
 /** @param {unknown} value */
@@ -78,7 +77,9 @@ function quickCommandReplyData(e, commands) {
 function deferQuickMarkdown(e, markdown, commands, errorMessage) {
     platform.afterReplies(e, async () => {
         try {
-            const sent = /** @type {{error?: unknown[]}|undefined} */ (await send.reply(e, segment.markdown(markdown), false, quickCommandReplyData(e, commands)))
+            const sent = /** @type {{error?: unknown[]}|undefined} */ (
+                await send.reply(e, segment.markdown(markdown), false, quickCommandReplyData(e, commands))
+            )
             if (sent?.error?.length) logger.warn(errorMessage)
         } catch (error) {
             logger.warn(errorMessage, error)
@@ -119,7 +120,7 @@ export function buildQuickCommandMarkdown(commands, title = '快捷操作') {
     for (let index = 0; index < unique.length; index += columns) {
         const row = unique.slice(index, index + columns)
         while (row.length < columns) row.push({ command: '', label: '' })
-        rows.push(`| ${row.map(item => item.command ? commandInput(item.command, item.label) : '\u200b').join(' | ')} |`)
+        rows.push(`| ${row.map(item => (item.command ? commandInput(item.command, item.label) : '\u200b')).join(' | ')} |`)
     }
     const separator = `| ${Array.from({ length: columns }, () => ':---:').join(' | ')} |`
     return [`${escapeMarkdownText(title)}：`, '', rows[0], separator, ...rows.slice(1)].join('\n')
@@ -164,7 +165,9 @@ export async function sendQuickCommandSections(/** @type {any} */ e, /** @type {
 
 /** @param {string} commandHead */
 function normalizeCommandHead(commandHead = 'phi') {
-    return String(commandHead ?? '').replace(/^[/#]+/, '').trim()
+    return String(commandHead ?? '')
+        .replace(/^[/#]+/, '')
+        .trim()
 }
 
 /** @param {string} commandHead @param {string} command */
@@ -408,18 +411,17 @@ export function buildMarketQuickMarkdown(themes, pagination = {}) {
         commandInput(`/${commandHead} market detail ${theme.slug}`, '查看详情'),
         commandInput(`/${commandHead} market ${theme.slug}`, '使用主题'),
     ])
-    const table = [
-        `| 名称 | 查看详情 | 使用主题 |`,
-        '| :---: | :---: | :---: |',
-        ...rows.map(row => `| ${row.join(' | ')} |`),
-    ]
+    const table = [`| 名称 | 查看详情 | 使用主题 |`, '| :---: | :---: | :---: |', ...rows.map(row => `| ${row.join(' | ')} |`)]
     const page = pagination.page || 1
     const pageCount = pagination.pageCount || 1
-    const navigation = pageCount > 1 ? [
-        '',
-        `| ${page > 1 ? commandInput(`/${commandHead}pr`, '上一页') : '已是首页'} | ${page} / ${pageCount} 页 | ${page < pageCount ? commandInput(`/${commandHead}nx`, '下一页') : '已是末页'} |`,
-        '| :---: | :---: | :---: |',
-    ] : []
+    const navigation =
+        pageCount > 1
+            ? [
+                  '',
+                  `| ${page > 1 ? commandInput(`/${commandHead}pr`, '上一页') : '已是首页'} | ${page} / ${pageCount} 页 | ${page < pageCount ? commandInput(`/${commandHead}nx`, '下一页') : '已是末页'} |`,
+                  '| :---: | :---: | :---: |',
+              ]
+            : []
     return ['本页主题快捷操作：', '', ...table, ...navigation].join('\n')
 }
 
@@ -441,7 +443,6 @@ function marketQuickCommands(themes, pagination = {}) {
     }
     return commands
 }
-
 
 /**
  * @param {botEvent} e

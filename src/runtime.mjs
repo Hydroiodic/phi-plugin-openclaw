@@ -26,12 +26,17 @@ export class PhigrosRuntime {
   dispatch(context, deliver) {
     if (this.stopped) return Promise.reject(new Error('Phigros runtime is closed'))
     if (context.signal?.aborted) return Promise.resolve(false)
-    return this.track((async () => {
-      const signal = context.signal ? AbortSignal.any([context.signal, this.abortController.signal]) : this.abortController.signal
-      const e = this.adapter.fromContext({ ...context, signal }, deliver)
-      try { return await this.router.dispatch(e) }
-      finally { await this.adapter.flush(e) }
-    })())
+    return this.track(
+      (async () => {
+        const signal = context.signal ? AbortSignal.any([context.signal, this.abortController.signal]) : this.abortController.signal
+        const e = this.adapter.fromContext({ ...context, signal }, deliver)
+        try {
+          return await this.router.dispatch(e)
+        } finally {
+          await this.adapter.flush(e)
+        }
+      })(),
+    )
   }
 
   /** Agent tool calls for the requester's own cloud save; see src/save-tools.mjs. */
@@ -54,21 +59,34 @@ export class PhigrosRuntime {
   close() {
     this.stopped = true
     this.abortController.abort()
-    return this.closing ||= (async () => {
+    return (this.closing ||= (async () => {
       // Start each disposer independently: a synchronous throw must not prevent
       // other shutdown work or active requests from draining.
       const stopped = await Promise.allSettled([
         Promise.resolve().then(() => this.scheduler.close()),
         Promise.resolve().then(() => this.apiMonitor?.close()),
-        Promise.resolve().then(() => this.adapter.illustrations?.close()), ...this.active,
+        Promise.resolve().then(() => this.adapter.illustrations?.close()),
+        ...this.active,
       ])
-      const cleanup = [() => this.pictures?.close(), () => this.config?.close(), () => this.watchers?.closeAll(), () => this.adapter.close()]
-      const errors = stopped.slice(0, 3).filter(result => result.status === 'rejected').map(result => result.reason)
+      const cleanup = [
+        () => this.pictures?.close(),
+        () => this.config?.close(),
+        () => this.watchers?.closeAll(),
+        () => this.adapter.close(),
+      ]
+      const errors = stopped
+        .slice(0, 3)
+        .filter(result => result.status === 'rejected')
+        .map(result => result.reason)
       for (const dispose of cleanup) {
-        try { await dispose() } catch (error) { errors.push(error) }
+        try {
+          await dispose()
+        } catch (error) {
+          errors.push(error)
+        }
       }
       if (errors.length) throw new AggregateError(errors, 'Phigros runtime cleanup failed')
-    })()
+    })())
   }
 }
 
@@ -80,7 +98,11 @@ export async function createRuntime(options) {
   try {
     adapter.resourceInfoPath = resources.infoPath
     adapter.resourceManifest = resources.manifest
-    adapter.illustrations = new IllustrationRepository({ baseUrl: resources.baseUrl, cacheRoot: resources.cacheRoot, logger: adapter.logger })
+    adapter.illustrations = new IllustrationRepository({
+      baseUrl: resources.baseUrl,
+      cacheRoot: resources.cacheRoot,
+      logger: adapter.logger,
+    })
     adapter.downloadIllustrations = () => adapter.illustrations.installAll()
     setPlatformAdapter(adapter)
     runtime.watchers = (await import('../components/FileWatcherRegistry.js')).default

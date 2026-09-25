@@ -2,11 +2,7 @@ import { Config } from '../../components/index.js'
 import logger from '../../components/Logger.js'
 import autoSeekApi from './autoSeekApi.js'
 import botApiAuth from './botApiAuth.js'
-import {
-    classifyApiConnectionError,
-    isApiConnectionError,
-    PhiApiError,
-} from './phiApiErrors.js'
+import { classifyApiConnectionError, isApiConnectionError, PhiApiError } from './phiApiErrors.js'
 import { isApiVersionBlocked } from './apiVersion.js'
 
 /**
@@ -20,11 +16,7 @@ import { isApiVersionBlocked } from './apiVersion.js'
  */
 async function request(originalPath, params = {}, method = 'POST', transportOptions = {}) {
     if (isApiVersionBlocked()) {
-        throw new PhiApiError(
-            'API协议大版本不兼容，请更新 phi-plugin 后重启',
-            0,
-            'api_version_incompatible',
-        )
+        throw new PhiApiError('API协议大版本不兼容，请更新 phi-plugin 后重启', 0, 'api_version_incompatible')
     }
     try {
         await botApiAuth.initialize()

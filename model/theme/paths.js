@@ -10,10 +10,7 @@ if (stateRoot !== pluginRoot) {
     if (!fs.existsSync(path.join(themesDir, 'milthm'))) fs.cpSync(bundled, path.join(themesDir, 'milthm'), { recursive: true })
 }
 
-const legacyThemeDirs = [
-    path.join(pluginResources, 'html', 'b19', 'res', 'themes'),
-    path.join(pluginResources, 'html', 'b19', 'themes'),
-]
+const legacyThemeDirs = [path.join(pluginResources, 'html', 'b19', 'res', 'themes'), path.join(pluginResources, 'html', 'b19', 'themes')]
 const THEME_ID_RE = /^[a-zA-Z0-9_-]+$/
 const RESERVED_IDS = new Set(['default', 'snow', 'star', 'dss2', 'topText', 'foolsDay'])
 
@@ -35,7 +32,9 @@ export function migrateLegacyThemeDirectories() {
             try {
                 const info = YAML.parse(fs.readFileSync(path.join(source, 'info.yaml'), 'utf8'))
                 id = typeof info?.id === 'string' ? info.id : ''
-            } catch { continue }
+            } catch {
+                continue
+            }
             if (!THEME_ID_RE.test(id) || RESERVED_IDS.has(id)) continue
             const destination = path.join(themesDir, id)
             if (path.resolve(source) === path.resolve(destination) || fs.existsSync(destination)) continue

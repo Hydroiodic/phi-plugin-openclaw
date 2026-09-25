@@ -28,9 +28,8 @@ export class RenderPressureHistory {
         const minute = Math.floor(endedMs / MINUTE_MS)
         const previous = this.samples.find(sample => Math.floor(Date.parse(sample.endedAt) / MINUTE_MS) === minute)
         if (previous) {
-            previous.startedAt = Date.parse(snapshot.windowStartedAt) < Date.parse(previous.startedAt)
-                ? snapshot.windowStartedAt
-                : previous.startedAt
+            previous.startedAt =
+                Date.parse(snapshot.windowStartedAt) < Date.parse(previous.startedAt) ? snapshot.windowStartedAt : previous.startedAt
             previous.endedAt = endedAt
             previous.capacity = snapshot.capacity
             previous.active = snapshot.active

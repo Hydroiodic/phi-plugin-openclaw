@@ -64,19 +64,22 @@ async function readFileLockState() {
     if (!stat) return null
     const raw = await fs.promises.readFile(LOCK_PATH, 'utf8').catch(() => '')
     let owner = null
-    try { owner = JSON.parse(raw) } catch { }
-    const generation = typeof owner?.token === 'string' && /^[a-f0-9-]{36}$/i.test(owner.token)
-        ? owner.token.toLowerCase()
-        : `legacy-${crypto.createHash('sha256')
-            .update(`${raw}\0${stat.dev}\0${stat.ino}\0${stat.mtimeMs}\0${stat.size}`)
-            .digest('hex')}`
+    try {
+        owner = JSON.parse(raw)
+    } catch {}
+    const generation =
+        typeof owner?.token === 'string' && /^[a-f0-9-]{36}$/i.test(owner.token)
+            ? owner.token.toLowerCase()
+            : `legacy-${crypto
+                  .createHash('sha256')
+                  .update(`${raw}\0${stat.dev}\0${stat.ino}\0${stat.mtimeMs}\0${stat.size}`)
+                  .digest('hex')}`
     return { stat, owner, generation }
 }
 
 /** @param {{stat:fs.Stats,owner:any}} state */
 function isStaleFileLock(state) {
-    return Date.now() - state.stat.mtimeMs > LOCK_STALE_MS
-        && !processAlive(Number(state.owner?.pid), state.owner?.identity)
+    return Date.now() - state.stat.mtimeMs > LOCK_STALE_MS && !processAlive(Number(state.owner?.pid), state.owner?.identity)
 }
 
 /**
@@ -125,12 +128,14 @@ async function acquireFileLock() {
             handle = await fs.promises.open(LOCK_PATH, 'wx', 0o600)
             const token = crypto.randomUUID()
             try {
-                await handle.writeFile(JSON.stringify({
-                    pid: process.pid,
-                    identity: currentProcessStartIdentity(),
-                    token,
-                    createdAt: new Date().toISOString(),
-                }))
+                await handle.writeFile(
+                    JSON.stringify({
+                        pid: process.pid,
+                        identity: currentProcessStartIdentity(),
+                        token,
+                        createdAt: new Date().toISOString(),
+                    }),
+                )
                 await handle.sync()
                 return { handle, token }
             } catch (error) {
@@ -153,7 +158,9 @@ export async function withMarketInstallLock(operation) {
     const previous = processQueue.catch(() => {})
     /** @type {() => void} */
     let releaseQueue = () => {}
-    processQueue = new Promise(resolve => { releaseQueue = () => resolve() })
+    processQueue = new Promise(resolve => {
+        releaseQueue = () => resolve()
+    })
     await previous
     let lock
     try {

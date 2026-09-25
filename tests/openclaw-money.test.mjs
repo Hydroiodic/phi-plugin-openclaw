@@ -6,15 +6,27 @@ import getNotes from '../model/user/getNotes.js'
 import * as moneyApps from '../apps/money.js'
 
 test('Notes transfers resolve OpenClaw users and never cross channel or bot account boundaries', async t => {
-  const original = getPlatformAdapter(), adapter = createPlatform(), balances = new Map(), replies = []
+  const original = getPlatformAdapter(),
+    adapter = createPlatform(),
+    balances = new Map(),
+    replies = []
   setPlatformAdapter(adapter)
-  t.after(() => { adapter.close(); setPlatformAdapter(original) })
-  const event = (senderId, extra = {}) => adapter.fromContext({ channel: 'qqbot', senderId, senderName: senderId, accountId: 'one', ...extra }, reply => replies.push(reply.text))
-  const sender = event('alice'), recipient = event('bob'), otherBot = event('bob', { accountId: 'two' }), otherChannel = event('bob', { channel: 'telegram' })
+  t.after(() => {
+    adapter.close()
+    setPlatformAdapter(original)
+  })
+  const event = (senderId, extra = {}) =>
+    adapter.fromContext({ channel: 'qqbot', senderId, senderName: senderId, accountId: 'one', ...extra }, reply => replies.push(reply.text))
+  const sender = event('alice'),
+    recipient = event('bob'),
+    otherBot = event('bob', { accountId: 'two' }),
+    otherChannel = event('bob', { channel: 'telegram' })
   balances.set(sender.user_id, 100)
   balances.set(recipient.user_id, 10)
   t.mock.method(getNotes, 'getNotesData', async id => ({ money: balances.get(id) || 0 }))
-  t.mock.method(getNotes, 'putNotesData', async (id, data) => { balances.set(id, data.money) })
+  t.mock.method(getNotes, 'putNotesData', async (id, data) => {
+    balances.set(id, data.money)
+  })
   const App = Object.values(moneyApps).find(value => typeof value === 'function')
   const app = new App()
   for (const target of ['bob', '<@bob>', 'qqbot:one:bob']) {

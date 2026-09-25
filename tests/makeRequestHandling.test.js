@@ -19,30 +19,30 @@ test('makeRequest endpoint execution only ignores explicit unbound errors', asyn
     const originalSend = platform.sendWithAt
     /** @type {string[]} */
     const messages = []
-    platform.sendWithAt = async (_event, message) => { messages.push(String(message)) }
+    platform.sendWithAt = async (_event, message) => {
+        messages.push(String(message))
+    }
     const originalRequest = phiApiClient.request
     try {
-        phiApiClient.request = async () => { throw new PhiApiError('not bound', 404, 'binding_not_found') }
-        const ignored = await makeRequest.getUserBan(
-            /** @type {any} */ ({ platform: 'qq', platform_id: 'request-user' }),
-            {
-                event: /** @type {any} */ (event),
-                ignoreUnboundError: true,
-                notifyUser: true,
-            },
-        )
+        phiApiClient.request = async () => {
+            throw new PhiApiError('not bound', 404, 'binding_not_found')
+        }
+        const ignored = await makeRequest.getUserBan(/** @type {any} */ ({ platform: 'qq', platform_id: 'request-user' }), {
+            event: /** @type {any} */ (event),
+            ignoreUnboundError: true,
+            notifyUser: true,
+        })
         assert.equal(ignored, null)
         assert.deepEqual(messages, [])
 
-        phiApiClient.request = async () => { throw new PhiApiError('forbidden', 403, 'permission_denied') }
-        const rejected = await makeRequest.getUserBan(
-            /** @type {any} */ ({ platform: 'qq', platform_id: 'request-user' }),
-            {
-                event: /** @type {any} */ (event),
-                ignoreUnboundError: true,
-                notifyUser: true,
-            },
-        )
+        phiApiClient.request = async () => {
+            throw new PhiApiError('forbidden', 403, 'permission_denied')
+        }
+        const rejected = await makeRequest.getUserBan(/** @type {any} */ ({ platform: 'qq', platform_id: 'request-user' }), {
+            event: /** @type {any} */ (event),
+            ignoreUnboundError: true,
+            notifyUser: true,
+        })
         assert.equal(rejected, null)
         assert.equal(messages.length, 1)
         assert.match(messages[0], /API访问被拒绝/)
@@ -63,11 +63,15 @@ test('UserCredentials endpoint methods forward ignoreUnboundError and use the ty
         getApiId: async () => undefined,
     }
     const originalRequest = phiApiClient.request
-    phiApiClient.request = /** @type {any} */ (async function (/** @type {any} */ path, /** @type {any} */ params, /** @type {any} */ method = 'POST') {
-        calls.push({ path, params, method, argumentCount: arguments.length })
-        throw new PhiApiError('not bound', 404, 'binding_not_found')
-    })
-    platform.sendWithAt = async (_event, message) => { messages.push(String(message)) }
+    phiApiClient.request = /** @type {any} */ (
+        async function (/** @type {any} */ path, /** @type {any} */ params, /** @type {any} */ method = 'POST') {
+            calls.push({ path, params, method, argumentCount: arguments.length })
+            throw new PhiApiError('not bound', 404, 'binding_not_found')
+        }
+    )
+    platform.sendWithAt = async (_event, message) => {
+        messages.push(String(message))
+    }
     try {
         const credentials = UserCredentials.fromEvent(event, {
             store: /** @type {any} */ (store),
@@ -96,21 +100,17 @@ test('UserCredentials can ignore missing local credentials before making the API
         getApiId: async () => undefined,
     }
     const originalRequest = phiApiClient.request
-    phiApiClient.request = async () => { calls += 1 }
+    phiApiClient.request = async () => {
+        calls += 1
+    }
     try {
         const credentials = UserCredentials.fromEvent(event, {
             store: /** @type {any} */ (store),
         })
 
-        assert.equal(
-            await credentials.getUserAPIBanStatus({ ignoreUnboundError: true }),
-            null,
-        )
+        assert.equal(await credentials.getUserAPIBanStatus({ ignoreUnboundError: true }), null)
         assert.equal(calls, 0)
-        await assert.rejects(
-            credentials.getUserAPIBanStatus(),
-            (/** @type {any} */ error) => error.code === 'binding_not_found',
-        )
+        await assert.rejects(credentials.getUserAPIBanStatus(), (/** @type {any} */ error) => error.code === 'binding_not_found')
         assert.equal(calls, 0)
     } finally {
         phiApiClient.request = originalRequest

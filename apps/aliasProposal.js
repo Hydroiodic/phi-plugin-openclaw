@@ -57,11 +57,14 @@ function splitArgs(message, command) {
  */
 function shortList(items, includeVote = false) {
     if (!items.length) return '暂无相关别名提案。'
-    return items.slice(0, 15).map((item, index) => {
-        const vote = includeVote ? `｜+${item.votesUp || 0}/-${item.votesDown || 0}` : ''
-        const reason = includeVote && item.publicReviewReason ? `\n理由：${item.publicReviewReason}` : ''
-        return `${index + 1}. ${item.alias} -> ${item.songId}\n${statusName[item.status] || item.status}${vote}${reason}\nID: ${item.id}`
-    }).join('\n\n')
+    return items
+        .slice(0, 15)
+        .map((item, index) => {
+            const vote = includeVote ? `｜+${item.votesUp || 0}/-${item.votesDown || 0}` : ''
+            const reason = includeVote && item.publicReviewReason ? `\n理由：${item.publicReviewReason}` : ''
+            return `${index + 1}. ${item.alias} -> ${item.songId}\n${statusName[item.status] || item.status}${vote}${reason}\nID: ${item.id}`
+        })
+        .join('\n\n')
 }
 
 export class aliasProposal extends phiPluginBase {
@@ -95,9 +98,8 @@ export class aliasProposal extends phiPluginBase {
         try {
             return await operation()
         } catch (error) {
-            const message = error instanceof Error && error.message === '请先绑定 sessionToken。'
-                ? error.message
-                : '别名服务暂时不可用，请稍后重试。'
+            const message =
+                error instanceof Error && error.message === '请先绑定 sessionToken。' ? error.message : '别名服务暂时不可用，请稍后重试。'
             send.send_with_At(e, message)
             return null
         }
@@ -124,13 +126,20 @@ export class aliasProposal extends phiPluginBase {
         }
         const songIds = getInfo.fuzzysongsnick(songText, 0.85, true)
         if (songIds.length !== 1) {
-            const candidates = songIds.slice(0, 8).map(id => `${getInfo.info(id, true)?.song || id} (${id})`).join('\n')
+            const candidates = songIds
+                .slice(0, 8)
+                .map(id => `${getInfo.info(id, true)?.song || id} (${id})`)
+                .join('\n')
             send.send_with_At(e, songIds.length ? `曲目不唯一，请使用更精确的名称：\n${candidates}` : '未找到对应曲目。')
             return false
         }
-        const proposal = await this.withFailureMessage(e, () => aliasProposalService.create(e, {
-            songId: songIds[0], alias, note,
-        }))
+        const proposal = await this.withFailureMessage(e, () =>
+            aliasProposalService.create(e, {
+                songId: songIds[0],
+                alias,
+                note,
+            }),
+        )
         if (proposal) send.send_with_At(e, `提案已提交。\n${proposal.alias} -> ${proposal.songId}\nID: ${proposal.id}`)
         return Boolean(proposal)
     }
@@ -187,7 +196,10 @@ export class aliasProposal extends phiPluginBase {
      * @returns {Promise<boolean>} 是否成功记录投票
      */
     async vote(e) {
-        const args = e.msg.replace(new RegExp(`${getPrefix()}(投票|vote)\\s*`, 'i'), '').trim().split(/\s+/)
+        const args = e.msg
+            .replace(new RegExp(`${getPrefix()}(投票|vote)\\s*`, 'i'), '')
+            .trim()
+            .split(/\s+/)
         const proposalId = args[0]
         const choice = String(args[1] || '').toLowerCase()
         /** @type {1 | -1 | null} */

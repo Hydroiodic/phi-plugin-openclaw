@@ -17,13 +17,13 @@ export class phiSaveEdit extends phiPluginBase {
             rule: [
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(确认上传|saveupload)(\\s*)([A-Za-z0-9]*)$`,
-                    fnc: 'confirm'
+                    fnc: 'confirm',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(取消上传|savecancel)$`,
-                    fnc: 'cancel'
-                }
-            ]
+                    fnc: 'cancel',
+                },
+            ],
         })
     }
 
@@ -41,7 +41,10 @@ export class phiSaveEdit extends phiPluginBase {
         send.send_with_At(e, '正在上传存档，请稍等…')
         try {
             const { changes } = await saveEditService.confirm(e.user_id, code)
-            send.send_with_At(e, `上传完成，已写入 ${changes.length} 项修改，原存档已备份。\n请在游戏内选择从云端同步存档；查分数据可发送 /${Config.getUserCfg('config', 'cmdhead')} update 更新。`)
+            send.send_with_At(
+                e,
+                `上传完成，已写入 ${changes.length} 项修改，原存档已备份。\n请在游戏内选择从云端同步存档；查分数据可发送 /${Config.getUserCfg('config', 'cmdhead')} update 更新。`,
+            )
         } catch (/** @type {any} */ error) {
             if (error?.name === 'SaveEditError' || error?.name === 'SaveUploadError' || error?.name === 'CloudTransportError') {
                 send.send_with_At(e, `上传失败：${error.message}`)

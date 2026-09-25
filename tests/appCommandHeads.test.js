@@ -24,5 +24,7 @@ test('recreated apps read the current head including empty and regex heads', () 
             assert.ok(new RegExp(update.rule[1].reg).test('/phi down ill'))
             if (head !== 'phi') assert.equal(new RegExp(proposal.rule[0].reg).test('/phi alias submit song | alias'), false)
         }
-    } finally { stub.mock.restore() }
+    } finally {
+        stub.mock.restore()
+    }
 })

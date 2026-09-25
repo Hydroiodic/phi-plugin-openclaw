@@ -21,9 +21,12 @@ export class TaskScheduler {
 
   run(instance, callback) {
     if (this.stopped || this.running.has(instance)) return
-    const work = Promise.resolve().then(() => callback.call(instance)).catch(() => {
-      this.logger.warn('Phigros 后台同步失败，将于下一周期重试。')
-    }).finally(() => this.running.delete(instance))
+    const work = Promise.resolve()
+      .then(() => callback.call(instance))
+      .catch(() => {
+        this.logger.warn('Phigros 后台同步失败，将于下一周期重试。')
+      })
+      .finally(() => this.running.delete(instance))
     this.running.set(instance, work)
     return work
   }

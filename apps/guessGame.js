@@ -1,13 +1,13 @@
-import Config from '../components/Config.js';
-import send from '../model/render/send.js';
-import guessTips from './guessGame/guessTips.js';
-import guessLetter from './guessGame/guessLetter.js';
-import guessIll from './guessGame/guessIll.js';
-import getBanGroup from '../model/user/getBanGroup.js';
-import phiPluginBase from '../components/baseClass.js';
-import logger from '../components/Logger.js';
+import Config from '../components/Config.js'
+import send from '../model/render/send.js'
+import guessTips from './guessGame/guessTips.js'
+import guessLetter from './guessGame/guessLetter.js'
+import guessIll from './guessGame/guessIll.js'
+import getBanGroup from '../model/user/getBanGroup.js'
+import phiPluginBase from '../components/baseClass.js'
+import logger from '../components/Logger.js'
 
-const games = "(提示猜曲|tipgame|(ltr|letter|开字母).*|guess|猜曲绘)"
+const games = '(提示猜曲|tipgame|(ltr|letter|开字母).*|guess|猜曲绘)'
 
 /**@import {botEvent} from '../components/baseClass.js' */
 
@@ -31,33 +31,33 @@ export class phiGames extends phiPluginBase {
             rule: [
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)${games}\\s*((\\-[lL]\\s*\\d+))?$`,
-                    fnc: 'start'
+                    fnc: 'start',
                 },
                 {
                     reg: `^.*$`,
                     fnc: 'guess',
-                    log: false
+                    log: false,
                 },
                 {
                     reg: `^[#/](出|开|翻|揭|看|翻开|打开|揭开|open)(\\s*)\\S$`,
-                    fnc: 'reveal'
+                    fnc: 'reveal',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(tip|提示)$`,
-                    fnc: 'getTip'
+                    fnc: 'getTip',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(ans|答案|结束)$`,
-                    fnc: 'ans'
-                }
-            ]
+                    fnc: 'ans',
+                },
+            ],
         })
     }
 
     /**
      * 开始游戏
-     * @param {botEvent} e 
-     * @returns 
+     * @param {botEvent} e
+     * @returns
      */
     async start(e) {
         const msg = e.msg.match(new RegExp(games))?.[0]
@@ -66,30 +66,30 @@ export class phiGames extends phiPluginBase {
             return false
         }
         if (gameList[e.group_id]) {
-            send.send_with_At(e, `当前存在其他未结束的游戏嗷！如果想要开启新游戏请 /${Config.getUserCfg('config', 'cmdhead')} ans 结束进行的游戏嗷！`)
+            send.send_with_At(
+                e,
+                `当前存在其他未结束的游戏嗷！如果想要开启新游戏请 /${Config.getUserCfg('config', 'cmdhead')} ans 结束进行的游戏嗷！`,
+            )
             return false
         }
         if (!msg) {
             return false
         }
         switch (msg) {
-            case "tipgame":
-            case "提示猜曲": {
-
+            case 'tipgame':
+            case '提示猜曲': {
                 if (await getBanGroup.get(e, 'tipgame')) return false
 
                 return await guessTips.start(e, gameList)
             }
-            case "guess":
-            case "猜曲绘": {
-
+            case 'guess':
+            case '猜曲绘': {
                 if (await getBanGroup.get(e, 'guessgame')) return false
 
                 return await guessIll.start(e, gameList)
             }
             default: {
-                if (msg.startsWith("ltr") || msg.startsWith("letter") || msg.startsWith("开字母")) {
-
+                if (msg.startsWith('ltr') || msg.startsWith('letter') || msg.startsWith('开字母')) {
                     if (await getBanGroup.get(e, 'ltrgame')) return false
 
                     return await guessLetter.start(e, gameList)
@@ -99,11 +99,10 @@ export class phiGames extends phiPluginBase {
         }
     }
 
-
     /**
      * 翻开字母
-     * @param {botEvent} e 
-     * @returns 
+     * @param {botEvent} e
+     * @returns
      */
     async reveal(e) {
         if (!e.isGroup || !e.group_id) {
@@ -111,7 +110,7 @@ export class phiGames extends phiPluginBase {
             return false
         }
         switch (gameList[e.group_id]?.gameType) {
-            case "guessLetter": {
+            case 'guessLetter': {
                 return await guessLetter.reveal(e, gameList)
             }
             default: {
@@ -120,30 +119,29 @@ export class phiGames extends phiPluginBase {
         }
     }
 
-
     /**
      * 猜测
-     * @param {botEvent} e 
-     * @returns 
+     * @param {botEvent} e
+     * @returns
      */
     async guess(e) {
         /**过滤特殊消息 */
         if (!e.msg) {
-            return false;
+            return false
         }
         if (!e.group_id) {
             return false
         }
         switch (gameList[e.group_id]?.gameType) {
-            case "guessTips": {
+            case 'guessTips': {
                 logger.info(`[phi-games][guess][tips] ${e.msg}`)
                 return await guessTips.guess(e, gameList)
             }
-            case "guessLetter": {
+            case 'guessLetter': {
                 logger.info(`[phi-games][guess][letter] ${e.msg}`)
                 return await guessLetter.guess(e, gameList)
             }
-            case "guessIll": {
+            case 'guessIll': {
                 logger.info(`[phi-games][guess][ill] ${e.msg}`)
                 return await guessIll.guess(e, gameList)
             }
@@ -153,21 +151,20 @@ export class phiGames extends phiPluginBase {
         }
     }
 
-
     /**
      * 获取提示
-     * @param {botEvent} e 
-     * @returns 
+     * @param {botEvent} e
+     * @returns
      */
     async getTip(e) {
         if (!e.group_id) {
             return false
         }
         switch (gameList[e.group_id]?.gameType) {
-            case "guessTips": {
+            case 'guessTips': {
                 return await guessTips.getTip(e, gameList)
             }
-            case "guessLetter": {
+            case 'guessLetter': {
                 return await guessLetter.getTip(e, gameList)
             }
             default: {
@@ -176,24 +173,23 @@ export class phiGames extends phiPluginBase {
         }
     }
 
-
     /**
      * 结束游戏
-     * @param {botEvent} e 
-     * @returns 
+     * @param {botEvent} e
+     * @returns
      */
     async ans(e) {
         if (!e.group_id) {
             return false
         }
         switch (gameList[e.group_id]?.gameType) {
-            case "guessTips": {
+            case 'guessTips': {
                 return await guessTips.ans(e, gameList)
             }
-            case "guessLetter": {
+            case 'guessLetter': {
                 return await guessLetter.ans(e, gameList)
             }
-            case "guessIll": {
+            case 'guessIll': {
                 return await guessIll.ans(e, gameList)
             }
             default: {

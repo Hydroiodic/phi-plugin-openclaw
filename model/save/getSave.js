@@ -75,7 +75,8 @@ export default class LocalSaveRepository {
     static async putHistoryBySessionToken(sessionToken, data) {
         if (!sessionToken) throw new Error('sessionToken is undefined')
         await this.assertSessionTokenAllowed(sessionToken)
-        if (!readFile.SetFile(directories.file(sessionToken, 'history.json'), data)) throw new Error('历史记录写入失败，请检查磁盘空间和目录权限')
+        if (!readFile.SetFile(directories.file(sessionToken, 'history.json'), data))
+            throw new Error('历史记录写入失败，请检查磁盘空间和目录权限')
         return true
     }
 

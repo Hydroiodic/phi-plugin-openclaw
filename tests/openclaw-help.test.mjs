@@ -9,18 +9,32 @@ import { HELP } from '../src/commands.mjs'
 const resources = fileURLToPath(new URL('../resources/', import.meta.url))
 const file = path.join(resources, 'html/help/help.art')
 const helpGroup = [
-  { group: '绑定与查询', list: [
-    { title: '/bind<br>/绑定', eg: '/bind <sessionToken|qrcode>', desc: '第一行<br>第二行 <曲名>' },
-    { title: '/b30', desc: 'Best30' },
-  ] },
+  {
+    group: '绑定与查询',
+    list: [
+      { title: '/bind<br>/绑定', eg: '/bind <sessionToken|qrcode>', desc: '第一行<br>第二行 <曲名>' },
+      { title: '/b30', desc: 'Best30' },
+    ],
+  },
   { group: '管理员命令', auth: 'master', list: [{ title: '/backup', desc: '备份' }] },
 ]
 function render(isMaster) {
-  return template.render(fs.readFileSync(file, 'utf8'), {
-    defaultLayout: path.join(resources, 'html/common/layout/default.art'),
-    _res_path: resources + '/', helpGroup, isMaster, cmdHead: 'phi',
-    theme: 'default', themeInfo: null, Version: { ver: '0.1.0' }, _plugin: 'Phigros', sys: { scale: '' },
-  }, { filename: file })
+  return template.render(
+    fs.readFileSync(file, 'utf8'),
+    {
+      defaultLayout: path.join(resources, 'html/common/layout/default.art'),
+      _res_path: resources + '/',
+      helpGroup,
+      isMaster,
+      cmdHead: 'phi',
+      theme: 'default',
+      themeInfo: null,
+      Version: { ver: '0.1.0' },
+      _plugin: 'Phigros',
+      sys: { scale: '' },
+    },
+    { filename: file },
+  )
 }
 
 test('text help is a three-column table with no trailing explanation', () => {
@@ -33,7 +47,8 @@ test('text help is a three-column table with no trailing explanation', () => {
 })
 
 test('image help preserves rows, line breaks, literal parameters and administrator visibility', () => {
-  const normal = render(false), admin = render(true)
+  const normal = render(false),
+    admin = render(true)
   assert.equal((normal.match(/<table class="help-table">/g) || []).length, 1)
   assert.equal((admin.match(/<table class="help-table">/g) || []).length, 2)
   for (const label of ['命令', '用法示例', '说明']) assert.ok(normal.includes(`>${label}</th>`))

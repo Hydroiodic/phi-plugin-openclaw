@@ -10,17 +10,31 @@ import { getPlatformAdapter, setPlatformAdapter } from '../components/platform/s
 
 test('malformed or non-mapping YAML retains last good configuration and recovers on change', async t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'phi-config-test-'))
-  const defaults = path.join(root, 'defaults'), local = path.join(root, 'local')
+  const defaults = path.join(root, 'defaults'),
+    local = path.join(root, 'local')
   fs.mkdirSync(defaults)
   fs.writeFileSync(path.join(defaults, 'config.yaml'), 'value: 1\n')
   const listeners = new Map()
-  const config = new Config({ configDir: local, defaultDir: defaults, watchers: {
-    watch: (key, file, onChange) => { listeners.set(key, onChange); return { close: async () => {} } },
-  } })
-  t.after(async () => { await config.close(); fs.rmSync(root, { recursive: true, force: true }) })
+  const config = new Config({
+    configDir: local,
+    defaultDir: defaults,
+    watchers: {
+      watch: (key, file, onChange) => {
+        listeners.set(key, onChange)
+        return { close: async () => {} }
+      },
+    },
+  })
+  t.after(async () => {
+    await config.close()
+    fs.rmSync(root, { recursive: true, force: true })
+  })
   const file = path.join(local, 'config.yaml')
   assert.deepEqual(config.getConfig('config'), { value: 1 })
-  const change = text => { fs.writeFileSync(file, text); listeners.get('config:config.config')() }
+  const change = text => {
+    fs.writeFileSync(file, text)
+    listeners.get('config:config.config')()
+  }
   change('value: [broken')
   assert.deepEqual(config.getConfig('config'), { value: 1 })
   assert.equal(fs.readFileSync(file, 'utf8'), 'value: [broken')
@@ -34,7 +48,8 @@ test('malformed or non-mapping YAML retains last good configuration and recovers
 })
 
 test('YAML writes preserve comments and use private atomic files; malformed files are never rewritten', t => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'phi-yaml-test-')), file = path.join(root, 'config.yaml')
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'phi-yaml-test-')),
+    file = path.join(root, 'config.yaml')
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   fs.writeFileSync(file, '# user comment\nvalue: 1\n')
   new YamlReader(file).set('value', 2)
@@ -57,5 +72,7 @@ test('version metadata follows verified resources without reading README or addi
     assert.deepEqual(version.toJSON(), { ver: 'v0.1.0', phigros: '3.20.0', phigrosVerNum: 154 })
     setPlatformAdapter({ resourceManifest: { game: { version: '3.21.0', code: 155 } } })
     assert.equal(version.phigrosVerNum, 155)
-  } finally { setPlatformAdapter(previous) }
+  } finally {
+    setPlatformAdapter(previous)
+  }
 })

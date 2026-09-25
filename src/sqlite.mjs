@@ -20,14 +20,20 @@ export class SqliteStore {
           member TEXT NOT NULL, score REAL NOT NULL, PRIMARY KEY(key, member));
         CREATE INDEX IF NOT EXISTS scores_order ON scores(key, score, member);
         CREATE INDEX IF NOT EXISTS entries_expiry ON entries(expires) WHERE expires IS NOT NULL;`)
-    } catch (error) { this.db.close(); throw error }
+    } catch (error) {
+      this.db.close()
+      throw error
+    }
   }
 
   /** @param {string} sql */
   #statement(sql) {
     if (this.#closed) throw new Error('SQLite store is closed')
     let statement = this.#statements.get(sql)
-    if (!statement) { statement = this.db.prepare(sql); this.#statements.set(sql, statement) }
+    if (!statement) {
+      statement = this.db.prepare(sql)
+      this.#statements.set(sql, statement)
+    }
     return statement
   }
   /** @param {unknown} value */
@@ -63,12 +69,16 @@ export class SqliteStore {
     this.#closed = true
     this.#statements.clear()
   }
-  clean() { this.#statement('DELETE FROM entries WHERE expires<=?').run(Date.now()) }
+  clean() {
+    this.#statement('DELETE FROM entries WHERE expires<=?').run(Date.now())
+  }
   /** @template T @param {() => T} fn @returns {T} */
   transaction(fn) {
     if (this.#closed) throw new Error('SQLite store is closed')
-    if (typeof fn !== 'function' || fn.constructor.name === 'AsyncFunction') throw new TypeError('SQLite transactions require a synchronous callback')
-    const depth = this.#transactionDepth++, savepoint = `phi_transaction_${depth}`
+    if (typeof fn !== 'function' || fn.constructor.name === 'AsyncFunction')
+      throw new TypeError('SQLite transactions require a synchronous callback')
+    const depth = this.#transactionDepth++,
+      savepoint = `phi_transaction_${depth}`
     try {
       this.db.exec(depth ? `SAVEPOINT ${savepoint}` : 'BEGIN IMMEDIATE')
       try {
@@ -85,7 +95,9 @@ export class SqliteStore {
         this.db.exec(depth ? `ROLLBACK TO ${savepoint}; RELEASE ${savepoint}` : 'ROLLBACK')
         throw error
       }
-    } finally { this.#transactionDepth-- }
+    } finally {
+      this.#transactionDepth--
+    }
   }
   /** @param {string} key */
   async get(key) {
@@ -95,10 +107,12 @@ export class SqliteStore {
   /** @param {string} key @param {unknown} value @param {{PX?:number, EX?:number}} options */
   async set(key, value, options = {}) {
     this.#text(key)
-    if (!options || typeof options !== 'object' || Array.isArray(options) || (options.PX !== undefined && options.EX !== undefined)) throw new TypeError('Invalid expiry options')
+    if (!options || typeof options !== 'object' || Array.isArray(options) || (options.PX !== undefined && options.EX !== undefined))
+      throw new TypeError('Invalid expiry options')
     const duration = options.PX !== undefined ? options.PX : options.EX === undefined ? undefined : options.EX * 1000
     const expires = duration === undefined ? null : Date.now() + duration
-    if (duration !== undefined && (!Number.isSafeInteger(duration) || duration <= 0 || !Number.isSafeInteger(expires))) throw new TypeError('Invalid expiry')
+    if (duration !== undefined && (!Number.isSafeInteger(duration) || duration <= 0 || !Number.isSafeInteger(expires)))
+      throw new TypeError('Invalid expiry')
     this.transaction(() => {
       this.#statement('DELETE FROM entries WHERE key=?').run(key)
       this.#statement("INSERT INTO entries(key,value,expires,kind) VALUES(?,?,?,'string')").run(key, String(value), expires)
@@ -109,19 +123,28 @@ export class SqliteStore {
   async del(...keys) {
     const names = keys.flat().map(key => this.#text(key))
     this.clean()
-    return this.transaction(() => names.reduce((n, key) => n + Number(this.#statement('DELETE FROM entries WHERE key=?').run(key).changes), 0))
+    return this.transaction(() =>
+      names.reduce((n, key) => n + Number(this.#statement('DELETE FROM entries WHERE key=?').run(key).changes), 0),
+    )
   }
   async keys(pattern = '*') {
     this.#text(pattern, 'pattern')
     this.clean()
-    return this.#statement('SELECT key FROM entries WHERE key GLOB ? ORDER BY rowid').all(pattern).map(row => String(row.key))
+    return this.#statement('SELECT key FROM entries WHERE key GLOB ? ORDER BY rowid')
+      .all(pattern)
+      .map(row => String(row.key))
   }
   async scan(cursor = 0, { MATCH = '*', COUNT = 100 } = {}) {
-    const position = this.#integer(cursor, 'cursor', 0), limit = Math.min(10000, this.#integer(COUNT, 'count', 1))
+    const position = this.#integer(cursor, 'cursor', 0),
+      limit = Math.min(10000, this.#integer(COUNT, 'count', 1))
     this.#text(MATCH, 'pattern')
     this.clean()
     // Stable rowid cursor: deleting a returned batch must not skip the next batch.
-    const rows = this.#statement('SELECT rowid,key FROM entries WHERE rowid>? AND key GLOB ? ORDER BY rowid LIMIT ?').all(position, MATCH, limit + 1)
+    const rows = this.#statement('SELECT rowid,key FROM entries WHERE rowid>? AND key GLOB ? ORDER BY rowid LIMIT ?').all(
+      position,
+      MATCH,
+      limit + 1,
+    )
     const batch = rows.slice(0, limit)
     return { cursor: rows.length > limit ? Number(batch.at(-1)?.rowid) : 0, keys: batch.map(row => String(row.key)) }
   }
@@ -154,7 +177,8 @@ export class SqliteStore {
   }
   /** @param {string} key @param {string} value */
   async zScore(key, value) {
-    this.#text(value, 'member'); this.#entry(key, 'zset')
+    this.#text(value, 'member')
+    this.#entry(key, 'zset')
     const score = this.#statement('SELECT score FROM scores WHERE key=? AND member=?').get(key, value)?.score
     return score == null ? null : Number(score)
   }
@@ -165,27 +189,41 @@ export class SqliteStore {
   }
   /** @param {string} key @param {number} min @param {number} max */
   async zCount(key, min, max) {
-    min = this.#number(min, 'minimum score', false); max = this.#number(max, 'maximum score', false)
+    min = this.#number(min, 'minimum score', false)
+    max = this.#number(max, 'maximum score', false)
     this.#entry(key, 'zset')
     return Number(this.#statement('SELECT COUNT(*) AS n FROM scores WHERE key=? AND score>=? AND score<=?').get(key, min, max)?.n)
   }
   /** @param {string} key @param {string} value */
   async zRank(key, value) {
-    this.#text(value, 'member'); this.#entry(key, 'zset')
+    this.#text(value, 'member')
+    this.#entry(key, 'zset')
     const entry = this.#statement('SELECT score FROM scores WHERE key=? AND member=?').get(key, value)
     if (!entry) return null
-    return Number(this.#statement('SELECT COUNT(*) AS n FROM scores WHERE key=? AND (score<? OR (score=? AND member<?))').get(key, entry.score, entry.score, value)?.n)
+    return Number(
+      this.#statement('SELECT COUNT(*) AS n FROM scores WHERE key=? AND (score<? OR (score=? AND member<?))').get(
+        key,
+        entry.score,
+        entry.score,
+        value,
+      )?.n,
+    )
   }
   /** @param {string} key @param {number} start @param {number} stop @param {string} [mode] */
   async zRange(key, start, stop, mode) {
-    start = this.#integer(start, 'range start'); stop = this.#integer(stop, 'range stop')
+    start = this.#integer(start, 'range start')
+    stop = this.#integer(stop, 'range stop')
     if (mode !== undefined && mode !== 'WITHSCORES') throw new TypeError('Invalid range mode')
     this.#entry(key, 'zset')
     const size = Number(this.#statement('SELECT COUNT(*) AS n FROM scores WHERE key=?').get(key)?.n)
     start = start < 0 ? Math.max(0, size + start) : start
     stop = stop < 0 ? size + stop : Math.min(stop, size - 1)
     if (stop < start || start >= size) return []
-    const rows = this.#statement('SELECT member,score FROM scores WHERE key=? ORDER BY score,member LIMIT ? OFFSET ?').all(key, stop - start + 1, start)
+    const rows = this.#statement('SELECT member,score FROM scores WHERE key=? ORDER BY score,member LIMIT ? OFFSET ?').all(
+      key,
+      stop - start + 1,
+      start,
+    )
     return mode === 'WITHSCORES' ? rows.flatMap(row => [String(row.member), String(row.score)]) : rows.map(row => String(row.member))
   }
 }

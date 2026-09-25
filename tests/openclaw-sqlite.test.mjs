@@ -18,7 +18,9 @@ test('SQLite persists credentials and ranking across close/reopen; expiry and ne
   assert.equal(await db.zAdd('rank', { value: 'a', score: -15 }), 1)
   assert.equal(await db.zAdd('rank', { value: 'c', score: -14 }), 1)
   assert.equal(await db.zAdd('rank', { value: 'c', score: -13 }), 0)
-  db.close(); await delay(40); db = new SqliteStore(file)
+  db.close()
+  await delay(40)
+  db = new SqliteStore(file)
   try {
     assert.equal(await db.get('user:1'), 'secret')
     assert.equal(await db.get('expiring'), null)
@@ -31,7 +33,9 @@ test('SQLite persists credentials and ranking across close/reopen; expiry and ne
     assert.equal(await db.del('rank'), 1)
     assert.equal(await db.zCard('rank'), 0)
     if (process.platform !== 'win32') assert.equal(fs.statSync(file).mode & 0o777, 0o600)
-  } finally { db.close() }
+  } finally {
+    db.close()
+  }
 })
 
 test('scan remains complete when deleting each returned page', async () => {
@@ -39,23 +43,31 @@ test('scan remains complete when deleting each returned page', async () => {
   try {
     for (let i = 0; i < 257; i++) await db.set(`legacy:${i}`, i)
     await db.set('keep', '1')
-    let cursor = 0, removed = 0
+    let cursor = 0,
+      removed = 0
     do {
       const page = await db.scan(cursor, { MATCH: 'legacy:*', COUNT: 17 })
-      removed += await db.del(page.keys); cursor = page.cursor
+      removed += await db.del(page.keys)
+      cursor = page.cursor
     } while (cursor)
     assert.equal(removed, 257)
     assert.deepEqual(await db.keys(), ['keep'])
     await assert.rejects(db.set('bad', '1', { EX: -1 }))
-  } finally { db.close() }
+  } finally {
+    db.close()
+  }
 })
 
 test('all sorted-set operations expire entries and enforce their type consistently', async t => {
   const db = new SqliteStore()
   t.after(() => db.close())
   const operations = [
-    ['zScore', ['a'], null], ['zCard', [], 0], ['zCount', [-Infinity, Infinity], 0],
-    ['zRank', ['a'], null], ['zRange', [0, -1], []], ['zRem', ['a'], 0],
+    ['zScore', ['a'], null],
+    ['zCard', [], 0],
+    ['zCount', [-Infinity, Infinity], 0],
+    ['zRank', ['a'], null],
+    ['zRange', [0, -1], []],
+    ['zRem', ['a'], 0],
   ]
   for (const [method, args, expected] of operations) {
     await db.zAdd('expired', { score: 1, value: 'a' })
@@ -75,7 +87,16 @@ test('SQLite validates numeric boundaries without partial writes or leaking raw 
   const db = new SqliteStore()
   t.after(() => db.close())
   await db.set('keep', 'original')
-  for (const options of [{ PX: Infinity }, { PX: NaN }, { PX: null }, { PX: 0.1 }, { PX: Number.MAX_SAFE_INTEGER }, { EX: 0 }, { EX: 1, PX: 1 }, null]) {
+  for (const options of [
+    { PX: Infinity },
+    { PX: NaN },
+    { PX: null },
+    { PX: 0.1 },
+    { PX: Number.MAX_SAFE_INTEGER },
+    { EX: 0 },
+    { EX: 1, PX: 1 },
+    null,
+  ]) {
     await assert.rejects(db.set('keep', 'changed', options), /Invalid expiry/)
     assert.equal(await db.get('keep'), 'original')
   }
@@ -97,15 +118,36 @@ test('SQLite nested transactions roll back locally, reject asynchronous callback
   const insert = key => db.db.prepare("INSERT INTO entries(key,value,kind) VALUES(?,'value','string')").run(key)
   db.transaction(() => {
     insert('outer')
-    assert.throws(() => db.transaction(() => { insert('inner'); throw new Error('cancel inner') }), /cancel inner/)
+    assert.throws(
+      () =>
+        db.transaction(() => {
+          insert('inner')
+          throw new Error('cancel inner')
+        }),
+      /cancel inner/,
+    )
     insert('outer-after')
   })
   assert.deepEqual(await db.keys(), ['outer', 'outer-after'])
-  assert.throws(() => db.transaction(() => { insert('rollback'); throw new Error('cancel outer') }), /cancel outer/)
+  assert.throws(
+    () =>
+      db.transaction(() => {
+        insert('rollback')
+        throw new Error('cancel outer')
+      }),
+    /cancel outer/,
+  )
   assert.equal(await db.get('rollback'), null)
   assert.throws(() => db.transaction(async () => insert('async')), /synchronous callback/)
   assert.equal(await db.get('async'), null)
-  assert.throws(() => db.transaction(() => { insert('promise'); return Promise.resolve() }), /synchronous callback/)
+  assert.throws(
+    () =>
+      db.transaction(() => {
+        insert('promise')
+        return Promise.resolve()
+      }),
+    /synchronous callback/,
+  )
   assert.equal(await db.get('promise'), null)
   db.close()
   assert.doesNotThrow(() => db.close())

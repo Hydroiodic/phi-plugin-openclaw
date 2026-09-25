@@ -1,11 +1,9 @@
-import getFile from "../filesystem/getFile.js";
+import getFile from '../filesystem/getFile.js'
 import path from 'path'
-import { otherDataPath } from "../filesystem/path.js";
-import fCompute from "./fCompute.js";
+import { otherDataPath } from '../filesystem/path.js'
+import fCompute from './fCompute.js'
 
 const dataPath = path.join(otherDataPath, 'commentData.json')
-
-
 
 /**
  * @typedef {Object} commentObject 评论对象
@@ -26,34 +24,32 @@ const dataPath = path.join(otherDataPath, 'commentData.json')
  * @property {string} [avatar] 仅在查询时添加
  */
 
-export default new class getComment {
-
+export default new (class getComment {
     constructor() {
         /**
          * 评论数据
          * @type {{[id:idString]: commentObject[]}}
          */
-        this.data = getFile.FileReader(dataPath);
+        this.data = getFile.FileReader(dataPath)
         /**
          * 评论id映射曲目id
          * @type {{[id:string]: idString}}
          */
         this.map = {}
         if (!this.data) {
-            this.data = {};
-            getFile.SetFile(dataPath, this.data);
+            this.data = {}
+            getFile.SetFile(dataPath, this.data)
         }
-        fCompute.objectKeys(this.data).forEach((id) => {
+        fCompute.objectKeys(this.data).forEach(id => {
             this.data[id].forEach((comment, index, array) => {
                 if (!comment?.thisId) {
-                    array.splice(index, 1);
-                    return;
+                    array.splice(index, 1)
+                    return
                 }
                 this.map[comment.thisId] = id
             })
         })
-        getFile.SetFile(dataPath, this.data);
-
+        getFile.SetFile(dataPath, this.data)
     }
 
     /**
@@ -61,7 +57,7 @@ export default new class getComment {
      * @param {idString} songId id
      */
     get(songId) {
-        return this.data?.[songId] || [];
+        return this.data?.[songId] || []
     }
 
     /**
@@ -70,11 +66,11 @@ export default new class getComment {
      */
     getByCommentId(commentId) {
         const songId = this.map[commentId]
-        if (!songId) return null;
+        if (!songId) return null
         for (const i of this.data[songId]) {
             if (i.thisId == commentId) {
                 i.songId = songId
-                return i;
+                return i
             }
         }
         return null
@@ -86,8 +82,8 @@ export default new class getComment {
      * @param {commentObject} comment 评论数据
      */
     add(id, comment) {
-        const arr = new Uint32Array(1);
-        comment.thisId = crypto.getRandomValues(arr)[0].toString();
+        const arr = new Uint32Array(1)
+        comment.thisId = crypto.getRandomValues(arr)[0].toString()
         if (this.data[id]) {
             this.data[id].push(comment)
         } else {
@@ -95,7 +91,6 @@ export default new class getComment {
         }
         this.map[comment.thisId] = id
         return getFile.SetFile(dataPath, this.data)
-
     }
 
     /**
@@ -104,15 +99,15 @@ export default new class getComment {
      */
     del(commentId) {
         const songId = this.map[commentId]
-        if (!songId) return false;
+        if (!songId) return false
         for (let i = 0; i <= this.data[songId].length; ++i) {
             if (this.data[songId][i].thisId == commentId) {
-                this.data[songId].splice(i, 1);
-                delete this.map[commentId];
+                this.data[songId].splice(i, 1)
+                delete this.map[commentId]
                 return getFile.SetFile(dataPath, this.data)
             }
         }
-        delete this.map[commentId];
+        delete this.map[commentId]
         return false
     }
-}()
+})()

@@ -13,23 +13,37 @@
  * @returns {B30AnalysisRecord[]}
  */
 export function getB30AnalysisRecords(b30) {
-    const phi = (b30.phi || []).slice(0, 3).map((record, index) => record && ({
-        id: record.id,
-        rank: record.rank,
-        rks: Number(record.rks),
-        kind: 'phi',
-        slot: `P${index + 1}`,
-    })).filter(Boolean)
-    const best = (b30.b19_list || []).slice(0, 27).map((record, index) => record && ({
-        id: record.id,
-        rank: record.rank,
-        rks: Number(record.rks),
-        kind: 'best',
-        slot: `B${index + 1}`,
-    })).filter(Boolean)
-    return /** @type {B30AnalysisRecord[]} */ ([...phi, ...best].filter(record =>
-        record.id && ['EZ', 'HD', 'IN', 'AT', 'LEGACY'].includes(record.rank) && Number.isFinite(record.rks)
-    ))
+    const phi = (b30.phi || [])
+        .slice(0, 3)
+        .map(
+            (record, index) =>
+                record && {
+                    id: record.id,
+                    rank: record.rank,
+                    rks: Number(record.rks),
+                    kind: 'phi',
+                    slot: `P${index + 1}`,
+                },
+        )
+        .filter(Boolean)
+    const best = (b30.b19_list || [])
+        .slice(0, 27)
+        .map(
+            (record, index) =>
+                record && {
+                    id: record.id,
+                    rank: record.rank,
+                    rks: Number(record.rks),
+                    kind: 'best',
+                    slot: `B${index + 1}`,
+                },
+        )
+        .filter(Boolean)
+    return /** @type {B30AnalysisRecord[]} */ (
+        [...phi, ...best].filter(
+            record => record.id && ['EZ', 'HD', 'IN', 'AT', 'LEGACY'].includes(record.rank) && Number.isFinite(record.rks),
+        )
+    )
 }
 
 /**
@@ -65,7 +79,7 @@ export function buildRksHistogram(records, targetTickCount = 4) {
         ticks.push({
             value,
             label: value.toFixed(2),
-            position: index / tickCount * 100,
+            position: (index / tickCount) * 100,
         })
     }
 
@@ -76,7 +90,7 @@ export function buildRksHistogram(records, targetTickCount = 4) {
             label: record.slot || `${record.kind === 'phi' ? 'P' : 'B'}${slotCounters[record.kind]}`,
             rks: record.rks,
             kind: record.kind,
-            height: Math.min(100, Math.max(0, (record.rks - domainMin) / domainRange * 100)),
+            height: Math.min(100, Math.max(0, ((record.rks - domainMin) / domainRange) * 100)),
         }
     })
 
@@ -85,7 +99,7 @@ export function buildRksHistogram(records, targetTickCount = 4) {
         slots,
         ticks,
         average,
-        averagePosition: Math.min(100, Math.max(0, (average - domainMin) / domainRange * 100)),
+        averagePosition: Math.min(100, Math.max(0, ((average - domainMin) / domainRange) * 100)),
         count: valid.length,
         domainMin,
         domainMax,

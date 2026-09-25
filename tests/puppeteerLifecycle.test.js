@@ -12,7 +12,10 @@ function browserDouble(pid = 321) {
     const child = { pid, exitCode: null, signalCode: null }
     browser.process = () => child
     browser.wsEndpoint = () => 'test://browser'
-    browser.close = async () => { child.exitCode = 0; browser.emit('disconnected') }
+    browser.close = async () => {
+        child.exitCode = 0
+        browser.emit('disconnected')
+    }
     return browser
 }
 
@@ -21,9 +24,13 @@ test('disconnect cleanup blocks concurrent relaunch until the old browser exits'
     const old = browserDouble()
     const next = browserDouble(322)
     let finishClose
-    old.close = () => new Promise(resolve => {
-        finishClose = () => { old.process().exitCode = 0; resolve() }
-    })
+    old.close = () =>
+        new Promise(resolve => {
+            finishClose = () => {
+                old.process().exitCode = 0
+                resolve()
+            }
+        })
     renderer.browser = old
     renderer.browserPid = 321
     const launch = t.mock.method(puppeteer, 'launch', async () => next)
@@ -44,7 +51,14 @@ test('shutdown during an in-flight launch closes the new browser and prevents re
     const renderer = new Puppeteer({ idleTimeout: 0 })
     const browser = browserDouble()
     let finishLaunch
-    t.mock.method(puppeteer, 'launch', () => new Promise(resolve => { finishLaunch = resolve }))
+    t.mock.method(
+        puppeteer,
+        'launch',
+        () =>
+            new Promise(resolve => {
+                finishLaunch = resolve
+            }),
+    )
     const launching = renderer.browserInit()
     await delay(0)
     const shutdown = renderer.shutdown()
@@ -59,16 +73,22 @@ test('shutdown waits for an existing close without allowing a waiting request to
     const renderer = new Puppeteer({ idleTimeout: 0 })
     const browser = browserDouble()
     let finishClose
-    browser.close = () => new Promise(resolve => {
-        finishClose = () => { browser.process().exitCode = 0; resolve() }
-    })
+    browser.close = () =>
+        new Promise(resolve => {
+            finishClose = () => {
+                browser.process().exitCode = 0
+                resolve()
+            }
+        })
     renderer.browser = browser
     renderer.browserPid = 321
     const launch = t.mock.method(puppeteer, 'launch', async () => browserDouble(322))
     const closing = renderer.closeBrowser()
     const request = renderer.browserInit()
     let completed = false
-    const shutdown = renderer.shutdown().then(() => { completed = true })
+    const shutdown = renderer.shutdown().then(() => {
+        completed = true
+    })
     await delay(0)
     assert.equal(completed, false)
     finishClose()
@@ -82,7 +102,9 @@ test('concurrent restarts share one close and one replacement launch', async t =
     const browser = browserDouble()
     renderer.browser = browser
     renderer.browserPid = 321
-    const close = t.mock.method(browser, 'close', async () => { browser.process().exitCode = 0 })
+    const close = t.mock.method(browser, 'close', async () => {
+        browser.process().exitCode = 0
+    })
     const next = browserDouble(322)
     const launch = t.mock.method(puppeteer, 'launch', async () => next)
     await Promise.all([renderer.restart(true), renderer.restart(true)])
@@ -95,7 +117,9 @@ test('concurrent restarts share one close and one replacement launch', async t =
 test('profile errors do not delete the profile or launch a second browser', async t => {
     const fs = await import('node:fs/promises')
     const renderer = new Puppeteer({ idleTimeout: 0 })
-    const rm = t.mock.method(fs.default, 'rm', async () => { throw new Error('must not delete') })
+    const rm = t.mock.method(fs.default, 'rm', async () => {
+        throw new Error('must not delete')
+    })
     const launch = t.mock.method(puppeteer, 'launch', async () => {
         throw new Error(`profile in use: ${renderer.config.userDataDir}`)
     })
@@ -113,7 +137,12 @@ for (const failure of ['template-empty', 'template-throw', 'new-page', 'render',
             const browser = browserDouble(321 + browsers.length)
             browser.newPage = async () => {
                 if (failure === 'new-page') throw new Error('newPage failure')
-                return { isClosed: () => pageClosed, close: async () => { pageClosed = true } }
+                return {
+                    isClosed: () => pageClosed,
+                    close: async () => {
+                        pageClosed = true
+                    },
+                }
             }
             browsers.push(browser)
             return browser
@@ -143,7 +172,10 @@ test('close timeout kills the tracked browser and waits for process exit', async
     const browser = browserDouble()
     browser.close = () => new Promise(() => {})
     let killedPid
-    renderer.killProcess = pid => { killedPid = pid; browser.process().signalCode = 'SIGKILL' }
+    renderer.killProcess = pid => {
+        killedPid = pid
+        browser.process().signalCode = 'SIGKILL'
+    }
     await renderer.stop(browser, 321)
     assert.equal(killedPid, 321)
     assert.equal(browser.process().signalCode, 'SIGKILL')
@@ -209,8 +241,16 @@ test('permanent shutdown clears template state without persistent template watch
 test('watchers are released even when browser cleanup fails', async () => {
     const renderer = new Puppeteer({ idleTimeout: 0 })
     let closed = 0
-    renderer.watcher = { one: { close: async () => { closed++ } } }
-    renderer.closeBrowser = async () => { throw new Error('browser cleanup failed') }
+    renderer.watcher = {
+        one: {
+            close: async () => {
+                closed++
+            },
+        },
+    }
+    renderer.closeBrowser = async () => {
+        throw new Error('browser cleanup failed')
+    }
     await assert.rejects(renderer.shutdown(), /browser cleanup failed/)
     assert.equal(closed, 1)
     assert.deepEqual(renderer.watcher, {})
@@ -222,12 +262,15 @@ for (const mode of ['hang', 'reject']) {
         const browser = browserDouble()
         browser.newPage = async () => ({
             isClosed: () => false,
-            close: () => mode === 'hang' ? new Promise(() => {}) : Promise.reject(new Error('close failed')),
+            close: () => (mode === 'hang' ? new Promise(() => {}) : Promise.reject(new Error('close failed'))),
         })
         renderer.browser = browser
         renderer.browserPid = 321
         renderer.dealTpl = () => 'test.html'
-        renderer.renderPage = async () => { renderer.renderNum++; return [Buffer.from('image')] }
+        renderer.renderPage = async () => {
+            renderer.renderNum++
+            return [Buffer.from('image')]
+        }
         assert.deepEqual(await renderer.screenshot('test/image'), Buffer.from('image'))
         assert.equal(browser.process().exitCode, 0)
         assert.equal(renderer.browser, false)

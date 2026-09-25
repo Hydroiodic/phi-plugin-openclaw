@@ -1,7 +1,7 @@
-import { allLevel, LevelNum, MAX_DIFFICULTY } from "../game/constNum.js"
+import { allLevel, LevelNum, MAX_DIFFICULTY } from '../game/constNum.js'
 /** @import Save from "./Save.js" */
-import fCompute from "../game/fCompute.js";
-import LevelRecordInfo from "../game/LevelRecordInfo.js";
+import fCompute from '../game/fCompute.js'
+import LevelRecordInfo from '../game/LevelRecordInfo.js'
 
 /**
  * @template T
@@ -10,23 +10,21 @@ import LevelRecordInfo from "../game/LevelRecordInfo.js";
  * @property {T} value - 值
  */
 export default class saveHistory {
-
     /**
-     * 
-     * @param { (saveHistoryObject & {version?: number}) } data 
+     *
+     * @param { (saveHistoryObject & {version?: number}) } data
      */
     constructor(data) {
-
         const ids = fCompute.objectKeys(data?.scoreHistory || {})
 
         for (const id of ids) {
-            const record = data?.scoreHistory?.[id];
-            if (!record) continue;
+            const record = data?.scoreHistory?.[id]
+            if (!record) continue
             for (const level of allLevel) {
-                if (!record[level]) continue;
+                if (!record[level]) continue
                 record[level].forEach(item => {
                     //@ts-ignore
-                    item[2] = new Date(item[2]);
+                    item[2] = new Date(item[2])
                 })
             }
         }
@@ -36,17 +34,17 @@ export default class saveHistory {
          * @property {Array<[number, number, Date, boolean]>} [acc, score, date, fc] acc为4位小数，score为整数，date为日期，fc为boolean
          */
         //@ts-ignore
-        this.scoreHistory = data?.scoreHistory || {};
+        this.scoreHistory = data?.scoreHistory || {}
         /**
          * @type {formatedHistoryBaseObject<number[]>[]}
-         * @description data货币变更记录 
-        */
-        this.data = [];
+         * @description data货币变更记录
+         */
+        this.data = []
 
         data?.data?.forEach(item => {
             this.data.push({
                 date: new Date(item.date),
-                value: item.value
+                value: item.value,
             })
         })
 
@@ -54,27 +52,27 @@ export default class saveHistory {
          * @type {formatedHistoryBaseObject<number>[]}
          * @description rks变更记录
          */
-        this.rks = [];
+        this.rks = []
 
         data?.rks?.forEach(item => {
             this.rks.push({
                 date: new Date(item.date),
-                value: item.value
+                value: item.value,
             })
-        });
+        })
 
         /**
          * @type {formatedHistoryBaseObject<number>[]}
          * @description 课题模式成绩
          */
-        this.challengeModeRank = [];
+        this.challengeModeRank = []
 
         data?.challengeModeRank?.forEach(item => {
             this.challengeModeRank.push({
                 date: new Date(item.date),
-                value: item.value
+                value: item.value,
             })
-        });
+        })
         /**v1.0,取消对当次更新内容的存储，取消对task的记录，更正scoreHistory */
         /**v1.1,更正scoreHistory */
         /**v2,由于曲名错误，删除所有记录，曲名使用id记录 */
@@ -159,7 +157,7 @@ export default class saveHistory {
                 now.date = save.saveInfo.modifiedAt.iso
                 /**本地无记录 */
                 if (!this.scoreHistory[id][level] || !this.scoreHistory[id][level].length) {
-                    this.scoreHistory[id][level] = [createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc)];
+                    this.scoreHistory[id][level] = [createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc)]
                     continue
                 }
                 /**新存档该难度无成绩 */
@@ -179,7 +177,11 @@ export default class saveHistory {
                         /**历史记录acc仅保存4位，检查是否与第一个小于该日期的记录一致 */
                         if (old.acc != Number(now.acc.toFixed(4)) || old.score != now.score || old.fc != now.fc) {
                             /**不一致在第i项插入 */
-                            this.scoreHistory[id][level].splice(i, 0, createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc))
+                            this.scoreHistory[id][level].splice(
+                                i,
+                                0,
+                                createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc),
+                            )
                         }
                         /**标记已处理 */
                         now = null
@@ -206,10 +208,14 @@ export default class saveHistory {
         /**更新rks记录 */
         for (let i = this.rks.length - 1; i >= 0; i--) {
             if (save.saveInfo.modifiedAt.iso > new Date(this.rks[i].date)) {
-                if (!this.rks[i + 1] || (this.rks[i].value != save.saveInfo.summary.rankingScore || this.rks[i + 1]?.value != save.saveInfo.summary.rankingScore)) {
+                if (
+                    !this.rks[i + 1] ||
+                    this.rks[i].value != save.saveInfo.summary.rankingScore ||
+                    this.rks[i + 1]?.value != save.saveInfo.summary.rankingScore
+                ) {
                     this.rks.splice(i + 1, 0, {
                         date: save.saveInfo.modifiedAt.iso,
-                        value: save.saveInfo.summary.rankingScore
+                        value: save.saveInfo.summary.rankingScore,
                     })
                 }
                 break
@@ -218,16 +224,20 @@ export default class saveHistory {
         if (!this.rks.length) {
             this.rks.push({
                 date: save.saveInfo.modifiedAt.iso,
-                value: save.saveInfo.summary.rankingScore
+                value: save.saveInfo.summary.rankingScore,
             })
         }
         /**更新data记录 */
         for (let i = this.data.length - 1; i >= 0; i--) {
             if (save.saveInfo.modifiedAt.iso > new Date(this.data[i].date)) {
-                if (!this.data[i + 1] || (checkValue(this.data[i].value, save.gameProgress.money) && checkValue(this.data[i + 1]?.value, save.gameProgress.money))) {
+                if (
+                    !this.data[i + 1] ||
+                    (checkValue(this.data[i].value, save.gameProgress.money) &&
+                        checkValue(this.data[i + 1]?.value, save.gameProgress.money))
+                ) {
                     this.data.splice(i + 1, 0, {
                         date: save.saveInfo.modifiedAt.iso,
-                        value: save.gameProgress.money
+                        value: save.gameProgress.money,
                     })
                 }
                 break
@@ -236,17 +246,17 @@ export default class saveHistory {
         if (!this.data.length) {
             this.data.push({
                 date: save.saveInfo.modifiedAt.iso,
-                value: save.gameProgress.money
+                value: save.gameProgress.money,
             })
         }
         /**更新课题模式记录 */
         for (let i = this.challengeModeRank.length - 1; i >= 0; i--) {
             if (save.saveInfo.modifiedAt.iso > new Date(this.challengeModeRank[i].date)) {
                 const clg = save.saveInfo.summary.challengeModeRank
-                if (clg != this.challengeModeRank[i].value && (this.challengeModeRank[i + 1]?.value != clg)) {
+                if (clg != this.challengeModeRank[i].value && this.challengeModeRank[i + 1]?.value != clg) {
                     this.challengeModeRank.splice(i + 1, 0, {
                         date: save.saveInfo.modifiedAt.iso,
-                        value: save.saveInfo.summary.challengeModeRank
+                        value: save.saveInfo.summary.challengeModeRank,
                     })
                 }
                 break
@@ -255,7 +265,7 @@ export default class saveHistory {
         if (!this.challengeModeRank.length) {
             this.challengeModeRank.push({
                 date: save.saveInfo.modifiedAt.iso,
-                value: save.saveInfo.summary.challengeModeRank
+                value: save.saveInfo.summary.challengeModeRank,
             })
         }
     }
@@ -298,11 +308,7 @@ export default class saveHistory {
 
                 if (selected) {
                     const opened = openHistory(selected)
-                    gameRecord[id][levelIdx] = new LevelRecordInfo(
-                        { acc: opened.acc, score: opened.score, fc: opened.fc },
-                        id,
-                        levelIdx
-                    )
+                    gameRecord[id][levelIdx] = new LevelRecordInfo({ acc: opened.acc, score: opened.score, fc: opened.fc }, id, levelIdx)
                 } else {
                     gameRecord[id][levelIdx] = null
                 }
@@ -342,14 +348,14 @@ export default class saveHistory {
             money,
             rks,
             challengeModeRank,
-            version: this.version
+            version: this.version,
         }
     }
 
     /**
      * 获取歌曲最新的历史记录
      * @param {idString} id 曲目id
-     * @returns 
+     * @returns
      */
     async getSongsLastRecord(id) {
         const t = { ...this.scoreHistory[id] }
@@ -389,13 +395,12 @@ export default class saveHistory {
     }
 
     getRksLine() {
-
         /**@type {formatedHistoryBaseObject<number>[]} */
         const rks_history_ = []
         const user_rks_data = this.rks
         const rks_range = [MAX_DIFFICULTY, 0]
         /** @type {[dateBegin: number, dateAfter: number]} */
-        let rks_date = [0, 0];
+        let rks_date = [0, 0]
         const rks_history = []
 
         if (user_rks_data.length) {
@@ -413,7 +418,6 @@ export default class saveHistory {
             })
 
             rks_history_.forEach((item, i) => {
-
                 i = Number(i)
 
                 if (!rks_history_[i + 1]) return
@@ -422,12 +426,11 @@ export default class saveHistory {
                 const x2 = fCompute.range(rks_history_[i + 1].date.getTime(), rks_date)
                 const y2 = fCompute.range(rks_history_[i + 1].value, rks_range)
                 rks_history.push([x1, y1, x2, y2])
-            });
+            })
             if (!rks_history.length) {
                 rks_history.push([0, 50, 100, 50])
             }
         }
-
 
         return {
             rks_history,
@@ -437,7 +440,6 @@ export default class saveHistory {
     }
 
     getDataLine() {
-
         /**@type {formatedHistoryBaseObject<number>[]} */
         const data_history_ = []
         const user_data_data = this.data
@@ -456,7 +458,7 @@ export default class saveHistory {
                 item.date = new Date(item.date)
                 const temObj = {
                     date: item.date,
-                    value: totValue
+                    value: totValue,
                 }
                 if (i <= 1 || temObj.value != data_history_[data_history_.length - 2].value) {
                     data_history_.push(temObj)
@@ -469,7 +471,6 @@ export default class saveHistory {
             })
 
             data_history_.forEach((item, i) => {
-
                 i = Number(i)
 
                 if (!data_history_[i + 1]) return
@@ -483,22 +484,19 @@ export default class saveHistory {
                 data_history.push([0, 50, 100, 50])
             }
 
-
-            const unit = ["KiB", "MiB", "GiB", "TiB", "Pib"]
-
-
+            const unit = ['KiB', 'MiB', 'GiB', 'TiB', 'Pib']
 
             for (const i of [4, 3, 2, 1, 0]) {
-                if (data_range_num[0] / (Math.pow(1024, i)) < 1024) {
-                    data_range[0] = `${Math.floor(data_range_num[0] / (Math.pow(1024, i)))}${unit[i]}`
-                    break;
+                if (data_range_num[0] / Math.pow(1024, i) < 1024) {
+                    data_range[0] = `${Math.floor(data_range_num[0] / Math.pow(1024, i))}${unit[i]}`
+                    break
                 }
             }
 
             for (const i of [4, 3, 2, 1, 0]) {
-                if (data_range_num[1] / (Math.pow(1024, i)) < 1024) {
-                    data_range[1] = `${Math.floor(data_range_num[1] / (Math.pow(1024, i)))}${unit[i]}`
-                    break;
+                if (data_range_num[1] / Math.pow(1024, i) < 1024) {
+                    data_range[1] = `${Math.floor(data_range_num[1] / Math.pow(1024, i))}${unit[i]}`
+                    break
                 }
             }
         }
@@ -506,16 +504,15 @@ export default class saveHistory {
         return {
             data_history,
             data_range: data_range_num,
-            data_date
+            data_date,
         }
     }
-
 }
 
 /**
  * 数组合并按照 date 排序并去重
- * @param {formatedHistoryBaseObject<any>[]} m 
- * @param {formatedHistoryBaseObject<any>[]} n 
+ * @param {formatedHistoryBaseObject<any>[]} m
+ * @param {formatedHistoryBaseObject<any>[]} n
  */
 function merge(m, n) {
     const t = m.concat(n)
@@ -535,17 +532,16 @@ function merge(m, n) {
 }
 
 /**
- * 
- * @param {number} acc 
- * @param {number} score 
- * @param {Date} date 
- * @param {boolean} fc 
+ *
+ * @param {number} acc
+ * @param {number} score
+ * @param {Date} date
+ * @param {boolean} fc
  * @returns {ScoreDetail}
  */
 function createHistory(acc, score, date, fc) {
     return [acc.toFixed(4), score, date.toISOString(), fc]
 }
-
 
 /**
  * 展开信息
@@ -556,14 +552,14 @@ function openHistory(data) {
         acc: Number(data[0]),
         score: Number(data[1]),
         date: new Date(data[2]),
-        fc: Boolean(data[3])
+        fc: Boolean(data[3]),
     }
 }
 
 /**
  * 比较两个数组
- * @param {any} a 
- * @param {any} b 
+ * @param {any} a
+ * @param {any} b
  * @returns {boolean}
  */
 function checkValue(a, b) {

@@ -33,7 +33,14 @@ test('gracefully cleans up and then relays an exit signal', async () => {
     const manager = new ProcessCleanupManager(target, 100)
     let gracefulCalls = 0
     let emergencyCalls = 0
-    manager.register(async () => { gracefulCalls++ }, () => { emergencyCalls++ })
+    manager.register(
+        async () => {
+            gracefulCalls++
+        },
+        () => {
+            emergencyCalls++
+        },
+    )
 
     target.emit('SIGTERM')
     await new Promise(resolve => setImmediate(resolve))
@@ -49,7 +56,12 @@ test('runs synchronous emergency cleanup during process exit', () => {
     const target = /** @type {NodeJS.Process} */ (/** @type {unknown} */ (new FakeProcess()))
     const manager = new ProcessCleanupManager(target)
     let emergencyCalls = 0
-    manager.register(async () => {}, () => { emergencyCalls++ })
+    manager.register(
+        async () => {},
+        () => {
+            emergencyCalls++
+        },
+    )
 
     target.emit('exit', 0)
 
@@ -63,7 +75,12 @@ test('host-managed reload signals do not disable later cleanup', async () => {
     let cleanups = 0
     target.on('SIGHUP', () => {})
     target.on('SIGTERM', () => {})
-    manager.register(async () => { cleanups++ }, () => {})
+    manager.register(
+        async () => {
+            cleanups++
+        },
+        () => {},
+    )
     try {
         target.emit('SIGHUP')
         await new Promise(resolve => setImmediate(resolve))
@@ -72,5 +89,7 @@ test('host-managed reload signals do not disable later cleanup', async () => {
         await new Promise(resolve => setImmediate(resolve))
         assert.equal(cleanups, 2)
         assert.deepEqual(/** @type {FakeProcess} */ (/** @type {unknown} */ (target)).killed, [])
-    } finally { manager.dispose() }
+    } finally {
+        manager.dispose()
+    }
 })

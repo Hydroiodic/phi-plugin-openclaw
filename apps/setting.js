@@ -10,7 +10,12 @@ import { getThemeInstallRequesterId } from '../model/theme/installGuard.js'
 import getBanGroup from '../model/user/getBanGroup.js'
 import send from '../model/render/send.js'
 import { isApiCapabilityConfigured } from '../model/user/apiPermission.js'
-import { sendQuickCommands, configQuickCommands, sendQuickCommandSections, userSettingQuickCommandSections } from '../model/game/markdown.js'
+import {
+    sendQuickCommands,
+    configQuickCommands,
+    sendQuickCommandSections,
+    userSettingQuickCommandSections,
+} from '../model/game/markdown.js'
 
 /**@import {botEvent} from '../components/baseClass.js' */
 
@@ -18,7 +23,6 @@ import { createSettingsForm } from '../components/settings/form.js'
 
 // 指令设置页复用集中定义，不再依赖 settings form 插件入口。
 const configInfo = createSettingsForm(Config, { includeCredentials: false })
-
 
 export class phihelp extends phiPluginBase {
     constructor() {
@@ -30,49 +34,58 @@ export class phihelp extends phiPluginBase {
             rule: [
                 {
                     reg: `^[#/](pgr|PGR|屁股肉|phi|Phi|(${Config.getUserCfg('config', 'cmdhead')}))(\\s*)(用户设置|个人设置|mysetting|myset)(\\s*.*)?$`,
-                    fnc: 'showUserSetting'
+                    fnc: 'showUserSetting',
                 },
                 {
                     reg: `^[#/](pgr|PGR|屁股肉|phi|Phi|(${Config.getUserCfg('config', 'cmdhead')}))(\\s*)(设置|set).*$`,
-                    fnc: 'set'
-                }
-            ]
+                    fnc: 'set',
+                },
+            ],
         })
-
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async set(e) {
         if (!e.isMaster) {
-            return false;
+            return false
         }
         const schemas = configInfo.schemas
 
         /**修改设置部分 */
-        const msg = e.msg.replace(new RegExp(`^[#/](pgr|PGR|屁股肉|phi|Phi|(${Config.getUserCfg('config', 'cmdhead')}))(\\s*)(设置|set)`), '')
+        const msg = e.msg.replace(
+            new RegExp(`^[#/](pgr|PGR|屁股肉|phi|Phi|(${Config.getUserCfg('config', 'cmdhead')}))(\\s*)(设置|set)`),
+            '',
+        )
         for (const i in schemas) {
             const schema = schemas[i]
             if (!schema.field) continue
 
-            const field = /**@type {configName} */(schema.field)
+            const field = /**@type {configName} */ (schema.field)
             if (msg.match(schema.label)) {
                 const value = msg.replace(schema.label, '').trim()
                 switch (schema.component) {
                     case 'Select': {
                         const option = schema.componentProps?.options?.find((/** @type {any} */ option) => option.label == value)
                         if (option) Config.modify('config', field, option.value)
-                        break;
+                        break
                     }
                     case 'Input':
                         Config.modify('config', field, value)
-                        break;
+                        break
                     case 'InputNumber':
-                        Config.modify('config', field, Math.max(Math.min(Number(value), schema.componentProps?.max ?? Infinity), schema.componentProps?.min ?? -Infinity))
-                        break;
+                        Config.modify(
+                            'config',
+                            field,
+                            Math.max(
+                                Math.min(Number(value), schema.componentProps?.max ?? Infinity),
+                                schema.componentProps?.min ?? -Infinity,
+                            ),
+                        )
+                        break
                     case 'Switch':
                         switch (value) {
                             case 'true':
@@ -81,35 +94,34 @@ export class phihelp extends phiPluginBase {
                             case '开启':
                             case '开':
                                 Config.modify('config', field, true)
-                                break;
+                                break
                             case 'false':
                             case 'OFF':
                             case 'off':
                             case '关闭':
                             case '关':
                                 Config.modify('config', field, false)
-                                break;
+                                break
                             default:
-                                break;
+                                break
                         }
-                        break;
+                        break
                     case 'RadioGroup': {
                         const options = schema.componentProps?.options
-                        if (!options) break;
+                        if (!options) break
                         for (let j = 0; j < options.length; j++) {
                             if (options[j].label == value) {
                                 Config.modify('config', field, options[j].value)
-                                break;
+                                break
                             }
                         }
-                        break;
+                        break
                     }
                     default:
-                        break;
+                        break
                 }
             }
         }
-
 
         /**渲染图片部分 */
         const config = configInfo.getConfigData()
@@ -120,13 +132,13 @@ export class phihelp extends phiPluginBase {
                 case 'Divider':
                     data.push({
                         label: schema.label,
-                        type: 'divider'
+                        type: 'divider',
                     })
-                    break;
+                    break
                 case 'Select': {
-                    if (!schema.field) break;
+                    if (!schema.field) break
                     const options = schema.componentProps?.options
-                    if (!options) break;
+                    if (!options) break
                     // @ts-ignore
                     const current = config[schema.field]
                     data.push({
@@ -135,11 +147,11 @@ export class phihelp extends phiPluginBase {
                         type: 'space',
                         value: options.find((/** @type {any} */ option) => option.value == current)?.label ?? current,
                     })
-                    break;
+                    break
                 }
                 case 'Input':
                 case 'InputNumber':
-                    if (!schema.field) break;
+                    if (!schema.field) break
                     data.push({
                         label: schema.label,
                         bottomHelpMessage: schema.bottomHelpMessage,
@@ -147,9 +159,9 @@ export class phihelp extends phiPluginBase {
                         // @ts-ignore
                         value: config[schema.field],
                         // @ts-ignore
-                        drc: schema.componentProps.addonAfter || ''
+                        drc: schema.componentProps.addonAfter || '',
                     })
-                    break;
+                    break
                 case 'Switch':
                     data.push({
                         label: schema.label,
@@ -158,9 +170,9 @@ export class phihelp extends phiPluginBase {
                         // @ts-ignore
                         value: config[schema.field],
                     })
-                    break;
+                    break
                 case 'RadioGroup':
-                    if (!schema.field) break;
+                    if (!schema.field) break
                     data.push({
                         label: schema.label,
                         bottomHelpMessage: schema.bottomHelpMessage,
@@ -168,17 +180,20 @@ export class phihelp extends phiPluginBase {
                         // @ts-ignore
                         value: schema.componentProps?.options.find(o => o.value == config[schema.field])?.label || '未知',
                     })
-                    break;
+                    break
                 default:
-                    break;
+                    break
             }
         }
         const plugin_data = await getNotes.getNotesData(e.user_id)
-        send.reply(e, await picmodle.common(e, 'setting', {
-            data,
-            background: getInfo.randomBackground(),
-            theme: plugin_data?.theme || 'star'
-        }))
+        send.reply(
+            e,
+            await picmodle.common(e, 'setting', {
+                data,
+                background: getInfo.randomBackground(),
+                theme: plugin_data?.theme || 'star',
+            }),
+        )
         await sendQuickCommands(e, configQuickCommands(Config.getUserCfg('config', 'cmdhead')), '全局设置快捷操作')
     }
 
@@ -196,7 +211,7 @@ export class phihelp extends phiPluginBase {
             b30AvgKind: ['b30avgkind', 'b30kind', 'avgkind', '均值范围', '统计范围', '均值类型'],
             b30AvgColor: ['b30avgcolor', 'avgcolor', '颜色', '配色', '均值颜色'],
             allowApiUsage: ['api', 'allowapiusage', 'api开关', 'api功能', 'api功能开关', '在线api', '是否允许使用api'],
-            showB30Analysis: ['showb30analysis', 'b30analysis', 'b30分析', '统计分析', 'b30统计分析', '分析区域']
+            showB30Analysis: ['showb30analysis', 'b30analysis', 'b30分析', '统计分析', 'b30统计分析', '分析区域'],
         }
 
         /**@type {Record<'theme' | 'b30AvgKind' | 'b30AvgColor' | 'allowApiUsage' | 'showB30Analysis', Record<string, string>>} */
@@ -210,7 +225,7 @@ export class phihelp extends phiPluginBase {
                 寒冬: 'snow',
                 星空: 'star',
                 使一颗心免于哀伤: 'star',
-                大师赛2: 'dss2'
+                大师赛2: 'dss2',
             },
             b30AvgKind: {
                 all: 'all',
@@ -223,7 +238,7 @@ export class phihelp extends phiPluginBase {
                 仅top: 'top',
                 不展示: 'none',
                 关: 'none',
-                隐藏: 'none'
+                隐藏: 'none',
             },
             b30AvgColor: {
                 red: 'red',
@@ -237,7 +252,7 @@ export class phihelp extends phiPluginBase {
                 蓝: 'blue',
                 蓝色: 'blue',
                 绿: 'green',
-                绿色: 'green'
+                绿色: 'green',
             },
             allowApiUsage: {
                 true: 'true',
@@ -255,7 +270,7 @@ export class phihelp extends phiPluginBase {
                 是: 'true',
                 否: 'false',
                 1: 'true',
-                0: 'false'
+                0: 'false',
             },
             showB30Analysis: {
                 true: 'true',
@@ -271,8 +286,8 @@ export class phihelp extends phiPluginBase {
                 是: 'true',
                 否: 'false',
                 1: 'true',
-                0: 'false'
-            }
+                0: 'false',
+            },
         }
 
         const usage = [
@@ -283,13 +298,23 @@ export class phihelp extends phiPluginBase {
             `/${Config.getUserCfg('config', 'cmdhead')} 用户设置 均值范围 b30`,
             `/${Config.getUserCfg('config', 'cmdhead')} 用户设置 配色 gold`,
             `/${Config.getUserCfg('config', 'cmdhead')} 用户设置 API开关 关闭`,
-            `/${Config.getUserCfg('config', 'cmdhead')} 用户设置 B30分析 关闭`
+            `/${Config.getUserCfg('config', 'cmdhead')} 用户设置 B30分析 关闭`,
         ].join('\n')
 
-        const rawArgs = e.msg.replace(new RegExp(`^[#/](pgr|PGR|屁股肉|phi|Phi|(${Config.getUserCfg('config', 'cmdhead')}))(\\s*)(用户设置|个人设置|mysetting|myset)`), '').trim()
+        const rawArgs = e.msg
+            .replace(
+                new RegExp(
+                    `^[#/](pgr|PGR|屁股肉|phi|Phi|(${Config.getUserCfg('config', 'cmdhead')}))(\\s*)(用户设置|个人设置|mysetting|myset)`,
+                ),
+                '',
+            )
+            .trim()
 
         if (rawArgs) {
-            const normalized = rawArgs.replace(/[：:=]/g, ' ').replace(/\s+/g, ' ').trim()
+            const normalized = rawArgs
+                .replace(/[：:=]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
             const args = normalized.split(' ')
 
             if (args.length < 2) {
@@ -303,7 +328,9 @@ export class phihelp extends phiPluginBase {
 
             /**@type {'theme' | 'b30AvgKind' | 'b30AvgColor' | 'allowApiUsage' | 'showB30Analysis' | null} */
             let settingKey = null
-            for (const key of /**@type {('theme' | 'b30AvgKind' | 'b30AvgColor' | 'allowApiUsage' | 'showB30Analysis')[]} */ (Object.keys(settingKeyAlias))) {
+            for (const key of /**@type {('theme' | 'b30AvgKind' | 'b30AvgColor' | 'allowApiUsage' | 'showB30Analysis')[]} */ (
+                Object.keys(settingKeyAlias)
+            )) {
                 if (settingKeyAlias[key].map(i => i.toLowerCase()).includes(keyInput)) {
                     settingKey = key
                     break
@@ -315,13 +342,12 @@ export class phihelp extends phiPluginBase {
                 return true
             }
 
-            if (settingKey === 'theme' && await getBanGroup.get(e, 'theme')) return false
+            if (settingKey === 'theme' && (await getBanGroup.get(e, 'theme'))) return false
 
             /** 主题选项动态合并内置 + 自定义主题，其余设置项保持静态数据源 */
             /** @param {string} key */
-            const getOptions = (key) => key === 'theme'
-                ? themeManager.getThemeOptions(pluginData.theme)
-                : /** @type {any} */ (USER_SETTING_OPTIONS)[key]
+            const getOptions = key =>
+                key === 'theme' ? themeManager.getThemeOptions(pluginData.theme) : /** @type {any} */ (USER_SETTING_OPTIONS)[key]
             let optionMap = /** @type {Record<string, { title: string, description: string }>} */ (getOptions(settingKey))
             let optionKeys = Object.keys(optionMap)
             const valueAliasMap = settingValueAlias[settingKey]
@@ -338,9 +364,10 @@ export class phihelp extends phiPluginBase {
             }
 
             const selectedTheme = settingKey === 'theme' ? themeManager.getTheme(canonicalValue) : null
-            const shouldPrepareTheme = settingKey === 'theme'
-                && /^[a-z][a-z0-9_-]{0,119}$/.test(canonicalValue)
-                && (!optionMap[canonicalValue] || selectedTheme?.marketInstalled)
+            const shouldPrepareTheme =
+                settingKey === 'theme' &&
+                /^[a-z][a-z0-9_-]{0,119}$/.test(canonicalValue) &&
+                (!optionMap[canonicalValue] || selectedTheme?.marketInstalled)
             if (shouldPrepareTheme) {
                 if (!selectedTheme && !isApiCapabilityConfigured('customTheme')) {
                     send.send_with_At(e, '该主题尚未下载，自动下载依赖联合查分 API，请联系 Bot 主人启用。')
@@ -368,7 +395,8 @@ export class phihelp extends phiPluginBase {
             try {
                 const updated = await getNotes.update(e.user_id, data => {
                     if (settingKey === 'allowApiUsage' || settingKey === 'showB30Analysis') data[settingKey] = canonicalValue === 'true'
-                    else if (settingKey === 'theme' && typeof data.setThemePreference === 'function') data.setThemePreference(canonicalValue)
+                    else if (settingKey === 'theme' && typeof data.setThemePreference === 'function')
+                        data.setThemePreference(canonicalValue)
                     // @ts-ignore
                     else data[settingKey] = canonicalValue
                 })
@@ -386,26 +414,26 @@ export class phihelp extends phiPluginBase {
          * @param {string} current
          */
         const buildItem = (key, current) => {
-            const options = /** @type {Record<string, { title: string, description: string }>} */ (key === 'theme'
-                ? themeManager.getThemeOptions(current)
-                : USER_SETTING_OPTIONS[key])
+            const options = /** @type {Record<string, { title: string, description: string }>} */ (
+                key === 'theme' ? themeManager.getThemeOptions(current) : USER_SETTING_OPTIONS[key]
+            )
             return {
                 key,
                 title: USER_SETTING_META[key].title,
                 description: USER_SETTING_META[key].description,
                 currentTitle: options[current]?.title || current,
-                options: Object.keys(options).map((value) => ({
+                options: Object.keys(options).map(value => ({
                     value,
                     title: options[value].title,
                     description: options[value].description,
-                    selected: value === current
-                }))
+                    selected: value === current,
+                })),
             }
         }
 
         /** 主题展示固定为四个内置项 + 一个整行的市场主题入口。 */
         /** @param {string} current */
-        const buildThemeItem = (current) => {
+        const buildThemeItem = current => {
             const builtins = /** @type {Record<string, {title:string, description:string}>} */ (USER_SETTING_OPTIONS.theme)
             const customTheme = themeManager.isCustomTheme(current) ? themeManager.getTheme(current) : null
             const commandHead = `${Config.getUserCfg('config', 'cmdhead')}`
@@ -441,15 +469,23 @@ export class phihelp extends phiPluginBase {
                 buildItem('b30AvgKind', pluginData?.b30AvgKind || 'all'),
                 buildItem('b30AvgColor', pluginData?.b30AvgColor || 'red'),
                 buildItem('allowApiUsage', String(pluginData?.allowApiUsage !== false)),
-                buildItem('showB30Analysis', String(pluginData?.showB30Analysis !== false))
-            ]
+                buildItem('showB30Analysis', String(pluginData?.showB30Analysis !== false)),
+            ],
         }
 
-        send.send_with_At(e, await picmodle.common(e, 'setting', {
-            ...data,
-            background: getInfo.randomBackground(),
-            theme: pluginData?.theme || 'default'
-        }, 'userSetting'))
+        send.send_with_At(
+            e,
+            await picmodle.common(
+                e,
+                'setting',
+                {
+                    ...data,
+                    background: getInfo.randomBackground(),
+                    theme: pluginData?.theme || 'default',
+                },
+                'userSetting',
+            ),
+        )
         await sendQuickCommandSections(e, userSettingQuickCommandSections(Config.getUserCfg('config', 'cmdhead')), '用户设置快捷操作')
         return true
     }

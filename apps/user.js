@@ -3,7 +3,7 @@ import send from '../model/render/send.js'
 import picmodle from '../model/render/picmodle.js'
 import getInfo from '../model/game/getInfo.js'
 import fCompute from '../model/game/fCompute.js'
-import getBanGroup from '../model/user/getBanGroup.js';
+import getBanGroup from '../model/user/getBanGroup.js'
 import LevelRecordInfo from '../model/game/LevelRecordInfo.js'
 import phiPluginBase from '../components/baseClass.js'
 import logger from '../components/Logger.js'
@@ -13,12 +13,7 @@ import { UserCredentials } from '../model/user/userCredentials.js'
 import analyzeSaveHistory from '../model/save/analyzeSaveHistory.js'
 import ScoreHistory from '../model/save/scoreHistory.js'
 import { canUseApi } from '../model/user/apiPermission.js'
-import {
-    sendQuickCommands,
-    scoreQuickCommands,
-    userListQuickCommands,
-    historyQuickCommands,
-} from '../model/game/markdown.js'
+import { sendQuickCommands, scoreQuickCommands, userListQuickCommands, historyQuickCommands } from '../model/game/markdown.js'
 
 /**@import {botEvent} from '../components/baseClass.js' */
 
@@ -32,31 +27,30 @@ export class phiuser extends phiPluginBase {
             rule: [
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(data)$`,
-                    fnc: 'data'
+                    fnc: 'data',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(info)[1-2]?.*$`,
-                    fnc: 'info'
+                    fnc: 'info',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)((lvsco(re)?)|scolv)(.*)$`,
-                    fnc: 'lvscore'
+                    fnc: 'lvscore',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)list(.*)$`,
-                    fnc: 'list'
+                    fnc: 'list',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(年度总结|2025history)(.*)$`,
-                    fnc: 'analyze2025SaveHistory'
+                    fnc: 'analyze2025SaveHistory',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(hisb30)(.*)$`,
-                    fnc: 'hisb30'
-                }
-            ]
+                    fnc: 'hisb30',
+                },
+            ],
         })
-
     }
 
     /**
@@ -64,9 +58,7 @@ export class phiuser extends phiPluginBase {
      * @param {botEvent} e
      */
     async data(e) {
-
         if (await getBanGroup.get(e, 'data')) return false
-
 
         const save = await send.getsave_result(e)
 
@@ -75,7 +67,10 @@ export class phiuser extends phiPluginBase {
         }
         if (save.gameProgress) {
             const data = save.gameProgress.money
-            send.send_with_At(e, `您的data数为：${data[4] ? `${data[4]}PB ` : ''}${data[3] ? `${data[3]}TB ` : ''}${data[2] ? `${data[2]}GB ` : ''}${data[1] ? `${data[1]}MB ` : ''}${data[0] ? `${data[0]}KB ` : ''}`)
+            send.send_with_At(
+                e,
+                `您的data数为：${data[4] ? `${data[4]}PB ` : ''}${data[3] ? `${data[3]}TB ` : ''}${data[2] ? `${data[2]}GB ` : ''}${data[1] ? `${data[1]}MB ` : ''}${data[0] ? `${data[0]}KB ` : ''}`,
+            )
         } else {
             send.send_with_At(e, `请先更新数据哦！\n/${Config.getUserCfg('config', 'cmdhead')} update`)
         }
@@ -83,7 +78,7 @@ export class phiuser extends phiPluginBase {
     }
 
     /**
-     * 
+     *
      * @param {botEvent} e
      */
     async info(e) {
@@ -124,7 +119,6 @@ export class phiuser extends phiPluginBase {
             logger.error(`未找到${save.gameuser.background}对应的曲绘！`)
         }
 
-
         const gameuser = {
             avatar: getInfo.idgetavatar(save.gameuser.avatar),
             ChallengeMode: Math.floor(save.saveInfo.summary.challengeModeRank / 100),
@@ -136,7 +130,7 @@ export class phiuser extends phiPluginBase {
             PlayerId: fCompute.convertRichText(save.saveInfo.PlayerId),
         }
 
-        let user_data;
+        let user_data
 
         if (await canUseApi(e)) {
             try {
@@ -156,7 +150,6 @@ export class phiuser extends phiPluginBase {
         }
         const { rks_history, data_history, rks_range, data_range, rks_date, data_date } = user_data.getRksAndDataLine()
 
-
         /**统计在要求acc>=i的前提下，玩家的rks为多少 */
         /**存档 */
         const acc_rksRecord = save.getRecord()
@@ -170,7 +163,7 @@ export class phiuser extends phiPluginBase {
         const acc_rks_range = [100, 0]
 
         /**预处理 */
-        let phi_rks = 0;
+        let phi_rks = 0
 
         for (let i = 0; i < 3; ++i) {
             if (acc_rks_phi[i]) {
@@ -219,7 +212,12 @@ export class phiuser extends phiPluginBase {
             if (acc_rks_data_[0] && acc_rks_data[i - 1][1] == acc_rks_data[i][1]) {
                 acc_rks_data_[acc_rks_data_.length - 1][2] = fCompute.range(acc_rks_data[i][0], acc_rks_AccRange)
             } else {
-                acc_rks_data_.push([fCompute.range(acc_rks_data[i - 1][0], acc_rks_AccRange), fCompute.range(acc_rks_data[i - 1][1], acc_rks_range), fCompute.range(acc_rks_data[i][0], acc_rks_AccRange), fCompute.range(acc_rks_data[i][1], acc_rks_range)])
+                acc_rks_data_.push([
+                    fCompute.range(acc_rks_data[i - 1][0], acc_rks_AccRange),
+                    fCompute.range(acc_rks_data[i - 1][1], acc_rks_range),
+                    fCompute.range(acc_rks_data[i][0], acc_rks_AccRange),
+                    fCompute.range(acc_rks_data[i][1], acc_rks_range),
+                ])
             }
         }
 
@@ -227,7 +225,7 @@ export class phiuser extends phiPluginBase {
         if (acc_rks_AccRange[0] == 100) {
             acc_rks_AccRange[0] = 0
         }
-        const acc_length = (100 - acc_rks_AccRange[0])
+        const acc_length = 100 - acc_rks_AccRange[0]
         const min_acc = acc_rks_AccRange[0]
         /**要传的数组 */
         const acc_rks_AccRange_position = []
@@ -239,7 +237,7 @@ export class phiuser extends phiPluginBase {
             while (acc_rks_AccRange[i] - acc_rks_AccRange[i - 1] < acc_length / 10) {
                 acc_rks_AccRange.splice(i, 1)
             }
-            acc_rks_AccRange_position.push([acc_rks_AccRange[i], (acc_rks_AccRange[i] - min_acc) / acc_length * 100])
+            acc_rks_AccRange_position.push([acc_rks_AccRange[i], ((acc_rks_AccRange[i] - min_acc) / acc_length) * 100])
         }
 
         const data = {
@@ -258,7 +256,6 @@ export class phiuser extends phiPluginBase {
             theme: pluginData?.theme || 'star',
         }
 
-
         const infoVersion = e.msg.match(new RegExp(`^[#/](?:${Config.getUserCfg('config', 'cmdhead')})\\s*info([12])?`, 'i'))?.at(-1)
         const kind = Number(infoVersion || 0)
         send.send_with_At(e, await picmodle.user_info(e, data, kind))
@@ -266,13 +263,11 @@ export class phiuser extends phiPluginBase {
     }
 
     /**
-     * 
+     *
      * @param {botEvent} e
      */
     async lvscore(e) {
-
         if (await getBanGroup.get(e, 'lvscore')) return false
-
 
         const save = await send.getsave_result(e, 1.0)
 
@@ -281,29 +276,34 @@ export class phiuser extends phiPluginBase {
         }
 
         /**匹配定数区间 */
-        let msg = e.msg.replace(/^[#/](.*?)(lvsco(re)?)(\s*)/, "")
+        let msg = e.msg.replace(/^[#/](.*?)(lvsco(re)?)(\s*)/, '')
 
         let isask = [true, true, true, true]
         msg = msg.toUpperCase()
         if (msg.includes('AT') || msg.includes('IN') || msg.includes('HD') || msg.includes('EZ')) {
             isask = [false, false, false, false]
-            if (msg.includes('EZ')) { isask[0] = true }
-            if (msg.includes('HD')) { isask[1] = true }
-            if (msg.includes('IN')) { isask[2] = true }
-            if (msg.includes('AT')) { isask[3] = true }
+            if (msg.includes('EZ')) {
+                isask[0] = true
+            }
+            if (msg.includes('HD')) {
+                isask[1] = true
+            }
+            if (msg.includes('IN')) {
+                isask[2] = true
+            }
+            if (msg.includes('AT')) {
+                isask[3] = true
+            }
         }
-        msg = msg.replace(/((\s*)|AT|IN|HD|EZ)*/g, "")
+        msg = msg.replace(/((\s*)|AT|IN|HD|EZ)*/g, '')
 
         let range = [0, getInfo.MAX_DIFFICULTY]
-
-
 
         // match_range(msg, range)
 
         if (msg.match(/[0-9]+(.[0-9]+)?(\s*[-～~]\s*[0-9]+(.[0-9]+)?)?/g)) {
             msg = msg.match(/[0-9]+(.[0-9]+)?(\s*[-～~]\s*[0-9]+(.[0-9]+)?)?/g)?.[0] || ''
             if (msg.match(/[-～~]/g)) {
-
                 range = msg.split(/\s*[-～~]\s*/g)
                 range[0] = Number(range[0])
                 range[1] = Number(range[1])
@@ -315,10 +315,8 @@ export class phiuser extends phiPluginBase {
             } else {
                 range[0] = range[1] = Number(msg)
             }
-            if (range[1] % 1 == 0 && !e.msg.includes(".0")) range[1] += 0.9
+            if (range[1] % 1 == 0 && !e.msg.includes('.0')) range[1] += 0.9
         }
-
-
 
         range[1] = Math.min(range[1], getInfo.MAX_DIFFICULTY)
         range[0] = Math.max(range[0], 0)
@@ -361,7 +359,6 @@ export class phiuser extends phiPluginBase {
 
         const Record = save.gameRecord
 
-
         for (const id of fCompute.objectKeys(getInfo.ori_info)) {
             const info = getInfo.ori_info[id]
             let vis = false
@@ -380,18 +377,16 @@ export class phiuser extends phiPluginBase {
             }
         }
 
-
         for (const id of fCompute.objectKeys(Record)) {
             const info = getInfo.info(id, true)
             const record = Record[id]
             let vis = false
             if (!info?.chart) continue
             for (const lv in [0, 1, 2, 3]) {
-                const levelName = Level[lv];
+                const levelName = Level[lv]
                 if (!info.chart[levelName]) continue
                 const difficulty = info.chart[levelName].difficulty
                 if (range[0] <= difficulty && difficulty <= range[1] && isask[lv]) {
-
                     if (!record[lv]) continue
 
                     ++unlockcharts
@@ -454,8 +449,8 @@ export class phiuser extends phiPluginBase {
             range: {
                 bottom: range[0],
                 top: range[1],
-                left: range[0] / MAX_DIFFICULTY * 100,
-                length: (range[1] - range[0]) / MAX_DIFFICULTY * 100
+                left: (range[0] / MAX_DIFFICULTY) * 100,
+                length: ((range[1] - range[0]) / MAX_DIFFICULTY) * 100,
             },
             illustration: illustration,
             highest: tothighest,
@@ -463,10 +458,10 @@ export class phiuser extends phiPluginBase {
             tot_cleared: totcleared,
             tot_fc: totfc,
             tot_phi: totphi,
-            tot_acc: (totacc / totcharts),
+            tot_acc: totacc / totcharts,
             date: fCompute.formatDate(save.saveInfo.modifiedAt.iso),
-            progress_phi: Number((totphi / totcharts * 100).toFixed(2)),
-            progress_fc: Number((totfc / totcharts * 100).toFixed(2)),
+            progress_phi: Number(((totphi / totcharts) * 100).toFixed(2)),
+            progress_fc: Number(((totfc / totcharts) * 100).toFixed(2)),
             avatar: getInfo.idgetavatar(save.gameuser.avatar),
             ChallengeMode: Math.floor(save.saveInfo.summary.challengeModeRank / 100),
             ChallengeModeRank: save.saveInfo.summary.challengeModeRank % 100,
@@ -475,20 +470,16 @@ export class phiuser extends phiPluginBase {
             background: getInfo.randomBackground('blur'),
         }
 
-
-
         send.send_with_At(e, await picmodle.lvsco(e, data))
         await sendQuickCommands(e, scoreQuickCommands(Config.getUserCfg('config', 'cmdhead')), '成绩页快捷操作')
     }
 
     /**
-     * 
+     *
      * @param {botEvent} e
      */
     async list(e) {
-
         if (await getBanGroup.get(e, 'list')) return false
-
 
         const save = await send.getsave_result(e)
 
@@ -496,26 +487,25 @@ export class phiuser extends phiPluginBase {
             return true
         }
 
-        const dif_range = [0, getInfo.MAX_DIFFICULTY];
-        const acc_range = [0, 100];
+        const dif_range = [0, getInfo.MAX_DIFFICULTY]
+        const acc_range = [0, 100]
 
         /** @type {string} */
-        let msg = e.msg.replace(/^[#/](.*?)list/, "").toUpperCase()
+        let msg = e.msg.replace(/^[#/](.*?)list/, '').toUpperCase()
 
-        const accStr = msg.match(/-ACC\s*\d+(\.\d+)?(\s*[-～~]\s*\d+(\.\d+)?|\s*[+-])?/i)?.[0];
+        const accStr = msg.match(/-ACC\s*\d+(\.\d+)?(\s*[-～~]\s*\d+(\.\d+)?|\s*[+-])?/i)?.[0]
         if (accStr) {
-            fCompute.match_range(accStr, acc_range);
-            msg = msg.replace(accStr, '');
+            fCompute.match_range(accStr, acc_range)
+            msg = msg.replace(accStr, '')
         }
 
-        const difStr = msg.match(/(-DIF)?\s*\d+(\.\d+)?(\s*[-～~]\s*\d+(\.\d+)?|\s*[+-])?/i)?.[0];
+        const difStr = msg.match(/(-DIF)?\s*\d+(\.\d+)?(\s*[-～~]\s*\d+(\.\d+)?|\s*[+-])?/i)?.[0]
         if (difStr) {
-            fCompute.match_range(difStr, dif_range);
-            msg = msg.replace(difStr, '');
+            fCompute.match_range(difStr, dif_range)
+            msg = msg.replace(difStr, '')
         }
 
         const { isask, scoreAsk } = fCompute.parseLevelAndRating(msg)
-
 
         const Record = save.gameRecord
 
@@ -532,38 +522,37 @@ export class phiuser extends phiPluginBase {
             const record = Record[id]
 
             for (const lv of [0, 1, 2, 3]) {
-                const levelName = Level[lv];
+                const levelName = Level[lv]
                 if (!info?.chart[levelName]) continue
                 const difficulty = info.chart[levelName].difficulty
-                if (!(dif_range[0] <= difficulty && difficulty <= dif_range[1] && isask[lv]))
-                    continue;
+                if (!(dif_range[0] <= difficulty && difficulty <= dif_range[1] && isask[lv])) continue
                 if (!record[lv]) {
-                    if (!scoreAsk.NEW || acc_range[0] != 0)
-                        continue;
+                    if (!scoreAsk.NEW || acc_range[0] != 0) continue
                     else
                         // @ts-ignore
                         record[lv] = {}
                 } else {
                     // @ts-ignore
-                    if (record[lv] && !scoreAsk[record[lv].Rating.toUpperCase()])
-                        continue;
-                    if (!(acc_range[0] <= record[lv].acc && record[lv].acc <= acc_range[1]))
-                        continue;
+                    if (record[lv] && !scoreAsk[record[lv].Rating.toUpperCase()]) continue
+                    if (!(acc_range[0] <= record[lv].acc && record[lv].acc <= acc_range[1])) continue
                 }
                 // @ts-ignore
-                record[lv].suggest = save.getSuggest(id, lv, 4, difficulty);
+                record[lv].suggest = save.getSuggest(id, lv, 4, difficulty)
                 data.push({
                     ...record[lv],
                     ...info,
                     illustration: getInfo.getill(id, 'low'),
                     difficulty: difficulty,
-                    rank: Level[lv]
-                });
+                    rank: Level[lv],
+                })
             }
         }
 
         if (data.length > Config.getUserCfg('config', 'listScoreMaxNum')) {
-            send.send_with_At(e, `谱面数量过多(${data.length})大于设置的最大值(${Config.getUserCfg('config', 'listScoreMaxNum')})，请缩小搜索范围QAQ！`)
+            send.send_with_At(
+                e,
+                `谱面数量过多(${data.length})大于设置的最大值(${Config.getUserCfg('config', 'listScoreMaxNum')})，请缩小搜索范围QAQ！`,
+            )
             return true
         }
 
@@ -575,37 +564,35 @@ export class phiuser extends phiPluginBase {
 
         //逻辑暂未实现
         const request = []
-        request.push(`定数 ${dif_range[0]}-${dif_range[1]}`);
-        request.push(`ACC ${acc_range[0]}-${acc_range[1]}`);
+        request.push(`定数 ${dif_range[0]}-${dif_range[1]}`)
+        request.push(`ACC ${acc_range[0]}-${acc_range[1]}`)
 
-
-        send.send_with_At(e, await picmodle.list(e, {
-            head_title: "成绩筛选",
-            song: data,
-            background: getInfo.randomBackground(),
-            theme: plugin_data?.theme || 'star',
-            PlayerId: save.saveInfo.PlayerId,
-            Rks: Number(save.saveInfo.summary.rankingScore).toFixed(4),
-            Date: save.saveInfo.summary.updatedAt,
-            ChallengeMode: Math.floor(save.saveInfo.summary.challengeModeRank / 100),
-            ChallengeModeRank: save.saveInfo.summary.challengeModeRank % 100,
-            request: request
-        }))
+        send.send_with_At(
+            e,
+            await picmodle.list(e, {
+                head_title: '成绩筛选',
+                song: data,
+                background: getInfo.randomBackground(),
+                theme: plugin_data?.theme || 'star',
+                PlayerId: save.saveInfo.PlayerId,
+                Rks: Number(save.saveInfo.summary.rankingScore).toFixed(4),
+                Date: save.saveInfo.summary.updatedAt,
+                ChallengeMode: Math.floor(save.saveInfo.summary.challengeModeRank / 100),
+                ChallengeModeRank: save.saveInfo.summary.challengeModeRank % 100,
+                request: request,
+            }),
+        )
         await sendQuickCommands(e, userListQuickCommands(Config.getUserCfg('config', 'cmdhead')), '成绩筛选快捷操作')
-
     }
 
     /**
-     * 
-     * @param {botEvent} e 
+     *
+     * @param {botEvent} e
      */
     async analyze2025SaveHistory(e) {
-
         const credentials = UserCredentials.fromEvent(e)
 
-
         if (await getBanGroup.get(e, 'analyze2025SaveHistory')) return false
-
 
         const save = await send.getsave_result(e)
 
@@ -616,22 +603,25 @@ export class phiuser extends phiPluginBase {
         const history = await credentials.getHistoryFromApi(['challengeModeRank', 'data', 'rks', 'scoreHistory'])
 
         if (!history) {
-            return true;
+            return true
         }
 
-        const stats = analyzeSaveHistory(history);
+        const stats = analyzeSaveHistory(history)
 
-        send.send_with_At(e, await picmodle.analyzeSaveHistory(e, {
-            stats,
-            background: getInfo.randomBackground(),
-        }));
+        send.send_with_At(
+            e,
+            await picmodle.analyzeSaveHistory(e, {
+                stats,
+                background: getInfo.randomBackground(),
+            }),
+        )
         await sendQuickCommands(e, historyQuickCommands(Config.getUserCfg('config', 'cmdhead')), '历史记录快捷操作')
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async hisb30(e) {
         const credentials = UserCredentials.fromEvent(e)
@@ -646,25 +636,25 @@ export class phiuser extends phiPluginBase {
         const history = await credentials.getHistoryFromApi(['scoreHistory'])
 
         if (!history) {
-            return true;
+            return true
         }
 
-        const { scoreHistory } = history;
+        const { scoreHistory } = history
 
-        const records = [];
+        const records = []
 
         for (const ids of fCompute.objectKeys(scoreHistory)) {
-            const songRecords = scoreHistory[ids];
+            const songRecords = scoreHistory[ids]
             for (const level of Level) {
-                const levelRecords = songRecords[level];
-                if (!levelRecords) continue;
+                const levelRecords = songRecords[level]
+                if (!levelRecords) continue
                 for (const record of levelRecords) {
-                    const openedRecord = ScoreHistory.open(record);
+                    const openedRecord = ScoreHistory.open(record)
                     records.push({
                         id: ids,
                         level: level,
-                        ...openedRecord
-                    });
+                        ...openedRecord,
+                    })
                 }
             }
         }
@@ -674,14 +664,14 @@ export class phiuser extends phiPluginBase {
 
         for (const record of records) {
             if (!timeKeyRecords[`${record.date.getTime()}`]) {
-                timeKeyRecords[`${record.date.getTime()}`] = [];
+                timeKeyRecords[`${record.date.getTime()}`] = []
             }
-            timeKeyRecords[`${record.date.getTime()}`].push(new LevelRecordInfo(record, record.id, Level.indexOf(record.level)));
+            timeKeyRecords[`${record.date.getTime()}`].push(new LevelRecordInfo(record, record.id, Level.indexOf(record.level)))
         }
 
         const times = fCompute.objectKeys(timeKeyRecords)
 
-        times.sort((a, b) => Number(a) - Number(b));
+        times.sort((a, b) => Number(a) - Number(b))
 
         /**@type {Record<'phi' | 'b27', LevelRecordInfo[]>} */
         let b30List = {
@@ -692,44 +682,44 @@ export class phiuser extends phiPluginBase {
         /**@typedef {LevelRecordInfo & {newPhi?: number, newB27?: number, exitPhi?: boolean, exitB27?: boolean}} b30ChangeResult*/
 
         /**@type {Record<string, b30ChangeResult[]>} */
-        const changeB30Result = {};
+        const changeB30Result = {}
 
         for (const time of times) {
             /**维护 time 对应时间戳的变化情况 */
 
             /**所有新成绩 */
-            const records = timeKeyRecords[time];
+            const records = timeKeyRecords[time]
 
             /**加入后新B30 */
-            const newB30List = fCompute.updateB30(b30List, records);
+            const newB30List = fCompute.updateB30(b30List, records)
 
             /**旧的keys */
-            const oldPhiCharts = b30List.phi.map(item => `${item.id}-${item.rank}`);
-            const oldB27Charts = b30List.b27.map(item => `${item.id}-${item.rank}`);
+            const oldPhiCharts = b30List.phi.map(item => `${item.id}-${item.rank}`)
+            const oldB27Charts = b30List.b27.map(item => `${item.id}-${item.rank}`)
 
             /**新的keys */
-            const newPhiCharts = newB30List.phi.map(item => `${item.id}-${item.rank}`);
-            const newB27Charts = newB30List.b27.map(item => `${item.id}-${item.rank}`);
+            const newPhiCharts = newB30List.phi.map(item => `${item.id}-${item.rank}`)
+            const newB27Charts = newB30List.b27.map(item => `${item.id}-${item.rank}`)
 
             /**@type {b30ChangeResult[]} 新的phi成绩*/
-            const newPhi = [];
+            const newPhi = []
             /**@type {b30ChangeResult[]} 新的b27成绩*/
-            const newB27 = [];
+            const newB27 = []
 
             newB30List.phi.forEach((item, index) => {
                 if (!oldPhiCharts.includes(`${item.id}-${item.rank}`)) {
-                    newPhi.push({ ...item, newPhi: index + 1 });
+                    newPhi.push({ ...item, newPhi: index + 1 })
                 }
-            });
+            })
 
             newB30List.b27.forEach((item, index) => {
                 if (!oldB27Charts.includes(`${item.id}-${item.rank}`)) {
-                    newB27.push({ ...item, newB27: index + 1 });
+                    newB27.push({ ...item, newB27: index + 1 })
                 }
-            });
+            })
 
             /**@type {Record<string, b30ChangeResult>} */
-            const newPhiVis = {};
+            const newPhiVis = {}
             /**@type { b30ChangeResult[]} 合并后新的phi成绩*/
             const newPhiResult = []
             /**@type { b30ChangeResult[]} 合并后新的b27成绩*/
@@ -737,79 +727,72 @@ export class phiuser extends phiPluginBase {
 
             /**先标记phi，优先合并到phi上 */
             newPhi.forEach(item => {
-                newPhiVis[`${item.id}-${item.rank}`] = item;
-            });
+                newPhiVis[`${item.id}-${item.rank}`] = item
+            })
 
             /**b27中有的合并到phi上 */
             newB27.forEach(item => {
-                const key = `${item.id}-${item.rank}`;
+                const key = `${item.id}-${item.rank}`
                 if (newPhiCharts.includes(key)) {
-                    newPhiVis[key].newB27 = item.newB27;
-                    return;
+                    newPhiVis[key].newB27 = item.newB27
+                    return
                 }
-                newB27Result.push(item);
-            });
+                newB27Result.push(item)
+            })
 
             /**合并后的新的phi成绩 */
             for (const key of fCompute.objectKeys(newPhiVis)) {
-                newPhiResult.push(newPhiVis[key]);
+                newPhiResult.push(newPhiVis[key])
             }
 
             /**退出的成绩，逻辑同上 */
 
             /**@type {b30ChangeResult[]} */
-            const exitPhi = [];
+            const exitPhi = []
             /**@type {b30ChangeResult[]} */
-            const exitB27 = [];
+            const exitB27 = []
 
             b30List.phi.forEach(item => {
                 if (!newPhiCharts.includes(`${item.id}-${item.rank}`)) {
-                    exitPhi.push({ ...item, exitPhi: true });
+                    exitPhi.push({ ...item, exitPhi: true })
                 }
-            });
+            })
 
             b30List.b27.forEach(item => {
                 if (!newB27Charts.includes(`${item.id}-${item.rank}`)) {
-                    exitB27.push({ ...item, exitB27: true });
+                    exitB27.push({ ...item, exitB27: true })
                 }
-            });
+            })
 
             /**@type {Record<string, b30ChangeResult>} */
-            const exitPhiVis = {};
+            const exitPhiVis = {}
             /**@type { b30ChangeResult[]} */
-            const exitPhiResult = [];
+            const exitPhiResult = []
             /**@type { b30ChangeResult[]} */
-            const exitB27Result = [];
+            const exitB27Result = []
 
             exitPhi.forEach(item => {
-                exitPhiVis[`${item.id}-${item.rank}`] = item;
-            });
+                exitPhiVis[`${item.id}-${item.rank}`] = item
+            })
 
             exitB27.forEach(item => {
-                const key = `${item.id}-${item.rank}`;
+                const key = `${item.id}-${item.rank}`
                 if (newB27Charts.includes(key)) {
-                    exitPhiVis[key].exitB27 = item.exitB27;
-                    return;
+                    exitPhiVis[key].exitB27 = item.exitB27
+                    return
                 }
-                exitB27Result.push(item);
-            });
+                exitB27Result.push(item)
+            })
 
             for (const key of fCompute.objectKeys(exitPhiVis)) {
-                exitPhiResult.push(exitPhiVis[key]);
+                exitPhiResult.push(exitPhiVis[key])
             }
 
             if (newPhiResult.length + newB27Result.length + exitPhiResult.length + exitB27Result.length > 0) {
-                changeB30Result[time] = [
-                    ...newPhiResult,
-                    ...newB27Result,
-                    ...exitPhiResult,
-                    ...exitB27Result,
-                ];
+                changeB30Result[time] = [...newPhiResult, ...newB27Result, ...exitPhiResult, ...exitB27Result]
             }
 
-
-            b30List = newB30List;
-
+            b30List = newB30List
         }
 
         /**
@@ -828,14 +811,14 @@ export class phiuser extends phiPluginBase {
          * @property {string} color 颜色
          * @property {hisb30Songs[]} songs 变化内容
          */
-        const rows = [];
+        const rows = []
 
         times.reverse().forEach(time => {
             if (changeB30Result[time]) {
-                const date = fCompute.formatDate(Number(time));
+                const date = fCompute.formatDate(Number(time))
 
                 /** @type {hisb30Songs[]} */
-                const songs = [];
+                const songs = []
                 changeB30Result[time].forEach(item => {
                     songs.push({
                         ill: getInfo.getill(item.id, 'low'),
@@ -844,17 +827,17 @@ export class phiuser extends phiPluginBase {
                         newB27: item.newB27,
                         exitPhi: item.exitPhi,
                         exitB27: item.exitB27,
-                    });
-                });
+                    })
+                })
                 rows.push({
                     date,
                     songs,
                     color: fCompute.getRandomBgColor(),
-                });
+                })
             }
         })
 
-        const pluginData = await getNotes.getNotesData(e.user_id);
+        const pluginData = await getNotes.getNotesData(e.user_id)
 
         const money = save.gameProgress?.money || [0, 0, 0, 0, 0]
         const gameuser = {
@@ -868,29 +851,27 @@ export class phiuser extends phiPluginBase {
             PlayerId: fCompute.convertRichText(save.saveInfo.PlayerId),
         }
 
-        send.send_with_At(e, await picmodle.common(e, 'historyB30', {
-            gameuser,
-            rows,
-            background: getInfo.randomBackground(),
-            theme: pluginData?.theme || 'star',
-        }))
+        send.send_with_At(
+            e,
+            await picmodle.common(e, 'historyB30', {
+                gameuser,
+                rows,
+                background: getInfo.randomBackground(),
+                theme: pluginData?.theme || 'star',
+            }),
+        )
         await sendQuickCommands(e, historyQuickCommands(Config.getUserCfg('config', 'cmdhead')), '历史记录快捷操作')
-
     }
-
-
-
 }
 
 /**
- * 
+ *
  * @param {number} real_score 真实成绩
  * @param {number} tot_score 总成绩
  * @param {boolean} fc 是否fc
- * @returns 
+ * @returns
  */
 function Rate(real_score, tot_score, fc) {
-
     if (!real_score) {
         return 'F'
     } else if (real_score == tot_score) {
@@ -905,11 +886,9 @@ function Rate(real_score, tot_score, fc) {
         return 'A'
     } else if (real_score >= tot_score * 0.82) {
         return 'B'
-    } else if (real_score >= tot_score * 0.70) {
+    } else if (real_score >= tot_score * 0.7) {
         return 'C'
     } else {
         return 'F'
     }
 }
-
-

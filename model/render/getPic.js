@@ -1,19 +1,18 @@
-import picmodle from "./picmodle.js"
-import getInfo from "../game/getInfo.js"
-import { imgPath } from "../filesystem/path.js"
-import segment from "../../components/segment.js"
-import logger from "../../components/Logger.js"
+import picmodle from './picmodle.js'
+import getInfo from '../game/getInfo.js'
+import { imgPath } from '../filesystem/path.js'
+import segment from '../../components/segment.js'
+import logger from '../../components/Logger.js'
 
 /**@import {botEvent} from "../../components/baseClass.js" */
 
-export default new class pic {
-
+export default new (class pic {
     /**
      * 获取歌曲图鉴，曲名为原名
      * @param {botEvent} e 消息
      * @param {idString} id 曲名
      * @param {any} data 自定义数据
-     * @returns 
+     * @returns
      */
     async GetSongsInfoAtlas(e, id, data = undefined) {
         data = data || getInfo.info(id)
@@ -31,7 +30,7 @@ export default new class pic {
      * @param {botEvent} e 消息e
      * @param {idString} id 原曲名称
      * @param { {illustration:string, illustrator:string} } [data] 自定义数据
-     * @returns 
+     * @returns
      */
     async GetSongsIllAtlas(e, id, data = undefined) {
         if (data) {
@@ -42,10 +41,10 @@ export default new class pic {
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @param {*} data
+     * @returns
      */
     async GetChap(e, data) {
         return await picmodle.chap(e, data)
@@ -75,5 +74,4 @@ export default new class pic {
     getIll(id, kind = 'common') {
         return segment.image(getInfo.getill(id, kind))
     }
-
-}()
+})()

@@ -6,24 +6,31 @@ export function createSettingsSchemas(includeCredentials = true) {
     const groups = [...new Set(items.map(item => item.group))]
     return groups.flatMap(group => [
         { label: group, component: 'SOFT_GROUP_BEGIN' },
-        ...items.filter(item => item.group === group).map(item => ({
-            field: item.key,
-            label: item.label,
-            bottomHelpMessage: item.description,
-            component: item.type === 'number' ? 'InputNumber'
-                : item.type === 'boolean' ? 'Switch'
-                    : item.type === 'select' ? 'RadioGroup' : 'Input',
-            required: item.required || false,
-            componentProps: {
-                ...(item.min === undefined ? {} : { min: item.min }),
-                ...(item.max === undefined ? {} : { max: item.max }),
-                ...(item.step === undefined ? {} : { step: item.step }),
-                ...(item.options ? { options: item.options.map(option => ({ ...option })) } : {}),
-                ...(item.unit ? { addonAfter: item.unit } : {}),
-                ...(item.placeholder ? { placeholder: item.placeholder } : {}),
-                ...(item.secret ? { type: 'password' } : {}),
-            },
-        })),
+        ...items
+            .filter(item => item.group === group)
+            .map(item => ({
+                field: item.key,
+                label: item.label,
+                bottomHelpMessage: item.description,
+                component:
+                    item.type === 'number'
+                        ? 'InputNumber'
+                        : item.type === 'boolean'
+                          ? 'Switch'
+                          : item.type === 'select'
+                            ? 'RadioGroup'
+                            : 'Input',
+                required: item.required || false,
+                componentProps: {
+                    ...(item.min === undefined ? {} : { min: item.min }),
+                    ...(item.max === undefined ? {} : { max: item.max }),
+                    ...(item.step === undefined ? {} : { step: item.step }),
+                    ...(item.options ? { options: item.options.map(option => ({ ...option })) } : {}),
+                    ...(item.unit ? { addonAfter: item.unit } : {}),
+                    ...(item.placeholder ? { placeholder: item.placeholder } : {}),
+                    ...(item.secret ? { type: 'password' } : {}),
+                },
+            })),
     ])
 }
 

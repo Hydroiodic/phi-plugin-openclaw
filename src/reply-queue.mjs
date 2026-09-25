@@ -27,7 +27,7 @@ export class ReplyQueue {
   enqueue(callback) {
     if (!this.isActive()) return Promise.resolve(false)
     this.count += 1
-    const task = this.track(this.tail.then(() => this.isActive() ? callback() : false))
+    const task = this.track(this.tail.then(() => (this.isActive() ? callback() : false)))
     this.tail = task.catch(() => {})
     return task
   }
@@ -42,7 +42,11 @@ export class ReplyQueue {
     // Concurrent flushes must join the same drain: a second caller must not
     // run a footer while the first caller is awaiting a slow image delivery.
     if (!this.flushing) {
-      this.flushing = Promise.resolve().then(() => this.drain()).finally(() => { this.flushing = null })
+      this.flushing = Promise.resolve()
+        .then(() => this.drain())
+        .finally(() => {
+          this.flushing = null
+        })
     }
     return this.flushing
   }
@@ -55,13 +59,21 @@ export class ReplyQueue {
         const pending = [...this.pending]
         this.pending.clear()
         for (const result of await Promise.allSettled(pending)) {
-          if (result.status === 'rejected' && !failed) { failed = true; failure = result.reason }
+          if (result.status === 'rejected' && !failed) {
+            failed = true
+            failure = result.reason
+          }
         }
       } else if (failed || !this.isActive()) {
         this.after.length = 0
       } else {
-        try { await this.after.shift()?.() }
-        catch (error) { failed = true; failure = error; this.after.length = 0 }
+        try {
+          await this.after.shift()?.()
+        } catch (error) {
+          failed = true
+          failure = error
+          this.after.length = 0
+        }
       }
     }
     if (failed) throw failure

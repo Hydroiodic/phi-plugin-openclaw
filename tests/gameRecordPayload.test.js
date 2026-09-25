@@ -24,11 +24,6 @@ test('buildGameRecordPayload strips derived fields and LEGACY records', () => {
     })
 
     assert.deepEqual(payload, {
-        'Glaciaxion.SunsetRay.0': [
-            { score: 1_000_000, acc: 100, fc: true },
-            null,
-            { score: 987_654, acc: 98.7654, fc: false },
-            null,
-        ],
+        'Glaciaxion.SunsetRay.0': [{ score: 1_000_000, acc: 100, fc: true }, null, { score: 987_654, acc: 98.7654, fc: false }, null],
     })
 })

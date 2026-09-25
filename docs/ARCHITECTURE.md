@@ -2,20 +2,20 @@
 
 ## 模块职责
 
-| 层次 | 主要对象 | 职责 |
-| --- | --- | --- |
-| OpenClaw 接入 | `PhigrosPlugin` | 注册原生命令、消息 hook 和存档工具，统一轻量回复、隐私检查和运行时加载 |
-| AI 存档工具 | `save-tools`、`SaveEditService`、`CloudSaveUploader` | 确认私聊发送者身份，解码与校验修改，等待本人确认后备份、上传和校验 |
-| 运行时 | `PhigrosRuntime`、`TaskScheduler` | 管理活动请求、后台任务和关闭顺序 |
-| 命令路由 | `CommandRouter` | 规范化命令、权限检查、交互上下文、业务分发 |
-| 平台服务 | `OpenClawPlatform` | 提供事件、身份、消息和本地存储接口 |
-| 消息与会话 | `ReplyQueue`、`MessagePayloadEncoder`、`ConversationContexts` | 有序回复、附件编码、快捷操作收尾、会话隔离与过期 |
-| 资源与存储 | `ResourceRepository`、`IllustrationRepository`、`SqliteStore` | 曲目版本缓存、共享曲绘下载校验、键值/排行榜数据及事务 |
-| 本地文件 | `FileRepository`、`AtomicFileWriter` | 序列化、原子替换和明确的读写结果 |
-| 云端与备份 | `CloudTransport`、`CloudSaveArchive`、`BackupRestoreService` | 有界请求、存档解析、备份预检和恢复 |
-| 用户数据 | `UserDataLock`、Notes 数据服务 | 用户级更新锁、多用户转账、余额校验及失败补偿 |
-| 业务 | `apps/`、`model/`、`lib/` | 查分、绑定、游戏、主题、云存档和成绩计算 |
-| 图片 | `TemplateRenderer`、Puppeteer 渲染器及实例池 | 模板、页面、浏览器、队列和临时文件生命周期 |
+| 层次          | 主要对象                                                      | 职责                                                                   |
+| ------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| OpenClaw 接入 | `PhigrosPlugin`                                               | 注册原生命令、消息 hook 和存档工具，统一轻量回复、隐私检查和运行时加载 |
+| AI 存档工具   | `save-tools`、`SaveEditService`、`CloudSaveUploader`          | 确认私聊发送者身份，解码与校验修改，等待本人确认后备份、上传和校验     |
+| 运行时        | `PhigrosRuntime`、`TaskScheduler`                             | 管理活动请求、后台任务和关闭顺序                                       |
+| 命令路由      | `CommandRouter`                                               | 规范化命令、权限检查、交互上下文、业务分发                             |
+| 平台服务      | `OpenClawPlatform`                                            | 提供事件、身份、消息和本地存储接口                                     |
+| 消息与会话    | `ReplyQueue`、`MessagePayloadEncoder`、`ConversationContexts` | 有序回复、附件编码、快捷操作收尾、会话隔离与过期                       |
+| 资源与存储    | `ResourceRepository`、`IllustrationRepository`、`SqliteStore` | 曲目版本缓存、共享曲绘下载校验、键值/排行榜数据及事务                  |
+| 本地文件      | `FileRepository`、`AtomicFileWriter`                          | 序列化、原子替换和明确的读写结果                                       |
+| 云端与备份    | `CloudTransport`、`CloudSaveArchive`、`BackupRestoreService`  | 有界请求、存档解析、备份预检和恢复                                     |
+| 用户数据      | `UserDataLock`、Notes 数据服务                                | 用户级更新锁、多用户转账、余额校验及失败补偿                           |
+| 业务          | `apps/`、`model/`、`lib/`                                     | 查分、绑定、游戏、主题、云存档和成绩计算                               |
+| 图片          | `TemplateRenderer`、Puppeteer 渲染器及实例池                  | 模板、页面、浏览器、队列和临时文件生命周期                             |
 
 `openclaw.mjs` 只负责声明插件和创建接入控制器。业务模块通过平台接口访问消息与存储，不应直接依赖 OpenClaw 的宿主 API。
 工厂函数用于创建有状态对象，具体行为由类承担；无状态的解析、验证和格式化函数保持独立，不为函数额外套无职责的类。

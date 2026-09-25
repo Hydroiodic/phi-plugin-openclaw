@@ -9,25 +9,43 @@ import { serveRepository } from './resource-server.mjs'
 
 test('entry resolves configured paths during registration, fetches remote metadata and retries failed first downloads', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'phi-entry-test-'))
-  const output = path.join(root, 'public'); await fs.mkdir(output)
+  const output = path.join(root, 'public')
+  await fs.mkdir(output)
   const server = await serveRepository(output)
   const previous = { base: process.env.PHI_RESOURCE_BASE_URL, version: process.env.PHI_RESOURCE_VERSION }
-  process.env.PHI_RESOURCE_BASE_URL = server.url; process.env.PHI_RESOURCE_VERSION = 'latest'
-  const commands = new Map(), services = []; let registering = true, calls = 0
+  process.env.PHI_RESOURCE_BASE_URL = server.url
+  process.env.PHI_RESOURCE_VERSION = 'latest'
+  const commands = new Map(),
+    services = []
+  let registering = true,
+    calls = 0
   t.after(async () => {
     for (const service of services) await service.stop()
     await server.close()
-    for (const [key, value] of [['PHI_RESOURCE_BASE_URL', previous.base], ['PHI_RESOURCE_VERSION', previous.version]]) {
-      if (value === undefined) delete process.env[key]; else process.env[key] = value
+    for (const [key, value] of [
+      ['PHI_RESOURCE_BASE_URL', previous.base],
+      ['PHI_RESOURCE_VERSION', previous.version],
+    ]) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
     }
     await fs.rm(root, { recursive: true, force: true })
   })
-  plugin.register({ pluginConfig: { dataDir: 'custom-data' },
-    runtime: { state: { resolveStateDir: () => root } }, logger: { info() {}, warn() {}, error() {}, debug() {} },
-    resolvePath: value => { assert.equal(registering, true); calls++; return path.join(root, value) },
-    registerCommand: command => commands.set(command.name, command), on() {}, registerService: service => services.push(service),
+  plugin.register({
+    pluginConfig: { dataDir: 'custom-data' },
+    runtime: { state: { resolveStateDir: () => root } },
+    logger: { info() {}, warn() {}, error() {}, debug() {} },
+    resolvePath: value => {
+      assert.equal(registering, true)
+      calls++
+      return path.join(root, value)
+    },
+    registerCommand: command => commands.set(command.name, command),
+    on() {},
+    registerService: service => services.push(service),
   })
-  registering = false; assert.equal(calls, 1)
+  registering = false
+  assert.equal(calls, 1)
   assert.equal(commands.size, 14)
   assert.ok(commands.has('gbbind') && commands.has('cnbind'))
   assert.ok([...commands.values()].every(command => command.requireAuth === false))
@@ -42,5 +60,10 @@ test('entry resolves configured paths during registration, fetches remote metada
 })
 
 test('CLI metadata loading does not touch unavailable runtime APIs', () => {
-  plugin.register({ registrationMode: 'cli-metadata', get runtime() { throw new Error('unavailable') } })
+  plugin.register({
+    registrationMode: 'cli-metadata',
+    get runtime() {
+      throw new Error('unavailable')
+    },
+  })
 })

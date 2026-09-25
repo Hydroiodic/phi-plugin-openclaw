@@ -11,10 +11,7 @@ test('convertRichText renders Unity tags and line breaks', () => {
 
 test('convertRichText escapes markup and rejects CSS injection in colors', () => {
     assert.equal(fCompute.convertRichText('a<b & c'), 'a&lt;b &amp; c')
-    assert.equal(
-        fCompute.convertRichText('<color=red;background:url(http://x)>x</color>'),
-        '<span style="color:inherit">x</span>',
-    )
+    assert.equal(fCompute.convertRichText('<color=red;background:url(http://x)>x</color>'), '<span style="color:inherit">x</span>')
 })
 
 test('convertRichText can return plain text', () => {

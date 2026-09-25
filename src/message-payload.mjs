@@ -6,7 +6,9 @@ import { fileURLToPath } from 'node:url'
 /** Converts business message segments into OpenClaw text/media payloads. */
 export class MessagePayloadEncoder {
   /** @param {string} mediaRoot */
-  constructor(mediaRoot) { this.mediaRoot = mediaRoot }
+  constructor(mediaRoot) {
+    this.mediaRoot = mediaRoot
+  }
 
   /** @param {any} message */
   async encode(message) {
@@ -23,8 +25,11 @@ export class MessagePayloadEncoder {
       if (Array.isArray(item)) {
         if (ancestors.has(item)) throw new TypeError('消息包含循环引用。')
         ancestors.add(item)
-        try { for (const part of item) await visit(part, depth + 1) }
-        finally { ancestors.delete(item) }
+        try {
+          for (const part of item) await visit(part, depth + 1)
+        } finally {
+          ancestors.delete(item)
+        }
         return
       }
       if (item == null || item === false) return
@@ -33,7 +38,10 @@ export class MessagePayloadEncoder {
         return
       }
       if (item.type === 'at') return
-      if (item.type !== 'image') { texts.push(String(item.text ?? '')); return }
+      if (item.type !== 'image') {
+        texts.push(String(item.text ?? ''))
+        return
+      }
       if (typeof item.data === 'string' && /^https?:\/\//i.test(item.data)) {
         const url = new URL(item.data)
         if (url.username || url.password) throw new TypeError('图片地址不能包含凭据。')
@@ -46,12 +54,16 @@ export class MessagePayloadEncoder {
       const file = path.join(this.mediaRoot, `phi-${randomUUID()}${ext}`)
       const handle = await fs.open(file, 'wx', 0o600)
       files.push(file)
-      try { await handle.writeFile(bytes) }
-      finally { await handle.close() }
+      try {
+        await handle.writeFile(bytes)
+      } finally {
+        await handle.close()
+      }
       mediaUrls.push(file)
     }
-    try { await visit(message) }
-    catch (error) {
+    try {
+      await visit(message)
+    } catch (error) {
       // A partially converted reply will never be sent; leave no orphan files.
       await Promise.all(files.map(file => fs.rm(file, { force: true }).catch(() => {})))
       throw error
@@ -70,8 +82,11 @@ export class MessagePayloadEncoder {
       } else data = await fs.readFile(data.startsWith('file:') ? fileURLToPath(data) : data)
     }
     if (!Buffer.isBuffer(data) && !ArrayBuffer.isView(data) && !(data instanceof ArrayBuffer)) throw new TypeError('不支持的图片数据。')
-    const bytes = Buffer.isBuffer(data) ? data : ArrayBuffer.isView(data)
-      ? Buffer.from(data.buffer, data.byteOffset, data.byteLength) : Buffer.from(data)
+    const bytes = Buffer.isBuffer(data)
+      ? data
+      : ArrayBuffer.isView(data)
+        ? Buffer.from(data.buffer, data.byteOffset, data.byteLength)
+        : Buffer.from(data)
     if (!bytes.length) throw new TypeError('图片数据为空。')
     return bytes
   }
@@ -79,7 +94,8 @@ export class MessagePayloadEncoder {
   /** @param {string} value */
   decodeBase64(value) {
     const normalized = value.replace(/\s+/g, '')
-    if (!normalized || !/^[A-Za-z0-9+/]*={0,2}$/.test(normalized) || normalized.length % 4 === 1) throw new TypeError('图片 base64 编码无效。')
+    if (!normalized || !/^[A-Za-z0-9+/]*={0,2}$/.test(normalized) || normalized.length % 4 === 1)
+      throw new TypeError('图片 base64 编码无效。')
     return Buffer.from(normalized, 'base64')
   }
 }

@@ -19,9 +19,9 @@ export const tempPath = path.join(stateRoot, 'temp')
 /**插件资源目录 */
 export const pluginResources = path.join(pluginRoot, 'resources')
 
-
 /**曲绘资源、曲目信息路径 */
-export const infoPath = getPlatformAdapter()?.resourceInfoPath || process.env.PHI_TEST_INFO_PATH || path.join(stateRoot, 'resource-cache', 'uninitialized')
+export const infoPath =
+    getPlatformAdapter()?.resourceInfoPath || process.env.PHI_TEST_INFO_PATH || path.join(stateRoot, 'resource-cache', 'uninitialized')
 
 /**额外曲目名称信息（开字母用） */
 export const DlcInfoPath = path.join(infoPath, 'DLC')
@@ -31,7 +31,6 @@ export const oldInfoPath = path.join(infoPath, 'oldInfo')
 
 /**数据路径 */
 export const dataPath = path.join(stateRoot, 'data')
-
 
 /**用户娱乐数据路径 */
 export const pluginDataPath = path.join(dataPath, 'pluginData')

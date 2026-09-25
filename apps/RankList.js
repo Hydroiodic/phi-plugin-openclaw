@@ -6,11 +6,11 @@ import getSave from '../model/save/getSave.js'
 import send from '../model/render/send.js'
 import picmodle from '../model/render/picmodle.js'
 import Config from '../components/Config.js'
-import getBanGroup from '../model/user/getBanGroup.js';
+import getBanGroup from '../model/user/getBanGroup.js'
 import makeRequest from '../model/api/makeRequest.js'
 import saveHistory from '../model/save/saveHistory.js'
 import phiPluginBase from '../components/baseClass.js'
-import { canUseApi } from '../model/user/apiPermission.js';
+import { canUseApi } from '../model/user/apiPermission.js'
 import platform from '../components/platform/index.js'
 import { UserCredentials } from '../model/user/userCredentials.js'
 import { sendQuickCommands, rankQuickCommands } from '../model/game/markdown.js'
@@ -18,7 +18,6 @@ import { sendQuickCommands, rankQuickCommands } from '../model/game/markdown.js'
 /**@import {botEvent} from '../components/baseClass.js' */
 
 export class phiRankList extends phiPluginBase {
-
     constructor() {
         super({
             name: 'phi-rankList',
@@ -28,32 +27,28 @@ export class phiRankList extends phiPluginBase {
             rule: [
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(排行榜|ranklist).*$`,
-                    fnc: 'rankList'
+                    fnc: 'rankList',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)(查询排名|rankfind).*$`,
-                    fnc: 'rankfind'
-                }
-            ]
-
+                    fnc: 'rankfind',
+                },
+            ],
         })
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async rankList(e) {
-
         if (await getBanGroup.get(e, 'rankList')) return false
-
-
 
         if (await canUseApi(e)) {
             const credentials = UserCredentials.fromEvent(e)
             const data = {
-                Title: "RankingScore排行榜",
+                Title: 'RankingScore排行榜',
                 totDataNum: 0,
                 BotNick: platform.getBotNickname(e),
                 /** @type {rankingListObject[]} */
@@ -66,9 +61,9 @@ export class phiRankList extends phiPluginBase {
                 ? await makeRequest.getRanklistRank({ request_rank: Number(msg[0]) }, { event: e })
                 : await credentials.getRanklistUser()
             if (api_ranklist) {
-                data.totDataNum = api_ranklist.totDataNum;
+                data.totDataNum = api_ranklist.totDataNum
                 for (const item of api_ranklist.users) {
-                    data.users.push({ ...await makeSmallLine(item), index: item.index, me: item.me })
+                    data.users.push({ ...(await makeSmallLine(item)), index: item.index, me: item.me })
                 }
                 data.me = await makeLargeLine(new Save(api_ranklist.me.save), new saveHistory(api_ranklist.me.history), e)
                 send.send_with_At(e, [await picmodle.common(e, 'rankingList', data), `总数据量：${data.totDataNum}\n`])
@@ -77,7 +72,7 @@ export class phiRankList extends phiPluginBase {
             }
         }
         const data = {
-            Title: "RankingScore排行榜",
+            Title: 'RankingScore排行榜',
             totDataNum: 0,
             BotNick: platform.getBotNickname(e),
             /** @type {rankingListObject[]} */
@@ -118,7 +113,7 @@ export class phiRankList extends phiPluginBase {
                 data.users.push({ playerId: '无效用户', index: rank })
                 getRksRank.delUserRks(sessionToken)
             } else {
-                data.users.push({ ...await makeSmallLine(save), index: rank, me: myTk === save.getSessionToken() })
+                data.users.push({ ...(await makeSmallLine(save)), index: rank, me: myTk === save.getSessionToken() })
                 if (myTk === sessionToken) {
                     const history = await getSave.getHistoryBySessionToken(save.getSessionToken())
                     data.me = await makeLargeLine(save, history, e)
@@ -131,9 +126,9 @@ export class phiRankList extends phiPluginBase {
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async rankfind(e) {
         if (await getBanGroup.get(e, 'rankList')) return false
@@ -162,30 +157,27 @@ export class phiRankList extends phiPluginBase {
 
         return true
     }
-
-
 }
 
 /**
  * 创建一个详细对象
- * @param {Save} save 
+ * @param {Save} save
  * @param {saveHistory} history
  * @param {botEvent} e
  */
 async function makeLargeLine(save, history, e) {
     if (!save) {
         return {
-            playerId: "无效用户"
+            playerId: '无效用户',
         }
     }
-
 
     const lineData = history.getRksAndDataLine()
     lineData.rks_date.forEach((item, index) => {
         // @ts-ignore
         item = fCompute.formatDateToNow(item)
         lineData.rks_date[index] = item
-    });
+    })
     /**
      * @type {{ ChallengeMode: number; ChallengeModeRank: number; date: string; }[]}
      */
@@ -195,7 +187,7 @@ async function makeLargeLine(save, history, e) {
             clgHistory.push({
                 ChallengeMode: Math.floor(item.value / 100),
                 ChallengeModeRank: item.value % 100,
-                date: fCompute.formatDateToNow(item.date)
+                date: fCompute.formatDateToNow(item.date),
             })
         }
     })
@@ -203,20 +195,20 @@ async function makeLargeLine(save, history, e) {
     const b30list = {
         P3: {
             title: 'Perfect 3',
-            list: b30Data.phi
+            list: b30Data.phi,
         },
         B3: {
             title: 'Best 3',
-            list: b30Data.b19_list.slice(0, 3)
+            list: b30Data.b19_list.slice(0, 3),
         },
         F3: {
             title: 'Floor 3',
-            list: b30Data.b19_list.slice(24, 27)
+            list: b30Data.b19_list.slice(24, 27),
         },
         L3: {
             title: 'Overflow 3',
-            list: b30Data.b19_list.slice(27, 30)
-        }
+            list: b30Data.b19_list.slice(27, 30),
+        },
     }
     return {
         backgroundurl: getInfo.getBackground(save?.gameuser?.background),
@@ -249,12 +241,12 @@ async function makeLargeLine(save, history, e) {
 
 /**
  * 创建一个简略对象
- * @param {Save | import('../model/api/makeRequest.js').UserItem} save 
+ * @param {Save | import('../model/api/makeRequest.js').UserItem} save
  */
 async function makeSmallLine(save) {
     if (!save) {
         return {
-            playerId: "无效用户",
+            playerId: '无效用户',
         }
     }
     return {

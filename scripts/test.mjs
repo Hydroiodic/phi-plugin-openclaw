@@ -7,10 +7,14 @@ import { resolveTestInfo } from './test-resources.mjs'
 try {
   const info = await resolveTestInfo()
   const root = fileURLToPath(new URL('../', import.meta.url))
-  const files = fs.readdirSync(new URL('../tests/', import.meta.url)).filter(file => /\.test\.(?:js|mjs)$/.test(file)
-    && (!process.argv.includes('--openclaw') || file.startsWith('openclaw'))).map(file => `tests/${file}`)
+  const files = fs
+    .readdirSync(new URL('../tests/', import.meta.url))
+    .filter(file => /\.test\.(?:js|mjs)$/.test(file) && (!process.argv.includes('--openclaw') || file.startsWith('openclaw')))
+    .map(file => `tests/${file}`)
   const result = spawnSync(process.execPath, ['--test', '--test-concurrency=1', '--test-force-exit', ...files], {
-    cwd: root, stdio: 'inherit', env: { ...process.env, PHI_TEST_INFO_PATH: info, PHI_RESOURCE_SOURCE_DIR: info },
+    cwd: root,
+    stdio: 'inherit',
+    env: { ...process.env, PHI_TEST_INFO_PATH: info, PHI_RESOURCE_SOURCE_DIR: info },
   })
   if (result.error) throw result.error
   process.exitCode = result.status ?? 1

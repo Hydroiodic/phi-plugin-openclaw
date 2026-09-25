@@ -1,4 +1,4 @@
-import getInfo from "./getInfo.js"
+import getInfo from './getInfo.js'
 /** @import Chart from "./Chart.js" */
 
 export default class SongsInfo {
@@ -36,11 +36,10 @@ export default class SongsInfo {
         this.isOriginal = data.isOriginal
         /**
          * 谱面详情
-         * @type {Partial<Record<allLevelKind, Chart>>} 
+         * @type {Partial<Record<allLevelKind, Chart>>}
          */
         this.chart = data.chart
         /** @type {boolean} 是否是特殊谱面 */
         this.sp_vis = data.sp_vis
     }
-
 }

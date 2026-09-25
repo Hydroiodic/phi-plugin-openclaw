@@ -4,7 +4,5 @@
   "printWidth": 140,
   "arrowParens": "avoid",
   "trailingComma": "all",
-  "overrides": [
-    { "files": ["*.md"], "options": { "proseWrap": "preserve" } }
-  ]
+  "overrides": [{ "files": ["*.md"], "options": { "proseWrap": "preserve" } }]
 }

@@ -7,7 +7,7 @@ import {
     encryptSongName,
     getRevealCandidates,
     hasHiddenCharacters,
-    revealCharacter
+    revealCharacter,
 } from '../apps/guessGame/letterGameUtils.js'
 
 test('literal star remains a valid tip candidate without being confused with the mask', () => {
@@ -39,16 +39,11 @@ test('empty and completed games have no reveal candidates', () => {
 })
 
 test('repeated tips always finish titles containing literal stars', () => {
-    const titles = [
-        '7 colors*',
-        'Altair (feat. *spiLa*)',
-        'cocoro*cosmetic',
-        'strawberry*passion'
-    ]
+    const titles = ['7 colors*', 'Altair (feat. *spiLa*)', 'cocoro*cosmetic', 'strawberry*passion']
     const game = /** @type {{letterNum: number, ansList: string[], blurlist: (string|null)[]}} */ ({
         letterNum: titles.length,
         ansList: titles,
-        blurlist: titles.map(encryptSongName)
+        blurlist: titles.map(encryptSongName),
     })
     const maximumSteps = titles.reduce((total, title) => total + Array.from(title).length, 0)
     let steps = 0

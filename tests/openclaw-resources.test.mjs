@@ -6,7 +6,18 @@ import path from 'node:path'
 import http from 'node:http'
 import { spawnSync } from 'node:child_process'
 import JSZip from 'jszip'
-import { ResourceRepository, ResourceError, resourceOptions, ensureResources, listResourceVersions, extractArchive, REQUIRED_INFO, sha256, validateManifest, validateResourceIndex } from '../src/resources.mjs'
+import {
+  ResourceRepository,
+  ResourceError,
+  resourceOptions,
+  ensureResources,
+  listResourceVersions,
+  extractArchive,
+  REQUIRED_INFO,
+  sha256,
+  validateManifest,
+  validateResourceIndex,
+} from '../src/resources.mjs'
 import { buildResources } from '../scripts/build-resources.mjs'
 import { IllustrationRepository, illustrationReference } from '../src/illustrations.mjs'
 import { serveRepository } from './resource-server.mjs'
@@ -14,7 +25,9 @@ import { serveRepository } from './resource-server.mjs'
 async function fixture(t, version = '3.20.0') {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'phi-resource-test-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))
-  const info = path.join(root, 'input'), output = path.join(root, 'public'), dataRoot = path.join(root, 'state')
+  const info = path.join(root, 'input'),
+    output = path.join(root, 'public'),
+    dataRoot = path.join(root, 'state')
   for (const name of [...REQUIRED_INFO, 'DLC/test.json', 'oldInfo/test.json']) {
     await fs.mkdir(path.dirname(path.join(info, name)), { recursive: true })
     await fs.writeFile(path.join(info, name), name.endsWith('.json') ? '{}' : 'fixture')
@@ -28,8 +41,20 @@ async function fixture(t, version = '3.20.0') {
 
 test('resource options: environment override, pin validation, HTTPS and credential policy', () => {
   assert.equal(resourceOptions({ resourceBaseUrl: 'https://example.com/custom' }, {}).baseUrl, 'https://example.com/custom/')
-  assert.equal(resourceOptions({ resourceBaseUrl: 'https://ignored.example' }, { PHI_RESOURCE_BASE_URL: 'https://mirror.example/prefix/', PHI_RESOURCE_VERSION: '3.20.0-r2' }).version, '3.20.0-r2')
-  for (const resourceBaseUrl of ['http://example.com/', 'file:///tmp/', 'https://user:secret@example.com/', 'https://example.com/?token=secret']) assert.throws(() => resourceOptions({ resourceBaseUrl }, {}))
+  assert.equal(
+    resourceOptions(
+      { resourceBaseUrl: 'https://ignored.example' },
+      { PHI_RESOURCE_BASE_URL: 'https://mirror.example/prefix/', PHI_RESOURCE_VERSION: '3.20.0-r2' },
+    ).version,
+    '3.20.0-r2',
+  )
+  for (const resourceBaseUrl of [
+    'http://example.com/',
+    'file:///tmp/',
+    'https://user:secret@example.com/',
+    'https://example.com/?token=secret',
+  ])
+    assert.throws(() => resourceOptions({ resourceBaseUrl }, {}))
   assert.throws(() => resourceOptions({ resourceVersion: '../../escape' }, {}))
 })
 
@@ -57,7 +82,10 @@ test('publisher derives the game version, checks consistency and sorts numeric g
   assert.equal(latest.version, '3.20.10')
   assert.equal(Object.hasOwn(latest, 'date'), false)
   assert.equal((await fs.readFile(path.join(f.output, 'index.tab'), 'utf8')).split('\n')[0], 'version\tphigros\tcode\tpackages')
-  assert.deepEqual((await listResourceVersions(f.config, {})).map(entry => entry.version), ['3.20.10', '3.20.2', '3.20.0', '3.9.0'])
+  assert.deepEqual(
+    (await listResourceVersions(f.config, {})).map(entry => entry.version),
+    ['3.20.10', '3.20.2', '3.20.0', '3.9.0'],
+  )
   await assert.rejects(f.build({ version: '3.21.0', gameVersion: '3.20.0' }), /相同的游戏版本/)
   assert.throws(() => validateManifest({ ...release.manifest, game: { version: '3.20.0', code: 154 } }), /游戏版本一致/)
 })
@@ -95,8 +123,14 @@ test('refresh, pinned rollback, numeric latest ordering and mirror isolation', a
   await f.build({ version: '3.20.0-r2' })
   assert.equal((await ensureResources({ dataRoot: f.dataRoot, config: f.config, env: {} })).manifest.version, '3.20.0')
   assert.equal((await ensureResources({ dataRoot: f.dataRoot, config: f.config, env: {}, refresh: true })).manifest.version, '3.20.0-r10')
-  assert.equal((await ensureResources({ dataRoot: f.dataRoot, config: { ...f.config, resourceVersion: '3.20.0-r2' }, env: {} })).manifest.version, '3.20.0-r2')
-  await assert.rejects(ensureResources({ dataRoot: f.dataRoot, config: { resourceBaseUrl: f.server.url + 'missing/' }, env: {} }), /HTTP 404/)
+  assert.equal(
+    (await ensureResources({ dataRoot: f.dataRoot, config: { ...f.config, resourceVersion: '3.20.0-r2' }, env: {} })).manifest.version,
+    '3.20.0-r2',
+  )
+  await assert.rejects(
+    ensureResources({ dataRoot: f.dataRoot, config: { resourceBaseUrl: f.server.url + 'missing/' }, env: {} }),
+    /HTTP 404/,
+  )
 })
 
 test('damaged archive fails integrity and leaves the active release usable', async t => {
@@ -110,7 +144,8 @@ test('damaged archive fails integrity and leaves the active release usable', asy
 
 test('optional illustration packages and game metadata are downloaded independently', async t => {
   const f = await fixture(t)
-  const illustrations = path.join(f.root, 'art'); await fs.mkdir(path.join(illustrations, 'ill'), { recursive: true })
+  const illustrations = path.join(f.root, 'art')
+  await fs.mkdir(path.join(illustrations, 'ill'), { recursive: true })
   await fs.writeFile(path.join(illustrations, 'ill', 'fixture.png'), 'fake-test-image')
   await f.build({ version: '3.20.0-r1', illustrations, partBytes: 16000 })
   const plain = await ensureResources({ dataRoot: f.dataRoot, config: f.config, env: {} })
@@ -126,14 +161,26 @@ test('optional illustration packages and game metadata are downloaded independen
 })
 
 test('ZIP rejects traversal, symlinks, executable files, expansion mismatch and cross-part duplicate names', async t => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'phi-resource-zip-')); t.after(() => fs.rm(root, { recursive: true, force: true }))
-  for (const [name, options, limit] of [['../escape.json', {}, 10], ['evil.json', { unixPermissions: 0o120777 }, 10], ['evil.js', {}, 10], ['large.json', {}, 1]]) {
-    const zip = new JSZip(); zip.file(name, '1234567890', options)
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'phi-resource-zip-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  for (const [name, options, limit] of [
+    ['../escape.json', {}, 10],
+    ['evil.json', { unixPermissions: 0o120777 }, 10],
+    ['evil.js', {}, 10],
+    ['large.json', {}, 1],
+  ]) {
+    const zip = new JSZip()
+    zip.file(name, '1234567890', options)
     const bytes = await zip.generateAsync({ type: 'nodebuffer', platform: 'UNIX' })
-    await assert.rejects(extractArchive(bytes, { bytes: bytes.length, sha256: sha256(bytes), unpackedBytes: limit, fileCount: 1 }, root, 'song-data'))
+    await assert.rejects(
+      extractArchive(bytes, { bytes: bytes.length, sha256: sha256(bytes), unpackedBytes: limit, fileCount: 1 }, root, 'song-data'),
+    )
   }
-  const zip = new JSZip(); zip.file('safe.json', '{}')
-  const bytes = await zip.generateAsync({ type: 'nodebuffer' }), archive = { bytes: bytes.length, sha256: sha256(bytes), unpackedBytes: 2, fileCount: 1 }, seen = new Set()
+  const zip = new JSZip()
+  zip.file('safe.json', '{}')
+  const bytes = await zip.generateAsync({ type: 'nodebuffer' }),
+    archive = { bytes: bytes.length, sha256: sha256(bytes), unpackedBytes: 2, fileCount: 1 },
+    seen = new Set()
   await extractArchive(bytes, archive, root, 'song-data', seen)
   await assert.rejects(extractArchive(bytes, archive, root, 'song-data', seen), /重复/)
 })
@@ -170,13 +217,22 @@ test('resource cache serializes different options and retries cleanly after a fa
   await assert.rejects(ensureResources({ dataRoot: f.dataRoot, config: f.config, env: {}, refresh: true }), /SHA-256/)
   await fs.writeFile(archive, original)
   assert.equal((await ensureResources({ dataRoot: f.dataRoot, config: f.config, env: {}, refresh: true })).manifest.version, '3.20.0-r2')
-  await assert.rejects(ensureResources({ dataRoot: f.dataRoot, config: { ...f.config, resourceVersion: '9.0.0' }, env: {} }), /未发布版本 9\.0\.0/)
+  await assert.rejects(
+    ensureResources({ dataRoot: f.dataRoot, config: { ...f.config, resourceVersion: '9.0.0' }, env: {} }),
+    /未发布版本 9\.0\.0/,
+  )
 })
 
 test('malformed metadata produces resource errors and rejects duplicate version pointers', async t => {
   const f = await fixture(t)
   const valid = JSON.parse(await fs.readFile(path.join(f.output, 'v/3.20.0/metadata.json'), 'utf8'))
-  for (const packages of [null, [], { 'song-data': {} }, { 'song-data': { archives: [null] } }, { 'song-data': valid.packages['song-data'], illustrations: null }]) {
+  for (const packages of [
+    null,
+    [],
+    { 'song-data': {} },
+    { 'song-data': { archives: [null] } },
+    { 'song-data': valid.packages['song-data'], illustrations: null },
+  ]) {
     assert.throws(() => validateManifest({ ...valid, packages }), ResourceError)
   }
   assert.throws(() => resourceOptions({ resourceBaseUrl: 'not a URL' }, {}), ResourceError)
@@ -187,14 +243,23 @@ test('malformed metadata produces resource errors and rejects duplicate version 
 
 test('interrupted and oversized HTTP responses produce bounded, actionable errors', async t => {
   const server = http.createServer((req, res) => {
-    if (req.url.startsWith('/large/')) { res.writeHead(200, { 'Content-Length': 3 * 1024 * 1024 }).end('tiny'); return }
+    if (req.url.startsWith('/large/')) {
+      res.writeHead(200, { 'Content-Length': 3 * 1024 * 1024 }).end('tiny')
+      return
+    }
     res.writeHead(200, { 'Content-Length': 100 })
     res.flushHeaders()
     res.write('{')
     setImmediate(() => res.destroy())
   })
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
-  t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections() }))
+  t.after(
+    () =>
+      new Promise(resolve => {
+        server.close(resolve)
+        server.closeAllConnections()
+      }),
+  )
   const base = `http://127.0.0.1:${server.address().port}/`
   await assert.rejects(listResourceVersions({ resourceBaseUrl: base }, {}), /资源请求失败或传输中断/)
   await assert.rejects(listResourceVersions({ resourceBaseUrl: `${base}large/` }, {}), /大小限制/)
@@ -221,12 +286,17 @@ test('publisher repacks downloaded metadata without duplicating or changing noti
   const installed = await ensureResources({ dataRoot: f.dataRoot, config: f.config, env: {} })
   const rebuilt = await f.build({ version: '3.20.0-r2', info: installed.infoPath })
   for (const kind of ['song-data']) {
-    const content = manifest => manifest.packages[kind].archives.map(({ sha256, bytes, unpackedBytes, fileCount }) => ({ sha256, bytes, unpackedBytes, fileCount }))
+    const content = manifest =>
+      manifest.packages[kind].archives.map(({ sha256, bytes, unpackedBytes, fileCount }) => ({ sha256, bytes, unpackedBytes, fileCount }))
     assert.deepEqual(content(rebuilt.manifest), content(initial.manifest), kind)
     const noticeNames = []
     for (const archive of rebuilt.manifest.packages[kind].archives) {
       const zip = await JSZip.loadAsync(await fs.readFile(path.join(f.output, archive.path)))
-      noticeNames.push(...Object.values(zip.files).filter(entry => !entry.dir && entry.name.startsWith('LICENSES/phi-plugin-openclaw/')).map(entry => entry.name))
+      noticeNames.push(
+        ...Object.values(zip.files)
+          .filter(entry => !entry.dir && entry.name.startsWith('LICENSES/phi-plugin-openclaw/'))
+          .map(entry => entry.name),
+      )
     }
     assert.equal(noticeNames.length, 3)
     assert.equal(new Set(noticeNames).size, 3)
@@ -237,7 +307,8 @@ test('publisher rejects changed and unknown reserved notices instead of silently
   const f = await fixture(t)
   const installed = await ensureResources({ dataRoot: f.dataRoot, config: f.config, env: {} })
   const noticeDir = path.join(installed.infoPath, 'LICENSES/phi-plugin-openclaw')
-  const notice = path.join(noticeDir, 'NOTICE.md'), original = await fs.readFile(notice)
+  const notice = path.join(noticeDir, 'NOTICE.md'),
+    original = await fs.readFile(notice)
   await fs.writeFile(notice, 'different attribution')
   await assert.rejects(f.build({ version: '3.20.0-r1', info: installed.infoPath }), /说明文件.*不一致.*不能覆盖/)
   assert.equal(await fs.readFile(notice, 'utf8'), 'different attribution')
@@ -250,12 +321,18 @@ test('publisher rejects changed and unknown reserved notices instead of silently
     await fs.unlink(file)
   }
   assert.equal(await fs.stat(path.join(f.output, 'v/3.20.0-r1')).catch(() => null), null)
-  assert.equal((await fs.readdir(f.output)).some(name => name.startsWith('.publish-')), false)
+  assert.equal(
+    (await fs.readdir(f.output)).some(name => name.startsWith('.publish-')),
+    false,
+  )
 })
 
 test('publisher rejects unsafe and case-colliding paths before committing a version', async t => {
   const f = await fixture(t)
-  for (const [name, expected] of [['bad:name.json', /不安全路径/], ['INFO.csv', /文件名重复/]]) {
+  for (const [name, expected] of [
+    ['bad:name.json', /不安全路径/],
+    ['INFO.csv', /文件名重复/],
+  ]) {
     await fs.writeFile(path.join(f.info, name), '{}')
     await assert.rejects(f.build({ version: '3.20.0-r1' }), expected)
     assert.equal(await fs.stat(path.join(f.output, 'v/3.20.0-r1')).catch(() => null), null)
@@ -275,13 +352,22 @@ test('publisher lock prevents lost index updates and permits retry without delet
   const failed = results.findIndex(result => result.status === 'rejected')
   assert.match(results[failed].reason.message, /已有发布任务/)
   await f.build({ version: versions[failed] })
-  assert.deepEqual((await listResourceVersions(f.config, {})).map(entry => entry.version), ['3.20.0-r2', '3.20.0-r1', '3.20.0'])
-  assert.equal((await fs.readdir(f.output)).some(name => name.startsWith('.publish-')), false)
+  assert.deepEqual(
+    (await listResourceVersions(f.config, {})).map(entry => entry.version),
+    ['3.20.0-r2', '3.20.0-r1', '3.20.0'],
+  )
+  assert.equal(
+    (await fs.readdir(f.output)).some(name => name.startsWith('.publish-')),
+    false,
+  )
 })
 
 test('resource CLI reports invalid flags and extra arguments without a stack trace', () => {
   for (const args of [['--unknown'], ['list', 'unexpected']]) {
-    const result = spawnSync(process.execPath, ['scripts/resources.mjs', ...args], { encoding: 'utf8', cwd: new URL('../', import.meta.url) })
+    const result = spawnSync(process.execPath, ['scripts/resources.mjs', ...args], {
+      encoding: 'utf8',
+      cwd: new URL('../', import.meta.url),
+    })
     assert.equal(result.status, 1)
     assert.doesNotMatch(result.stderr, /\n\s+at /)
     assert.equal(result.stdout, '')

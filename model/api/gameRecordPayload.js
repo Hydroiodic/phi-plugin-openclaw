@@ -11,13 +11,15 @@ export function buildGameRecordPayload(gameRecord) {
             const levelRecords = /** @type {({score: number, acc: number, fc: boolean | number} | null)[]} */ (records)
             return [
                 songId,
-                levelRecords.slice(0, Level.length).map(record => record
-                    ? {
-                        score: record.score,
-                        acc: record.acc,
-                        fc: Boolean(record.fc),
-                    }
-                    : null),
+                levelRecords.slice(0, Level.length).map(record =>
+                    record
+                        ? {
+                              score: record.score,
+                              acc: record.acc,
+                              fc: Boolean(record.fc),
+                          }
+                        : null,
+                ),
             ]
         }),
     )

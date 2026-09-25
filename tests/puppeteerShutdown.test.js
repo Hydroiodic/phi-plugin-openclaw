@@ -6,7 +6,9 @@ test('force shutdown kills the tracked browser and prevents relaunch', async () 
     const renderer = new Puppeteer({ idleTimeout: 0 }, 'shutdown-test')
     renderer.browserPid = 321
     let killedPid
-    renderer.killProcess = pid => { killedPid = pid }
+    renderer.killProcess = pid => {
+        killedPid = pid
+    }
 
     renderer.forceShutdown()
 

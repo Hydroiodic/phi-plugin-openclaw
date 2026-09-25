@@ -9,11 +9,13 @@ test('API capability switches are subordinate to the master switch', () => {
     const originalGetUserCfg = Config.getUserCfg
     let master = true
     let customTheme = true
-    Config.getUserCfg = /** @type {any} */ ((/** @type {string} */ _name, /** @type {string} */ key) => {
-        if (key === 'openPhiPluginApi') return master
-        if (key === 'enableCustomThemeApi') return customTheme
-        return true
-    })
+    Config.getUserCfg = /** @type {any} */ (
+        (/** @type {string} */ _name, /** @type {string} */ key) => {
+            if (key === 'openPhiPluginApi') return master
+            if (key === 'enableCustomThemeApi') return customTheme
+            return true
+        }
+    )
     try {
         assert.equal(isApiCapabilityConfigured('customTheme'), true)
         customTheme = false

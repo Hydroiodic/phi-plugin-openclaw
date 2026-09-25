@@ -67,25 +67,25 @@ QQ 平台若为不同场景分配不同 OpenID，需要分别绑定；插件不�
 
 ### 常用命令
 
-| 功能 | 示例 |
-| --- | --- |
-| 分类表格帮助（文本 / 图片） | `/phi` / `/phi help` |
-| B30、更多成绩 | `/b30`、`/b40`、`/phi b50` |
-| P30、FC、其他成绩列表 | `/p30`、`/fc30`、`/x30` |
-| 更新存档 / 解绑 | `/phi update` / `/unbind` |
-| 国际服 / 国服绑定 | `/gbbind qrcode` / `/cnbind qrcode`，也支持后接 sessionToken |
-| 单曲成绩 | `/score Rrhar'il` |
-| 推分建议 | `/suggest` |
-| 个人信息 / 成绩筛选 / 定数统计 | `/phi info`、`/phi list`、`/phi lvsco` |
-| 章节成绩 / 成就 / 历史 | `/phi chap`、`/phi achievement`、`/phi hisb30` |
-| 曲目信息 / 检索 / 曲绘 | `/song Credits`、`/phi search`、`/phi ill Credits` |
-| 定数表 / 计算 / 随机曲目 | `/phi table 15`、`/phi com`、`/phi rand` |
-| 本机绑定用户排行榜 | `/phi ranklist` |
-| 签到、任务、今日人品 | `/phi sign`、`/phi task`、`/phi jrrp` |
-| 群聊猜曲绘、提示猜曲、开字母 | `/phi guess`、`/phi tipgame`、`/phi ltr` |
-| 个人主题与统计展示 | `/phi myset` |
-| 多轮选择或游戏回答 | `@机器人 /phi reply 1`；也可按原提示回复 |
-| 管理员身份 / 项目说明 | `/phi identity` / `/phi license` |
+| 功能                           | 示例                                                         |
+| ------------------------------ | ------------------------------------------------------------ |
+| 分类表格帮助（文本 / 图片）    | `/phi` / `/phi help`                                         |
+| B30、更多成绩                  | `/b30`、`/b40`、`/phi b50`                                   |
+| P30、FC、其他成绩列表          | `/p30`、`/fc30`、`/x30`                                      |
+| 更新存档 / 解绑                | `/phi update` / `/unbind`                                    |
+| 国际服 / 国服绑定              | `/gbbind qrcode` / `/cnbind qrcode`，也支持后接 sessionToken |
+| 单曲成绩                       | `/score Rrhar'il`                                            |
+| 推分建议                       | `/suggest`                                                   |
+| 个人信息 / 成绩筛选 / 定数统计 | `/phi info`、`/phi list`、`/phi lvsco`                       |
+| 章节成绩 / 成就 / 历史         | `/phi chap`、`/phi achievement`、`/phi hisb30`               |
+| 曲目信息 / 检索 / 曲绘         | `/song Credits`、`/phi search`、`/phi ill Credits`           |
+| 定数表 / 计算 / 随机曲目       | `/phi table 15`、`/phi com`、`/phi rand`                     |
+| 本机绑定用户排行榜             | `/phi ranklist`                                              |
+| 签到、任务、今日人品           | `/phi sign`、`/phi task`、`/phi jrrp`                        |
+| 群聊猜曲绘、提示猜曲、开字母   | `/phi guess`、`/phi tipgame`、`/phi ltr`                     |
+| 个人主题与统计展示             | `/phi myset`                                                 |
+| 多轮选择或游戏回答             | `@机器人 /phi reply 1`；也可按原提示回复                     |
+| 管理员身份 / 项目说明          | `/phi identity` / `/phi license`                             |
 
 完整功能入口、别名、参数和权限见 [命令清单](docs/COMMANDS.md)。
 详细参数也可看 `/phi help`、`/phi tk help`、`/phi api help`。
@@ -121,10 +121,10 @@ QQ 官方 Bot 不保证支持撤回、私聊转发、合并转发或群文件等
 - **只在按用户隔离的私聊会话中可用。** 群聊和多人共用的会话里工具直接拒绝，存档内容不会进入别人能看到的对话。
   OpenClaw 默认 `session.dmScope` 为 `main`，所有私聊共用一个会话，此时工具会拒绝工作；需要改为按用户隔离：
 
-  ```bash
-  openclaw config set session.dmScope per-channel-peer   # 一个 channel 接多个 Bot 账号时用 per-account-channel-peer
-  openclaw gateway restart
-  ```
+    ```bash
+    openclaw config set session.dmScope per-channel-peer   # 一个 channel 接多个 Bot 账号时用 per-account-channel-peer
+    openclaw gateway restart
+    ```
 
 - **上传必须由本人确认。** 插件把修改清单和 6 位确认码直接发给用户，用户自己发送 `/phi 确认上传 <确认码>` 才会上传，
   `/phi 取消上传` 放弃；确认码 10 分钟内有效，助手无法代为确认。
@@ -141,38 +141,38 @@ QQ 官方 Bot 不保证支持撤回、私聊转发、合并转发或群文件等
 
 ```json
 {
-  "plugins": {
-    "entries": {
-      "phi-plugin-openclaw": {
-        "enabled": true,
-        "config": {
-          "channels": ["qqbot"],
-          "admins": [],
-          "enableApi": false,
-          "renderScale": 100,
-          "renderNum": 1,
-          "timeout": 20000
+    "plugins": {
+        "entries": {
+            "phi-plugin-openclaw": {
+                "enabled": true,
+                "config": {
+                    "channels": ["qqbot"],
+                    "admins": [],
+                    "enableApi": false,
+                    "renderScale": 100,
+                    "renderNum": 1,
+                    "timeout": 20000
+                }
+            }
         }
-      }
     }
-  }
 }
 ```
 
-| 配置 | 说明 |
-| --- | --- |
-| `channels` | 允许的 channel ID；未配置或空数组表示全部，QQ Bot 是 `qqbot` |
-| `admins` | 管理员身份列表，格式 `channel:accountId:senderId`，从 `/phi identity` 获取；普通命令授权不等于管理员权限 |
-| `enableApi` | 是否启用外部联合查分服务，默认 `false` |
-| `saveEditing` | 是否允许 AI 助手在私聊中读取、修改用户本人的云存档，默认 `true`；上传始终需要用户本人确认 |
-| `dataDir` | 可选，自定义持久数据目录；建议绝对路径 |
-| `resourceBaseUrl` | 自建资源仓库的根 HTTPS 地址，默认 `https://hydroiodic.site/phi-plugin-openclaw/resources/v1/` |
-| `resourceVersion` | `latest`（默认）或游戏版本，如 `3.20.0`；首次解析 latest 后缓存，手动更新 |
-| `downloadIllustrations` | 是否预下载完整共享曲绘库，默认 `false`；默认按需下载单张并校验缓存 |
-| `chromiumPath` | 可选，指定现有 Chrome/Chromium 可执行文件 |
-| `renderScale` | 图片比例 50–200，默认 100 |
-| `renderNum` | 同时渲染的浏览器数量 1–4，默认 1 |
-| `timeout` | 图片页面加载超时，毫秒，默认 20000 |
+| 配置                    | 说明                                                                                                     |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| `channels`              | 允许的 channel ID；未配置或空数组表示全部，QQ Bot 是 `qqbot`                                             |
+| `admins`                | 管理员身份列表，格式 `channel:accountId:senderId`，从 `/phi identity` 获取；普通命令授权不等于管理员权限 |
+| `enableApi`             | 是否启用外部联合查分服务，默认 `false`                                                                   |
+| `saveEditing`           | 是否允许 AI 助手在私聊中读取、修改用户本人的云存档，默认 `true`；上传始终需要用户本人确认                |
+| `dataDir`               | 可选，自定义持久数据目录；建议绝对路径                                                                   |
+| `resourceBaseUrl`       | 自建资源仓库的根 HTTPS 地址，默认 `https://hydroiodic.site/phi-plugin-openclaw/resources/v1/`            |
+| `resourceVersion`       | `latest`（默认）或游戏版本，如 `3.20.0`；首次解析 latest 后缓存，手动更新                                |
+| `downloadIllustrations` | 是否预下载完整共享曲绘库，默认 `false`；默认按需下载单张并校验缓存                                       |
+| `chromiumPath`          | 可选，指定现有 Chrome/Chromium 可执行文件                                                                |
+| `renderScale`           | 图片比例 50–200，默认 100                                                                                |
+| `renderNum`             | 同时渲染的浏览器数量 1–4，默认 1                                                                         |
+| `timeout`               | 图片页面加载超时，毫秒，默认 20000                                                                       |
 
 例如在 Linux 上使用本机 Chrome：
 

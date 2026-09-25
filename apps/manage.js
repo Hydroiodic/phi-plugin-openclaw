@@ -1,22 +1,37 @@
-import Config from '../components/Config.js';
-import send from '../model/render/send.js';
-import picmodle from '../model/render/picmodle.js';
-import getBackup from '../model/save/getBackup.js';
-import fs from 'node:fs';
-import { backupPath } from '../model/filesystem/path.js';
-import path from 'node:path';
-import fCompute from '../model/game/fCompute.js';
-import getRksRank from '../model/game/getRksRank.js';
-import getSave from '../model/save/getSave.js';
-import userCredentialStore from '../model/user/userCredentialStore.js';
-import { redisPath } from '../model/game/constNum.js';
-import phiPluginBase from '../components/baseClass.js';
-import logger from '../components/Logger.js';
-import { redis } from '../components/platform/index.js';
+import Config from '../components/Config.js'
+import send from '../model/render/send.js'
+import picmodle from '../model/render/picmodle.js'
+import getBackup from '../model/save/getBackup.js'
+import fs from 'node:fs'
+import { backupPath } from '../model/filesystem/path.js'
+import path from 'node:path'
+import fCompute from '../model/game/fCompute.js'
+import getRksRank from '../model/game/getRksRank.js'
+import getSave from '../model/save/getSave.js'
+import userCredentialStore from '../model/user/userCredentialStore.js'
+import { redisPath } from '../model/game/constNum.js'
+import phiPluginBase from '../components/baseClass.js'
+import logger from '../components/Logger.js'
+import { redis } from '../components/platform/index.js'
 
 /**@import {botEvent} from '../components/baseClass.js' */
 
-const banSetting = ["help", "bind", "b19", "wb19", "song", "ranklist", "fnc", "tipgame", "guessgame", "ltrgame", "sign", "setting", "dan", "apiSetting"]
+const banSetting = [
+    'help',
+    'bind',
+    'b19',
+    'wb19',
+    'song',
+    'ranklist',
+    'fnc',
+    'tipgame',
+    'guessgame',
+    'ltrgame',
+    'sign',
+    'setting',
+    'dan',
+    'apiSetting',
+]
 
 /** @param {botEvent} e */
 const restoreKey = e => JSON.stringify([e.user_id, e.chatId || e.group_id || 'private'])
@@ -31,46 +46,46 @@ export class phiset extends phiPluginBase {
             rule: [
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})\\s*repu$`,
-                    fnc: 'restartpu'
+                    fnc: 'restartpu',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})\\s*backup(\\s*back)?$`,
-                    fnc: 'backup'
+                    fnc: 'backup',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})\\s*restore$`,
-                    fnc: 'restore'
+                    fnc: 'restore',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})\\s*get .*$`,
-                    fnc: 'get'
+                    fnc: 'get',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})\\s*del .*$`,
-                    fnc: 'del'
+                    fnc: 'del',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})\\s*allow .*$`,
-                    fnc: 'allow'
+                    fnc: 'allow',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})\\s*ban .*$`,
-                    fnc: 'ban'
+                    fnc: 'ban',
                 },
                 {
                     reg: `^[#/](${Config.getUserCfg('config', 'cmdhead')})\\s*unban .*$`,
-                    fnc: 'unban'
-                }
-            ]
+                    fnc: 'unban',
+                },
+            ],
         })
         /** @type {Map<string, {files:string[],expiresAt:number}>} */
         this.restoreChoices = new Map()
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async restartpu(e) {
         if (!e.isMaster) {
@@ -86,9 +101,9 @@ export class phiset extends phiPluginBase {
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async backup(e) {
         if (!e.isMaster) {
@@ -106,9 +121,9 @@ export class phiset extends phiPluginBase {
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     restore(e) {
         if (!e.isMaster) {
@@ -118,8 +133,13 @@ export class phiset extends phiPluginBase {
             for (const [key, choice] of this.restoreChoices) {
                 if (choice.expiresAt <= Date.now()) this.restoreChoices.delete(key)
             }
-            const files = fs.existsSync(backupPath) ? fs.readdirSync(backupPath, { withFileTypes: true })
-                .filter(entry => entry.isFile() && /\.zip$/i.test(entry.name)).map(entry => entry.name).sort() : []
+            const files = fs.existsSync(backupPath)
+                ? fs
+                      .readdirSync(backupPath, { withFileTypes: true })
+                      .filter(entry => entry.isFile() && /\.zip$/i.test(entry.name))
+                      .map(entry => entry.name)
+                      .sort()
+                : []
             if (!files.length) {
                 send.send_with_At(e, '暂无可恢复的 ZIP 备份，请先执行 backup。')
                 return true
@@ -131,7 +151,6 @@ export class phiset extends phiPluginBase {
             logger.error(err)
             send.send_with_At(e, '无法读取备份目录，请检查目录权限。')
         }
-
     }
 
     async doRestore() {
@@ -166,9 +185,9 @@ export class phiset extends phiPluginBase {
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async get(e) {
         if (!e.isMaster) {
@@ -184,9 +203,9 @@ export class phiset extends phiPluginBase {
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async del(e) {
         if (!e.isMaster) {
@@ -198,16 +217,16 @@ export class phiset extends phiPluginBase {
             return false
         }
         /**@type {phigrosToken} */
-        const sessionToken = /** @type {any} */ (msg);
+        const sessionToken = /** @type {any} */ (msg)
         await getSave.deleteSaveBySessionToken(sessionToken)
         await userCredentialStore.banSessionToken(sessionToken)
         send.send_with_At(e, '成功')
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async allow(e) {
         if (!e.isMaster) {
@@ -219,15 +238,15 @@ export class phiset extends phiPluginBase {
             return false
         }
         /**@type {phigrosToken} */
-        const sessionToken = /** @type {any} */ (msg);
+        const sessionToken = /** @type {any} */ (msg)
         await userCredentialStore.allowSessionToken(sessionToken)
         send.send_with_At(e, '成功')
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async ban(e) {
         if (!fCompute.is_admin(e) && !e.isMaster) {
@@ -238,12 +257,12 @@ export class phiset extends phiPluginBase {
             return false
         }
 
-        const msg = e.msg.replace(/^.*ban\s*/, '');
+        const msg = e.msg.replace(/^.*ban\s*/, '')
         switch (msg) {
             case 'all': {
                 for (const i in banSetting) {
                     // @ts-ignore
-                    await redis.set(`${redisPath}:banGroup:${e.group_id}:${banSetting[i]}`, 1);
+                    await redis.set(`${redisPath}:banGroup:${e.group_id}:${banSetting[i]}`, 1)
                 }
                 break
             }
@@ -251,23 +270,28 @@ export class phiset extends phiPluginBase {
                 for (const i in banSetting) {
                     if (banSetting[i] == msg) {
                         // @ts-ignore
-                        await redis.set(`${redisPath}:banGroup:${e.group_id}:${banSetting[i]}`, 1);
+                        await redis.set(`${redisPath}:banGroup:${e.group_id}:${banSetting[i]}`, 1)
                         break
                     }
                 }
                 break
             }
         }
-        send.send_with_At(e, `当前: ${e.group_id}\n已禁用:\n${(
-            // @ts-ignore
-            await redis.keys(`${redisPath}:banGroup:${e.group_id}:*`)
-        ).join('\n').replace(new RegExp(`${redisPath}:banGroup:${e.group_id}:`, 'g'), '')}`)
+        send.send_with_At(
+            e,
+            `当前: ${e.group_id}\n已禁用:\n${
+                // @ts-ignore
+                (await redis.keys(`${redisPath}:banGroup:${e.group_id}:*`))
+                    .join('\n')
+                    .replace(new RegExp(`${redisPath}:banGroup:${e.group_id}:`, 'g'), '')
+            }`,
+        )
     }
 
     /**
-     * 
-     * @param {botEvent} e 
-     * @returns 
+     *
+     * @param {botEvent} e
+     * @returns
      */
     async unban(e) {
         if (!e.isAdmin && !e.isMaster) {
@@ -277,12 +301,12 @@ export class phiset extends phiPluginBase {
             send.send_with_At(e, '请在群聊中使用呐！')
             return false
         }
-        const msg = e.msg.replace(/^.*unban\s*/, '');
+        const msg = e.msg.replace(/^.*unban\s*/, '')
         switch (msg) {
             case 'all': {
                 for (const i in banSetting) {
                     // @ts-ignore
-                    await redis.del(`${redisPath}:banGroup:${e.group_id}:${banSetting[i]}`);
+                    await redis.del(`${redisPath}:banGroup:${e.group_id}:${banSetting[i]}`)
                 }
                 break
             }
@@ -290,16 +314,21 @@ export class phiset extends phiPluginBase {
                 for (const i in banSetting) {
                     if (banSetting[i] == msg) {
                         // @ts-ignore
-                        await redis.del(`${redisPath}:banGroup:${e.group_id}:${banSetting[i]}`);
+                        await redis.del(`${redisPath}:banGroup:${e.group_id}:${banSetting[i]}`)
                         break
                     }
                 }
                 break
             }
         }
-        send.send_with_At(e, `当前: ${e.group_id}\n已禁用:\n${(
-            // @ts-ignore
-            await redis.keys(`${redisPath}:banGroup:${e.group_id}:*`)
-        ).join('\n').replace(new RegExp(`${redisPath}:banGroup:${e.group_id}:`, 'g'), '')}`)
+        send.send_with_At(
+            e,
+            `当前: ${e.group_id}\n已禁用:\n${
+                // @ts-ignore
+                (await redis.keys(`${redisPath}:banGroup:${e.group_id}:*`))
+                    .join('\n')
+                    .replace(new RegExp(`${redisPath}:banGroup:${e.group_id}:`, 'g'), '')
+            }`,
+        )
     }
 }

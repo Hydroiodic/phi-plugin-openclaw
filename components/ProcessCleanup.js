@@ -25,7 +25,7 @@ export class ProcessCleanupManager {
         this.exitHandler = () => {
             try {
                 this.emergencyCleanup()
-            } catch { }
+            } catch {}
         }
     }
 
@@ -38,7 +38,9 @@ export class ProcessCleanupManager {
         this.cleanup = cleanup
         this.emergencyCleanup = emergencyCleanup
         if (this.installed && oldCleanup !== cleanup) {
-            void Promise.resolve().then(() => oldCleanup()).catch(() => {})
+            void Promise.resolve()
+                .then(() => oldCleanup())
+                .catch(() => {})
         }
         if (!this.installed) this.install()
     }
@@ -50,7 +52,9 @@ export class ProcessCleanupManager {
         const signals = ['SIGHUP', 'SIGINT', 'SIGTERM']
         if (process.platform === 'win32') signals.push('SIGBREAK')
         for (const signal of signals) {
-            const handler = () => { void this.handleSignal(signal, handler) }
+            const handler = () => {
+                void this.handleSignal(signal, handler)
+            }
             this.signalHandlers[signal] = handler
             this.target.on(signal, handler)
         }
@@ -68,7 +72,9 @@ export class ProcessCleanupManager {
         try {
             await Promise.race([
                 Promise.resolve().then(() => this.cleanup()),
-                new Promise(resolve => { timeoutId = setTimeout(resolve, this.timeout) }),
+                new Promise(resolve => {
+                    timeoutId = setTimeout(resolve, this.timeout)
+                }),
             ])
         } catch {
             // The synchronous fallback below still runs when graceful cleanup fails.
@@ -76,7 +82,7 @@ export class ProcessCleanupManager {
             if (timeoutId) clearTimeout(timeoutId)
             try {
                 this.emergencyCleanup()
-            } catch { }
+            } catch {}
         }
 
         if (!shouldRelaySignal) {
@@ -104,9 +110,7 @@ export class ProcessCleanupManager {
     }
 }
 
-const processCleanupManager = /** @type {ProcessCleanupManager} */ (
-    globalStore[cleanupManagerSymbol] ||= new ProcessCleanupManager()
-)
+const processCleanupManager = /** @type {ProcessCleanupManager} */ (globalStore[cleanupManagerSymbol] ||= new ProcessCleanupManager())
 
 /**
  * @param {() => Promise<unknown>} cleanup

@@ -28,8 +28,24 @@ const MAX_COMPRESSION_RATIO = 200
 const RESERVED_IDS = new Set(['default', 'snow', 'star', 'dss2', 'topText', 'foolsDay'])
 const TEXT_EXTENSIONS = new Set(['.art', '.css', '.json', '.md', '.txt', '.yaml'])
 const ALLOWED_EXTENSIONS = new Set([
-    '.art', '.avif', '.css', '.docx', '.gif', '.jpeg', '.jpg', '.json', '.md', '.otf', '.pdf', '.png',
-    '.ttf', '.txt', '.webp', '.woff', '.woff2', '.yaml',
+    '.art',
+    '.avif',
+    '.css',
+    '.docx',
+    '.gif',
+    '.jpeg',
+    '.jpg',
+    '.json',
+    '.md',
+    '.otf',
+    '.pdf',
+    '.png',
+    '.ttf',
+    '.txt',
+    '.webp',
+    '.woff',
+    '.woff2',
+    '.yaml',
 ])
 const WINDOWS_RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i
 
@@ -285,8 +301,12 @@ export async function isMarketThemeCached(themeId, download) {
         if (!stat.isDirectory() || stat.isSymbolicLink()) return false
         const info = YAML.parse(await fs.promises.readFile(path.join(target, 'info.yaml'), 'utf8'))
         const receipt = await readMarketReceipt(path.join(target, '.phi-market.json'))
-        return info?.id === themeId && receipt?.slug === themeId
-            && receipt?.version === download.version && receipt?.sha256 === download.sha256
+        return (
+            info?.id === themeId &&
+            receipt?.slug === themeId &&
+            receipt?.version === download.version &&
+            receipt?.sha256 === download.sha256
+        )
     } catch {
         return false
     }
@@ -343,7 +363,9 @@ async function installMarketArchiveUnlocked(themeId, download, zipPath) {
                 version: download.version,
             }
             await fs.promises.writeFile(path.join(stage, '.phi-market.json'), `${JSON.stringify(receipt, null, 2)}\n`, {
-                encoding: 'utf8', mode: 0o600, flag: 'wx',
+                encoding: 'utf8',
+                mode: 0o600,
+                flag: 'wx',
             })
             await assertMarketInstallQuota(themeId, stage)
             if (existing) {

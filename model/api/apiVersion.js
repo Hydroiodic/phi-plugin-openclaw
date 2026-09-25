@@ -38,11 +38,12 @@ export function compareApiVersion(apiVersion, supportedVersion = SUPPORTED_API_V
             supportedVersion,
         }
     }
-    const status = actual.major !== supported.major
-        ? 'major_mismatch'
-        : actual.minor !== supported.minor || actual.patch !== supported.patch
-            ? 'minor_mismatch'
-            : 'compatible'
+    const status =
+        actual.major !== supported.major
+            ? 'major_mismatch'
+            : actual.minor !== supported.minor || actual.patch !== supported.patch
+              ? 'minor_mismatch'
+              : 'compatible'
     return {
         status,
         apiVersion: actual.normalized,

@@ -33,10 +33,12 @@ test('clearApiData requires confirmation and authenticates deletion with SSTK', 
     UserCredentials.prototype.getSessionToken = /** @type {any} */ (async () => 'sstk-value')
     UserCredentials.prototype.deleteApiCachedSave = async () => true
     makeRequestFnc.makePlatform = /** @type {any} */ (() => ({ platform: 'test', platform_id: 'test-user', _local_user_id: 'test-user' }))
-    UserCredentials.prototype.deleteApiAccount = /** @type {any} */ (async function () {
-        clearRequests.push({ ...(await this.platformParams()), token: await this.getSessionToken() })
-        return { message: 'ok' }
-    })
+    UserCredentials.prototype.deleteApiAccount = /** @type {any} */ (
+        async function () {
+            clearRequests.push({ ...(await this.platformParams()), token: await this.getSessionToken() })
+            return { message: 'ok' }
+        }
+    )
     send.send_with_At = /** @type {any} */ ((/** @type {any} */ _e, /** @type {any} */ message) => messages.push(message))
 
     try {
@@ -52,12 +54,14 @@ test('clearApiData requires confirmation and authenticates deletion with SSTK', 
 
         command.e = /** @type {any} */ (event('确认'))
         assert.equal(await command.confirmClearApiData(), true)
-        assert.deepEqual(clearRequests, [{
-            platform: 'test',
-            platform_id: 'test-user',
-            _local_user_id: 'test-user',
-            token: 'sstk-value',
-        }])
+        assert.deepEqual(clearRequests, [
+            {
+                platform: 'test',
+                platform_id: 'test-user',
+                _local_user_id: 'test-user',
+                token: 'sstk-value',
+            },
+        ])
         assert.equal(finished[0][0], 'confirmClearApiData')
         assert.match(messages.at(-1), /账号已注销/)
     } finally {
@@ -75,10 +79,12 @@ test('clearApiData cancellation does not call the API', async () => {
     const originalDeleteAccount = UserCredentials.prototype.deleteApiAccount
     let requested = false
 
-    UserCredentials.prototype.deleteApiAccount = /** @type {any} */ (async () => {
-        requested = true
-        return null
-    })
+    UserCredentials.prototype.deleteApiAccount = /** @type {any} */ (
+        async () => {
+            requested = true
+            return null
+        }
+    )
     send.send_with_At = /** @type {any} */ (async () => undefined)
 
     try {
