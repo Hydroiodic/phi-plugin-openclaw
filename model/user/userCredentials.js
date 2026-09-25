@@ -375,7 +375,7 @@ export class UserCredentials {
      * 获取当前用户的本地禁用状态。
      * @returns {Promise<boolean | null>} 禁用状态；请求失败或被忽略时返回 `null`
      */
-    async getUserLoaclBanStatus() {
+    async getUserLocalBanStatus() {
         return await userCredentialStore.isSessionTokenBanned(await this.getSessionToken())
     }
 
@@ -619,7 +619,7 @@ export class UserCredentials {
             this.endpointOptions(options),
         )
         if (!cloudSave) return null
-        let result = new Save(cloudSave)
+        const result = new Save(cloudSave)
         await result.init()
         return result
     }

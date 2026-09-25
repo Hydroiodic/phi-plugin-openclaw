@@ -1,7 +1,6 @@
-import Config from '../../components/Config.js'
 import logger from '../../components/Logger.js'
 import Version from '../../components/Version.js'
-import PhigrosUser from '../../lib/PhigrosUser.js'
+/** @import PhigrosUser from '../../lib/PhigrosUser.js' */
 import { canUseApi } from '../user/apiPermission.js'
 import { Level, LevelNum, MAX_DIFFICULTY } from '../game/constNum.js'
 import fCompute from '../game/fCompute.js'
@@ -71,10 +70,6 @@ export default class Save {
             money: [0, 0, 0, 0, 0]
         }
         this.gameuser = {
-            /**user */
-            name: data.gameuser?.name || '',
-            /**版本 */
-            version: data.gameuser?.version || '',
             /**是否展示Id */
             showPlayerId: data.gameuser?.showPlayerId || false,
             /**简介 */
@@ -86,8 +81,8 @@ export default class Save {
         }
         if (checkIg(this)) {
             getRksRank.delUserRks(this.session)
-            logger.error(`封禁tk ${this.session}`)
-            throw new Error(`您的存档rks异常，该 token 已禁用，如有异议请联系机器人管理员。\n${this.session}`)
+            logger.error('存档 rks 异常，已禁用该 token。')
+            throw new Error('您的存档rks异常，该 token 已禁用，如有异议请联系机器人管理员。')
         }
         /**
          * @type {Record<idString, (LevelRecordInfo|null)[]>}
@@ -99,8 +94,8 @@ export default class Save {
 
         for (const id of idList) {
             this.gameRecord[id] = []
-            for (let i in data.gameRecord[id]) {
-                let level = Number(i)
+            for (const i in data.gameRecord[id]) {
+                const level = Number(i)
                 if (!data.gameRecord[id][level]) {
                     this.gameRecord[id][level] = null
                     continue
@@ -113,14 +108,14 @@ export default class Save {
                         if (id == "Starduster.Quree.0" && level == 0 && data.gameRecord[id][level].acc <= 102.57 && data.gameRecord[id][level].acc >= 0) {
                             continue
                         }
-                        logger.error(`acc > 100 封禁tk ${this.session}`)
+                        logger.error('存档 acc 异常，已禁用该 token。')
                         getRksRank.delUserRks(this.session)
-                        throw new Error(`您的存档 acc 异常，该 token 已禁用，如有异议请联系机器人管理员。\n${this.session}\n${id} ${level} ${data.gameRecord[id][level].acc}`)
+                        throw new Error(`您的存档 acc 异常，该 token 已禁用，如有异议请联系机器人管理员。\n${id} ${level} ${data.gameRecord[id][level].acc}`)
                     }
                     if (data.gameRecord[id][level].score > 1000000 || data.gameRecord[id][level].score < 0) {
-                        logger.error(`score > 1000000 封禁tk ${this.session}`)
+                        logger.error('存档 score 异常，已禁用该 token。')
                         getRksRank.delUserRks(this.session)
-                        throw new Error(`您的存档 score 异常，该 token 已禁用，如有异议请联系机器人管理员。\n${this.session}\n${id} ${level} ${data.gameRecord[id][level].score}`)
+                        throw new Error(`您的存档 score 异常，该 token 已禁用，如有异议请联系机器人管理员。\n${id} ${level} ${data.gameRecord[id][level].score}`)
                     }
                 }
                 this.gameRecord[id][level] = new LevelRecordInfo(data.gameRecord[id][level], id, level)
@@ -129,19 +124,11 @@ export default class Save {
     }
 
     async init() {
-        // for (let id in this.gameRecord) {
-        //     for (let i in this.gameRecord[id]) {
-        //         let level = Number(i)
-        //         if (!this.gameRecord[id][level]) {
-        //             continue
-        //         }
-        //     }
-        // }
     }
 
     checkNoInfo() {
         /**@type {idString[]} */
-        let err = []
+        const err = []
 
         /**@type {idString[]} */
         const ids = /**@type {any} */(Object.keys(this.gameRecord))
@@ -165,12 +152,12 @@ export default class Save {
         /**
          * @type {LevelRecordInfo[]}
          */
-        let sortedRecord = []
+        const sortedRecord = []
         const ids = fCompute.objectKeys(this.gameRecord)
-        for (let id of ids) {
+        for (const id of ids) {
             this.gameRecord[id].forEach((recording, level) => {
                 if (level == 4) return; // LEGACY
-                let tem = this.gameRecord[id][level]
+                const tem = this.gameRecord[id][level]
                 if (!tem?.score) return;
                 sortedRecord.push(tem)
             })
@@ -191,13 +178,13 @@ export default class Save {
         /**
          * @type {LevelRecordInfo[]}
          */
-        let record = []
+        const record = []
         const ids = fCompute.objectKeys(this.gameRecord)
         for (const id of ids) {
             if (!this.gameRecord[id]) continue;
-            for (let level of [0, 1, 2, 3]) {
+            for (const level of [0, 1, 2, 3]) {
                 /**LEGACY */
-                let tem = this.gameRecord[id]?.[level]
+                const tem = this.gameRecord[id]?.[level]
                 if (!tem) continue
                 if (tem.acc >= acc) {
                     record.push(tem)
@@ -218,7 +205,7 @@ export default class Save {
     /**计算rks+0.01的最低所需要提升的rks */
     minUpRks() {
         /**考虑屁股肉四舍五入原则 */
-        let minuprks = Math.floor(this.saveInfo.summary.rankingScore * 100) / 100 + 0.005 - this.saveInfo.summary.rankingScore
+        const minuprks = Math.floor(this.saveInfo.summary.rankingScore * 100) / 100 + 0.005 - this.saveInfo.summary.rankingScore
         return minuprks < 0 ? minuprks + 0.01 : minuprks
     }
 
@@ -228,16 +215,13 @@ export default class Save {
         const ids = fCompute.objectKeys(this.gameRecord)
         for (const id of ids) {
             if (!this.gameRecord[id]) continue;
-            for (let level of [0, 1, 2, 3]) {
+            for (const level of [0, 1, 2, 3]) {
 
-                let score = this.gameRecord[id][level]
+                const score = this.gameRecord[id][level]
                 if (!score) continue;
                 if (score.acc > 100 || score.acc < 0 || score.score > 1000000 || score.score < 0) {
                     error += `\n${id} ${Level[level]} ${score.fc} ${score.acc} ${score.score} 非法的成绩`
                 }
-                // if (!score.fc && (score.score >= 1000000 || score.acc >= 100)) {
-                //     error += `\n${i} ${Level[j]} ${score.fc} ${score.acc} ${score.score} 不符合预期的值`
-                // }
                 if ((score.score >= 1000000 && score.acc < 100) || (score.score < 1000000 && score.acc >= 100)) {
                     error += `\n${id} ${Level[level]} ${score.fc} ${score.acc} ${score.score} 成绩不自洽`
                 }
@@ -273,7 +257,7 @@ export default class Save {
         /**计算得到的rks，仅作为测试使用 */
         let sum_rks = 0
         /**满分且 rks 最高的成绩数组 */
-        let philist = this.findAccRecord(100);
+        const philist = this.findAccRecord(100);
 
         for (let i = 0, j = 0; i < philist.length; ++i) {
             if (philist[i].rks < philist[j].rks) {
@@ -308,10 +292,9 @@ export default class Save {
         /**
          * @type {((LevelRecordInfo & Partial<otherLevelRecordInfo>) | undefined)[]}
          */
-        let phi = [];
+        const phi = [];
 
 
-        // console.info(phi)
         /**处理数据 */
         const phiNum = Math.max((option.allPhi ? philist.length : 3), 3)
         for (let i = 0; i < phiNum; ++i) {
@@ -335,9 +318,9 @@ export default class Save {
          * 所有成绩
          * @type {(LevelRecordInfo & Partial<otherLevelRecordInfo>)[]}
          */
-        let rkslist = this.getRecord()
+        const rkslist = this.getRecord()
         /**真实 rks */
-        let userrks = this.saveInfo.summary.rankingScore
+        const userrks = this.saveInfo.summary.rankingScore
         /**考虑屁股肉四舍五入原则的最小上升rks */
         let minuprks = Math.floor(userrks * 100) / 100 + 0.005 - userrks
         if (minuprks < 0) {
@@ -350,7 +333,7 @@ export default class Save {
         const b19Dual = []
 
         /**bestN 列表 */
-        let b19_list = []
+        const b19_list = []
         for (let i = 0; i < num && i < rkslist.length; ++i) {
             /**计算rks */
             if (i < 27) sum_rks += Number(rkslist[i].rks)
@@ -391,7 +374,7 @@ export default class Save {
             b19Dual.push({ songId: rkslist[i].id, rank: /**@type {levelKind} */(rkslist[i].rank), acc: rkslist[i].acc })
         }
 
-        let com_rks = sum_rks / 30
+        const com_rks = sum_rks / 30
 
         if (option.avgType !== 'none' && await canUseApi(e, 'scoreStatistics') !== false) {
             try {
@@ -549,11 +532,11 @@ export default class Save {
      * @param {boolean} [withPhi=true] 是否包含 phi 
      */
     async getBestWithLimit(num, limit, withPhi = true) {
-        let getInfo = (await import('../game/getInfo.js')).default
+        const getInfo = (await import('../game/getInfo.js')).default
         /**计算得到的rks，仅作为测试使用 */
         let sum_rks = 0
         /**满分且 rks 最高的成绩数组 */
-        let philist = this.findAccRecord(100)
+        const philist = this.findAccRecord(100)
 
         /**处理条件 */
         for (let i = 0; i < philist.length; ++i) {
@@ -594,9 +577,9 @@ export default class Save {
          * 所有成绩
          * @type {(LevelRecordInfo & {suggestType?: number, suggest?: string, num?: number|string})[]}
          */
-        let rkslist = this.getRecord()
+        const rkslist = this.getRecord()
         /**真实 rks */
-        let userrks = this.saveInfo.summary.rankingScore
+        const userrks = this.saveInfo.summary.rankingScore
         /**考虑屁股肉四舍五入原则的最小上升rks */
         let minuprks = Math.floor(userrks * 100) / 100 + 0.005 - userrks
         if (minuprks < 0) {
@@ -612,7 +595,7 @@ export default class Save {
         }
 
         /**bestN 列表 */
-        let b19_list = []
+        const b19_list = []
         for (let i = 0; i < num && i < rkslist.length; ++i) {
             const x = rkslist[i];
             if (!x?.rks) continue;
@@ -635,7 +618,7 @@ export default class Save {
             b19_list.push(x)
         }
 
-        let com_rks = sum_rks / 30
+        const com_rks = sum_rks / 30
         return { phi, b19_list, com_rks }
 
     }
@@ -666,17 +649,12 @@ export default class Save {
      */
     getSuggest(id, lv, count, difficulty) {
         if (this.b19_rks === undefined || this.b0_rks === undefined) {
-            let record = this.getRecord()
+            const record = this.getRecord()
             this.b19_rks = record.length > 26 ? record[26].rks : 0
             this.b0_rks = this.findAccRecord(100, true)[0]?.rks
         }
-        // console.info(this.b19_rks, this.gameRecord[id][lv]?.rks ? this.gameRecord[id][lv].rks : 0, this.gameRecord[id])
-        let suggest = 0
-        if (!this.gameRecord[id] || !this.gameRecord[id][lv] || !this.gameRecord[id][lv].rks) {
-            suggest = fCompute.suggest(Math.max(this.b19_rks, 0) + this.minUpRks() * 30, difficulty)
-        } else {
-            suggest = fCompute.suggest(Math.max(this.b19_rks, this.gameRecord[id][lv].rks) + this.minUpRks() * 30, difficulty)
-        }
+        const currentRks = this.gameRecord[id]?.[lv]?.rks || 0
+        let suggest = fCompute.suggest(Math.max(this.b19_rks, currentRks) + this.minUpRks() * 30, difficulty)
 
         if (suggest == -1 && difficulty > this.b0_rks + this.minUpRks() * 30) {
             suggest = 100
@@ -715,12 +693,12 @@ export default class Save {
      */
     async getStats() {
         /**'EZ', 'HD', 'IN', 'AT' */
-        let tot = [0, 0, 0, 0]
+        const tot = [0, 0, 0, 0]
 
         const Record = this.gameRecord
         const Level = getInfo.allLevel
 
-        let stats_ = {
+        const stats_ = {
             title: '',
             Rating: '',
             unlock: 0,
@@ -734,12 +712,12 @@ export default class Save {
             lowest: 18,
         }
 
-        let stats = [{ ...stats_ }, { ...stats_ }, { ...stats_ }, { ...stats_ }]
+        const stats = [{ ...stats_ }, { ...stats_ }, { ...stats_ }, { ...stats_ }]
 
         const idsFromRecord = fCompute.objectKeys(Record)
         const idsFromInfo = fCompute.objectKeys(getInfo.ori_info)
-        for (let id of idsFromInfo) {
-            let info = getInfo.ori_info[id]
+        for (const id of idsFromInfo) {
+            const info = getInfo.ori_info[id]
             if (!info?.chart) continue
             if (info.chart['AT'] && Number(info.chart['AT'].difficulty)) {
                 ++tot[3]
@@ -767,12 +745,12 @@ export default class Save {
         stats[3].tot = tot[3]
         stats[3].title = Level[3]
 
-        for (let id of idsFromRecord) {
+        for (const id of idsFromRecord) {
             // 记录数组会为 Legacy 槽位保留下标 3 的 null 占位，必须以当前曲库谱面为准。
             const info = getInfo.ori_info[id]
             if (!info?.chart) continue
-            let record = Record[id]
-            for (let lv of [0, 1, 2, 3]) {
+            const record = Record[id]
+            for (const lv of [0, 1, 2, 3]) {
                 const chart = info.chart[Level[lv]]
                 if (!chart || !Number(chart.difficulty)) continue
                 if (record.length <= lv || record[lv] === undefined) continue
@@ -800,7 +778,7 @@ export default class Save {
             }
         }
 
-        for (let lv of [0, 1, 2, 3]) {
+        for (const lv of [0, 1, 2, 3]) {
             stats[lv].Rating = fCompute.rate(stats[lv].real_score, stats[lv].fc == stats[lv].unlock, stats[lv].tot_score)
             if (stats[lv].lowest == 18) {
                 stats[lv].lowest = 0
@@ -844,11 +822,9 @@ export default class Save {
         const ids = fCompute.objectKeys(record1)
         const ids2 = fCompute.objectKeys(record2)
         if (ids.length != ids2.length) return false
-        for (let id of ids) {
+        for (const id of ids) {
             if (!record2[id]) return false
-            const levels = record1[id]?.length
-            const levels2 = record1[id]?.length
-            if (levels != levels2) return false
+            const levels = Math.max(record1[id]?.length || 0, record2[id].length)
             for (let level = 0; level < levels; level++) {
                 const r1 = record1[id][level]
                 const r2 = record2[id][level]
@@ -883,8 +859,8 @@ export default class Save {
  * @returns 
  */
 function checkLimit(record, limit) {
-    for (let i in limit) {
-        let l = limit[i]
+    for (const i in limit) {
+        const l = limit[i]
         switch (l.type) {
             case 'acc':
                 if (record.acc < l.value[0] || record.acc > l.value[1]) return false
@@ -937,8 +913,8 @@ function buildGameRecord(data, ver) {
 
     for (const id of idList) {
         gameRecord[id] = []
-        for (let i in data[id]) {
-            let level = Number(i)
+        for (const i in data[id]) {
+            const level = Number(i)
             if (!data[id][level]) {
                 gameRecord[id][level] = null
                 continue

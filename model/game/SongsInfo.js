@@ -1,5 +1,5 @@
 import getInfo from "./getInfo.js"
-import Chart from "./Chart.js"
+/** @import Chart from "./Chart.js" */
 
 export default class SongsInfo {
     /**

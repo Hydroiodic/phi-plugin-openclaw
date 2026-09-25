@@ -58,7 +58,7 @@ export default new class pic {
      */
     getimg(img, style = 'png') {
         // name = 'phi'
-        let url = `${imgPath}/${img}.${style}`
+        const url = `${imgPath}/${img}.${style}`
         if (url) {
             return segment.image(url)
         }

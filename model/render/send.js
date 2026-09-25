@@ -1,6 +1,6 @@
 import Config from '../../components/Config.js'
 import { UserCredentials } from '../user/userCredentials.js';
-import Save from "../save/Save.js";
+/** @import Save from "../save/Save.js" */
 import logger from "../../components/Logger.js";
 import { canUseApi } from '../user/apiPermission.js';
 import platform from "../../components/platform/index.js";
@@ -40,13 +40,12 @@ class send {
      */
     static async getsave_result(e, ver = undefined, send = true) {
 
-        let user_save = null
         const credentials = UserCredentials.fromEvent(e)
-        let sessionToken = await credentials.getSessionToken()
+        const sessionToken = await credentials.getSessionToken()
         const allowApi = await canUseApi(e)
         if (allowApi) {
             try {
-                user_save = await credentials.getUpdatedSaveFromApi()
+                const user_save = await credentials.getUpdatedSaveFromApi()
                 if (user_save) return user_save.save
             } catch (/**@type {any} */ err) {
                 logger.warn(`[phi-plugin] getUpdatedSaveFromApi `, err)
@@ -60,7 +59,7 @@ class send {
             return false
         }
 
-        user_save = (await credentials.getUpdatedSaveFromLocal(sessionToken))?.save
+        const user_save = (await credentials.getUpdatedSaveFromLocal(sessionToken))?.save
 
 
         if (!user_save || (ver && (!user_save.Recordver || user_save.Recordver < ver))) {

@@ -40,9 +40,9 @@ export default class ScoreHistory {
      * @returns {extendedScoreHistoryDetail} 扩展后的成绩信息
      */
     static extend(songId, level, now, old = undefined) {
-        let song = getInfo.idgetsong(songId) || songId
-        let nowAcc = Number(now[0])
-        let oldAcc = old ? Number(old[0]) : undefined
+        const song = getInfo.idgetsong(songId) || songId
+        const nowAcc = Number(now[0])
+        const oldAcc = old ? Number(old[0]) : undefined
         const info = getInfo.info(songId, true)
         if (info?.chart[level]?.difficulty) {
             /**有难度信息 */

@@ -8,7 +8,7 @@ import { CloudSaveArchive } from '../lib/cloudSaveArchive.js'
 import TapTapHelper from '../lib/TapTap/TapTapHelper.js'
 import LCHelper from '../lib/TapTap/LCHelper.js'
 import PhigrosUser from '../lib/PhigrosUser.js'
-import SaveManager from '../lib/SaveManager.js'
+import { SAVE_KEY, SAVE_IV } from '../lib/saveCipher.js'
 
 const required = ['gameProgress', 'user', 'settings', 'gameRecord']
 async function archive(overrides = {}, options = {}) {
@@ -85,7 +85,7 @@ test('forged ZIP uncompressed sizes cannot bypass actual streaming limits', asyn
 })
 
 function encrypt(bytes) {
-    const cipher = createCipheriv('aes-256-cbc', Buffer.from(SaveManager.key, 'hex'), Buffer.from(SaveManager.iv, 'hex'))
+    const cipher = createCipheriv('aes-256-cbc', SAVE_KEY, SAVE_IV)
     return Buffer.concat([Buffer.from([1]), cipher.update(bytes), cipher.final()])
 }
 

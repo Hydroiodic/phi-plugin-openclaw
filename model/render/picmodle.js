@@ -1,6 +1,6 @@
 import puppeteer from './puppeteer.js'
 import { Version, Plugin_Name, Display_Plugin_Name, Config } from '../../components/index.js'
-import { _path, pluginResources, imgPath, tempPath } from '../filesystem/path.js'
+import { pluginResources, imgPath, tempPath } from '../filesystem/path.js'
 import fCompute from '../game/fCompute.js'
 import themeManager from '../theme/manager.js'
 import fs from 'node:fs'
@@ -64,7 +64,7 @@ export default await new class picmodle {
             logger.error(err)
         }
         /** 初始化渲染器槽位；Chromium 在非 Canvas 页面首次渲染时按需启动。 */
-        let num = Config.getUserCfg('config', 'renderNum')
+        const num = Config.getUserCfg('config', 'renderNum')
         for (let i = 0; i < num; i++) {
             this.puppeteer.push(new puppeteer({
                 puppeteerTimeout: Config.getUserCfg('config', 'timeout')
@@ -390,9 +390,9 @@ export default await new class picmodle {
         this.pressureMaxActive = Math.max(this.pressureMaxActive, this.rendering.size)
         try {
             params = await platform.prepareIllustrations(params)
-            let [app, tpl] = renderPath.split('/')
-            let layoutPath = pluginResources.replace(/\\/g, '/') + `/html/common/layout/`
-            let resPath = pluginResources.replace(/\\/g, '/') + `/`
+            const [app, tpl] = renderPath.split('/')
+            const layoutPath = pluginResources.replace(/\\/g, '/') + `/html/common/layout/`
+            const resPath = pluginResources.replace(/\\/g, '/') + `/`
 
 
             /** 主题解析：自定义模板仅作用于 B19，页面样式与公共主题信息由 themeInfo 注入布局。 */
@@ -405,7 +405,7 @@ export default await new class picmodle {
                 if (t?.themeInfo) themeInfo = t.themeInfo
             }
 
-            let data = {
+            const data = {
                 ...params,
                 themeInfo,
                 saveId: (params.saveId || params.save_id || tpl),
@@ -478,7 +478,7 @@ export default await new class picmodle {
 
     async restart() {
         if (this.shuttingDown) return
-        let num = Config.getUserCfg('config', 'renderNum')
+        const num = Config.getUserCfg('config', 'renderNum')
         const tasks = []
         for (let i = 0; i < num; i++) {
             if (this.puppeteer[i]) tasks.push(this.puppeteer[i].restart(true))

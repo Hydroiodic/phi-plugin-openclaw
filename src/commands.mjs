@@ -58,7 +58,7 @@ export function isPhigrosCommand(text) {
 }
 
 export function normalizeCommand(text) {
-  let value = stripMention(text)
+  const value = stripMention(text)
   // The channel normally strips mentions. Only consume structured leading mentions,
   // never display-name text or an embedded slash in an ordinary conversation.
   if (HOST_COMMANDS.has(value.match(/^\/([^\s]+)/)?.[1].toLowerCase())) return value

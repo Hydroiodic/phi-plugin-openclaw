@@ -1,5 +1,5 @@
 import { allLevel, LevelNum, MAX_DIFFICULTY } from "../game/constNum.js"
-import Save from "./Save.js"
+/** @import Save from "./Save.js" */
 import fCompute from "../game/fCompute.js";
 import LevelRecordInfo from "../game/LevelRecordInfo.js";
 
@@ -86,7 +86,7 @@ export default class saveHistory {
         /**检查版本 */
         if (!this.version || this.version < 2) {
             if (this.scoreHistory) {
-                for (let i in this.scoreHistory) {
+                for (const i in this.scoreHistory) {
                     if (!i.includes('.0')) {
                         this.scoreHistory = {}
                     }
@@ -110,9 +110,9 @@ export default class saveHistory {
         this.rks = merge(this.rks, data.rks)
         this.challengeModeRank = merge(this.challengeModeRank, data.challengeModeRank)
         const ids = fCompute.objectKeys(data.scoreHistory || {})
-        for (let id of ids) {
+        for (const id of ids) {
             if (!this.scoreHistory[id]) this.scoreHistory[id] = {}
-            for (let dif of allLevel) {
+            for (const dif of allLevel) {
                 if (this.scoreHistory[id] && this.scoreHistory[id][dif]) {
                     if (data.scoreHistory[id][dif]) {
                         this.scoreHistory[id][dif] = [...this.scoreHistory[id][dif], ...data.scoreHistory[id][dif]]
@@ -126,10 +126,9 @@ export default class saveHistory {
                 if (!this.scoreHistory[id][dif]) continue
                 let i = 1
                 while (i < this.scoreHistory[id][dif].length) {
-                    let last = openHistory(this.scoreHistory[id][dif][i - 1])
-                    let now = openHistory(this.scoreHistory[id][dif][i])
+                    const last = openHistory(this.scoreHistory[id][dif][i - 1])
+                    const now = openHistory(this.scoreHistory[id][dif][i])
                     if (last.score == now.score && last.acc == now.acc && last.fc == now.fc) {
-                        // console.info(last.date.toISOString(), now.date.toISOString())
                         this.scoreHistory[id][dif].splice(i, 1)
                     } else {
                         ++i
@@ -146,11 +145,11 @@ export default class saveHistory {
     update(save) {
         /**更新单曲成绩 */
         const ids = fCompute.objectKeys(save.gameRecord || {})
-        for (let id of ids) {
+        for (const id of ids) {
             if (!this.scoreHistory[id]) this.scoreHistory[id] = {}
-            for (let i in save.gameRecord[id]) {
+            for (const i in save.gameRecord[id]) {
                 /**难度映射 */
-                let level = allLevel[i]
+                const level = allLevel[i]
                 /**
                  * 提取成绩
                  * @type {LevelRecordInfo & {date?: Date} | null}
@@ -168,8 +167,7 @@ export default class saveHistory {
                 /**本地记录日期为递增 */
                 for (let i = this.scoreHistory[id][level].length - 1; i >= 0; --i) {
                     /**第i项记录 */
-                    let old = openHistory(this.scoreHistory[id][level][i])
-                    // console.info(old.date.toISOString(), new Date(now.date).toISOString(), old.date.toISOString() == new Date(now.date).toISOString())
+                    const old = openHistory(this.scoreHistory[id][level][i])
                     /**日期完全相同则认为已存储 */
                     if (old.score == now.score && old.acc == now.acc && old.fc == now.fc) {
                         /**标记已处理 */
@@ -190,16 +188,14 @@ export default class saveHistory {
                 }
                 /**未被处理，有该难度记录，说明日期早于本地记录 */
                 if (now) {
-                    // console.info(11)
                     this.scoreHistory[id][level].unshift(createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc))
                 }
                 /**查重 */
                 let j = 1
                 while (j < this.scoreHistory[id][level].length) {
-                    let last = openHistory(this.scoreHistory[id][level][j - 1])
-                    let now = openHistory(this.scoreHistory[id][level][j])
+                    const last = openHistory(this.scoreHistory[id][level][j - 1])
+                    const now = openHistory(this.scoreHistory[id][level][j])
                     if (last.score == now.score && last.acc == now.acc && last.fc == now.fc) {
-                        // console.info(last.date.toISOString(), now.date.toISOString())
                         this.scoreHistory[id][level].splice(j, 1)
                     } else {
                         ++j
@@ -246,7 +242,7 @@ export default class saveHistory {
         /**更新课题模式记录 */
         for (let i = this.challengeModeRank.length - 1; i >= 0; i--) {
             if (save.saveInfo.modifiedAt.iso > new Date(this.challengeModeRank[i].date)) {
-                let clg = save.saveInfo.summary.challengeModeRank
+                const clg = save.saveInfo.summary.challengeModeRank
                 if (clg != this.challengeModeRank[i].value && (this.challengeModeRank[i + 1]?.value != clg)) {
                     this.challengeModeRank.splice(i + 1, 0, {
                         date: save.saveInfo.modifiedAt.iso,
@@ -356,16 +352,16 @@ export default class saveHistory {
      * @returns 
      */
     async getSongsLastRecord(id) {
-        let t = { ...this.scoreHistory[id] }
+        const t = { ...this.scoreHistory[id] }
         /**
          * @type {Partial<Record<allLevelKind, LevelRecordInfo & {date?: Date}>>}
          */
         const result = {}
-        for (let level of allLevel) {
+        for (const level of allLevel) {
             if (!t[level]) continue
             const lastRecord = t[level] ? openHistory(t[level][t[level].length - 1]) : null
             if (!lastRecord) continue
-            let date = lastRecord?.date
+            const date = lastRecord?.date
             result[level] = new LevelRecordInfo(lastRecord, id, LevelNum[level])
             result[level].date = date
         }
@@ -387,20 +383,20 @@ export default class saveHistory {
      * @returns {rksAndDataLineObject}
      */
     getRksAndDataLine() {
-        let rks = this.getRksLine()
-        let data = this.getDataLine()
+        const rks = this.getRksLine()
+        const data = this.getDataLine()
         return { ...rks, ...data }
     }
 
     getRksLine() {
 
         /**@type {formatedHistoryBaseObject<number>[]} */
-        let rks_history_ = []
-        let user_rks_data = this.rks
-        let rks_range = [MAX_DIFFICULTY, 0]
+        const rks_history_ = []
+        const user_rks_data = this.rks
+        const rks_range = [MAX_DIFFICULTY, 0]
         /** @type {[dateBegin: number, dateAfter: number]} */
         let rks_date = [0, 0];
-        let rks_history = []
+        const rks_history = []
 
         if (user_rks_data.length) {
             rks_date = [new Date(user_rks_data[0].date).getTime(), 0]
@@ -421,10 +417,10 @@ export default class saveHistory {
                 i = Number(i)
 
                 if (!rks_history_[i + 1]) return
-                let x1 = fCompute.range(item.date.getTime(), rks_date)
-                let y1 = fCompute.range(item.value, rks_range)
-                let x2 = fCompute.range(rks_history_[i + 1].date.getTime(), rks_date)
-                let y2 = fCompute.range(rks_history_[i + 1].value, rks_range)
+                const x1 = fCompute.range(item.date.getTime(), rks_date)
+                const y1 = fCompute.range(item.value, rks_range)
+                const x2 = fCompute.range(rks_history_[i + 1].date.getTime(), rks_date)
+                const y2 = fCompute.range(rks_history_[i + 1].value, rks_range)
                 rks_history.push([x1, y1, x2, y2])
             });
             if (!rks_history.length) {
@@ -443,14 +439,14 @@ export default class saveHistory {
     getDataLine() {
 
         /**@type {formatedHistoryBaseObject<number>[]} */
-        let data_history_ = []
-        let user_data_data = this.data
+        const data_history_ = []
+        const user_data_data = this.data
         const data_range_num = [1e16, 0]
         const data_range = ['', '']
         /** @type {[dateBegin: number, dateAfter: number] | []} */
         let data_date = []
         /** @type {[x1: number, y1: number, x2: number, y2: number][]} */
-        let data_history = []
+        const data_history = []
 
         if (user_data_data.length) {
             data_date = [new Date(user_data_data[0].date).getTime(), 0]
@@ -477,10 +473,10 @@ export default class saveHistory {
                 i = Number(i)
 
                 if (!data_history_[i + 1]) return
-                let x1 = fCompute.range(item.date.getTime(), data_date)
-                let y1 = fCompute.range(item.value, data_range_num)
-                let x2 = fCompute.range(data_history_[i + 1].date.getTime(), data_date)
-                let y2 = fCompute.range(data_history_[i + 1].value, data_range_num)
+                const x1 = fCompute.range(item.date.getTime(), data_date)
+                const y1 = fCompute.range(item.value, data_range_num)
+                const x2 = fCompute.range(data_history_[i + 1].date.getTime(), data_date)
+                const y2 = fCompute.range(data_history_[i + 1].value, data_range_num)
                 data_history.push([x1, y1, x2, y2])
             })
             if (!data_history.length) {
@@ -488,7 +484,7 @@ export default class saveHistory {
             }
 
 
-            let unit = ["KiB", "MiB", "GiB", "TiB", "Pib"]
+            const unit = ["KiB", "MiB", "GiB", "TiB", "Pib"]
 
 
 
@@ -522,7 +518,7 @@ export default class saveHistory {
  * @param {formatedHistoryBaseObject<any>[]} n 
  */
 function merge(m, n) {
-    let t = m.concat(n)
+    const t = m.concat(n)
     t.sort((a, b) => {
         return new Date(a.date).getTime() - new Date(b.date).getTime()
     })
@@ -579,7 +575,7 @@ function checkValue(a, b) {
         return false
     }
     /**数组 */
-    for (let i in a) {
+    for (const i in a) {
         if (a[i] != b[i]) return false
     }
     return true

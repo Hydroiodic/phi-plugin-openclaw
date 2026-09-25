@@ -1,6 +1,5 @@
 import fCompute from './fCompute.js';
 import getInfo from './getInfo.js';
-import { LevelNum } from './constNum.js';
 
 
 /**
@@ -37,7 +36,7 @@ export default class LevelRecordInfo {
         /** @type {idString} */
         this.id = id;
 
-        let info = getInfo.info(id, true)
+        const info = getInfo.info(id, true)
 
         /** @type {allLevelKind} */
         this.rank = getInfo.allLevel[rank] //AT IN HD EZ LEGACY

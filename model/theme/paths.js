@@ -31,7 +31,7 @@ export function migrateLegacyThemeDirectories() {
         for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
             if (!entry.isDirectory() || entry.name.startsWith('.phi-market-')) continue
             const source = path.join(root, entry.name)
-            let id = ''
+            let id
             try {
                 const info = YAML.parse(fs.readFileSync(path.join(source, 'info.yaml'), 'utf8'))
                 id = typeof info?.id === 'string' ? info.id : ''

@@ -282,7 +282,7 @@ function parseChecksums(bytes, version, expected) {
   check(text.endsWith('\n'), `v/${version}/SHA256SUMS 末尾应有换行`)
   const values = new Map()
   for (const line of text.trimEnd().split('\n')) {
-    const match = /^([a-f0-9]{64})  ([^/\r\n]+)$/.exec(line)
+    const match = /^([a-f0-9]{64}) {2}([^/\r\n]+)$/.exec(line)
     check(match, `v/${version}/SHA256SUMS 行格式错误：${line}`)
     check(!values.has(match[2]), `v/${version}/SHA256SUMS 文件名重复：${match[2]}`)
     values.set(match[2], match[1])
@@ -345,7 +345,7 @@ export async function verifyIllustrations(reader, log) {
   check(Array.isArray(index.archives) && index.archives.length > 0 && index.archives.length <= 256, '曲绘分包数量无效')
   const sums = new Map(), sumsBytes = (await reader.read(prefix + 'SHA256SUMS', MAX_INDEX, 'text/plain')).bytes
   for (const line of sumsBytes.toString('utf8').trimEnd().split('\n')) {
-    const match = /^([a-f0-9]{64})  (index\.json|packages\/[a-f0-9]{64}\.zip)$/.exec(line)
+    const match = /^([a-f0-9]{64}) {2}(index\.json|packages\/[a-f0-9]{64}\.zip)$/.exec(line)
     check(match && !sums.has(match[2]), '曲绘 SHA256SUMS 格式或条目重复')
     sums.set(match[2], match[1])
   }

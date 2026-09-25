@@ -12,7 +12,6 @@ import { UserCredentials } from '../model/user/userCredentials.js'
 import userCredentialStore from '../model/user/userCredentialStore.js'
 import { getApiAccessState } from '../model/user/apiPermission.js'
 import fCompute from '../model/game/fCompute.js'
-import platform from '../components/platform/index.js'
 import getNotes from '../model/user/getNotes.js'
 import { sendQuickCommands, apiSettingQuickCommands } from '../model/game/markdown.js'
 
@@ -170,10 +169,7 @@ export class phihelp extends phiPluginBase {
 
         const credentials = UserCredentials.fromEvent(e)
 
-        if (await getBanGroup.get(e, 'setApiToken')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'setApiToken')) return false
 
         if (!await this.checkApiEnabled(e)) {
             return false
@@ -186,7 +182,7 @@ export class phihelp extends phiPluginBase {
             return false
         }
 
-        let apiToken = e.msg.replace(/^[#/].*?setApiToken\s*\n?/, '')
+        const apiToken = e.msg.replace(/^[#/].*?setApiToken\s*\n?/, '')
         if (!apiToken) {
             send.send_with_At(e, `请输入apiToken！\n格式：\n设置密码：/${Config.getUserCfg('config', 'cmdhead')} setApiToken <新Token> `)
             return true
@@ -212,10 +208,7 @@ export class phihelp extends phiPluginBase {
      */
     async tokenList(e) {
         const credentials = UserCredentials.fromEvent(e)
-        if (await getBanGroup.get(e, 'tokenList')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'tokenList')) return false
 
         if (!await this.checkApiEnabled(e)) {
             return false
@@ -269,16 +262,13 @@ export class phihelp extends phiPluginBase {
 
         const credentials = UserCredentials.fromEvent(e)
 
-        if (await getBanGroup.get(e, 'auth')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'auth')) return false
 
         if (!await this.checkApiEnabled(e)) {
             return false
         }
 
-        let apiToken = e.msg.replace(/^[#/].*?auth\s*/, '')
+        const apiToken = e.msg.replace(/^[#/].*?auth\s*/, '')
         if (/[\s\x00-\x1F\x7F'"\\]/.test(apiToken)) {
             send.send_with_At(e, 'API Token 包含非法字符，请检查后重试！')
             return false
@@ -306,10 +296,7 @@ export class phihelp extends phiPluginBase {
      */
     async clearApiData(e) {
         const credentials = UserCredentials.fromEvent(e)
-        if (await getBanGroup.get(e, 'clearApiData')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'clearApiData')) return false
 
         if (!await this.checkApiEnabled(e)) {
             return false
@@ -366,10 +353,7 @@ export class phihelp extends phiPluginBase {
      * @returns 
      */
     async updateHistory(e) {
-        if (await getBanGroup.get(e, 'updateHistory')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'updateHistory')) return false
         if (!await this.checkApiEnabled(e)) return false
         const credentials = UserCredentials.fromEvent(e)
         if (!await credentials.getSessionToken()) {
@@ -406,7 +390,7 @@ export class phihelp extends phiPluginBase {
          * 获取user_token
          * @type {phigrosToken[]}
          */
-        let user_token = []
+        const user_token = []
         console.info('[phi-plugin] 获取user_token列表...')
         const credentialEntries = await userCredentialStore.listSessionCredentials()
         user_token.push(...credentialEntries.values())
@@ -414,7 +398,7 @@ export class phihelp extends phiPluginBase {
         if (user_token.length > 1000) {
             send.send_with_At(e, `数据量过大，开始分批上传，预计${Math.ceil(user_token.length / 1000) * 5}秒...`);
             for (let i = 0; i < user_token.length; i += 1000) {
-                let batch = user_token.slice(i, i + 1000);
+                const batch = user_token.slice(i, i + 1000);
                 const uploadResult = await makeRequest.setUsersToken(
                     { data: batch },
                     { event: e, errorPrefix: '上传用户Token失败', notifyUser: true },
@@ -463,8 +447,8 @@ export class phihelp extends phiPluginBase {
         /** @type {idString[]} */
         const ids = /**@type {any} */ (Object.keys(data));
 
-        for (let songId of ids) {
-            for (let comment of data[songId]) {
+        for (const songId of ids) {
+            for (const comment of data[songId]) {
                 updateData.push({ ...comment, songId });
             }
         }
@@ -492,7 +476,7 @@ export class phihelp extends phiPluginBase {
             return false
         }
 
-        let save = await send.getsave_result(e)
+        const save = await send.getsave_result(e)
         if (!save) {
             return true
         }
@@ -608,7 +592,7 @@ export class phihelp extends phiPluginBase {
             pageTitle: 'Phi-Plugin API 用户设置',
             pageDescription: '以下设置会同步到查分平台账户权限。',
             items: items,
-            background: getInfo.getill(getInfo.illlist[Number((Math.random() * (getInfo.illlist.length - 1)).toFixed(0))]),
+            background: getInfo.randomBackground(),
             theme: pluginData?.theme || 'default'
         }, 'userSetting'))
         await sendQuickCommands(e, apiSettingQuickCommands(Config.getUserCfg('config', 'cmdhead')), 'API设置快捷操作')

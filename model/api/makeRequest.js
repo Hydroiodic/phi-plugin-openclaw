@@ -1,4 +1,4 @@
-import saveHistory from '../save/saveHistory.js';
+/** @import saveHistory from '../save/saveHistory.js' */
 import phiApiClient from './phiApiClient.js';
 import logger from '../../components/Logger.js';
 import platform from '../../components/platform/index.js';

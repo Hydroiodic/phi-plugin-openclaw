@@ -76,7 +76,7 @@ test('verified downloader sends no credentials and enforces size and SHA-256', a
     /** @type {typeof fetch} */
     const fetchImpl = async (_url, init) => {
         assert.deepEqual(init?.headers, { Accept: 'application/zip' })
-        assert.equal('Authorization' in /** @type {any} */ (init?.headers), false)
+        assert.equal('Authorization' in /** @type {any} */ (init?.headers ?? {}), false)
         return new Response(bytes, {
             status: 200,
             headers: { 'Content-Type': 'application/zip', 'Content-Length': String(bytes.length) },

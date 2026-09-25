@@ -227,10 +227,10 @@ export default class phiPluginBase extends HostPlugin {
     let msg = e.msg.replace(fncName, '');
     /** @type {Pick<getMicInfoFromMsgOptionsMap, T>} */
     const optObj = /** @type {Pick<getMicInfoFromMsgOptionsMap, T>} */ ({});
-    for (let opt of params) {
+    for (const opt of params) {
       switch (opt) {
         case 'rank': {
-          let rank = /** @type {levelKind} */((msg.match(/\b(EZ|HD|IN|AT)\b/i)?.[1] || 'IN').toUpperCase())
+          const rank = /** @type {levelKind} */((msg.match(/\b(EZ|HD|IN|AT)\b/i)?.[1] || 'IN').toUpperCase())
           optObj[opt] = rank;
           msg = msg.replace(/\b(EZ|HD|IN|AT)\b/i, '')
           break;
@@ -243,7 +243,7 @@ export default class phiPluginBase extends HostPlugin {
       return;
     }
 
-    let ids = getInfo.fuzzysongsnick(msg, undefined, true)
+    const ids = getInfo.fuzzysongsnick(msg, undefined, true)
     if (!ids.length) {
       send.send_with_At(e, `未找到${msg}的相关曲目信息QAQ！如果想要提供别名的话请访问 /phihelp 中的别名投稿链接嗷！`, true)
       return;
@@ -252,7 +252,7 @@ export default class phiPluginBase extends HostPlugin {
     if (ids.length > 1) {
       await this.choseMutiNick(e, ids, { ...optObj, ...options }, (e, id, optObj) => {
 
-        let info = getInfo.info(id, true)
+        const info = getInfo.info(id, true)
         if (!info) {
           send.send_with_At(e, `未找到${id}的曲目信息QAQ！请回报管理员！`, true)
           logger.error(`phi-plugin错误：未找到曲目ID为${id}的曲目信息！`)
@@ -270,7 +270,7 @@ export default class phiPluginBase extends HostPlugin {
       })
     } else {
       const id = ids[0];
-      let info = getInfo.info(id, true)
+      const info = getInfo.info(id, true)
       if (!info) {
         send.send_with_At(e, `未找到${id}的曲目信息QAQ！请回报管理员！`, true)
         logger.error(`phi-plugin错误：未找到曲目ID为${id}的曲目信息！`)

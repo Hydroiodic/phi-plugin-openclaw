@@ -30,7 +30,7 @@ test('Bot sync acknowledges a message only after private delivery succeeds', asy
             }] : [],
         }
     }
-    setPlatformAdapter({ relpyPrivate: async () => { delivered += 1; return { message_id: 'sent' } } })
+    setPlatformAdapter({ replyPrivate: async () => { delivered += 1; return { message_id: 'sent' } } })
     try {
         await service.sync()
         assert.equal(delivered, 1)

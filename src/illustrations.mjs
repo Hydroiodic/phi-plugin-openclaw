@@ -44,7 +44,7 @@ export function validateIllustrationIndex(index) {
 export function parseIllustrationChecksums(bytes) {
   const hashes = new Map()
   for (const line of bytes.toString('utf8').trimEnd().split('\n')) {
-    const match = /^([a-f0-9]{64})  (index\.json|packages\/[a-f0-9]{64}\.zip)$/.exec(line)
+    const match = /^([a-f0-9]{64}) {2}(index\.json|packages\/[a-f0-9]{64}\.zip)$/.exec(line)
     check(match && !hashes.has(match[2]), '曲绘 SHA256SUMS 无效。')
     hashes.set(match[2], match[1])
   }

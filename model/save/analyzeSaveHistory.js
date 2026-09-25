@@ -129,7 +129,6 @@ function topNNumberMap(map, n) {
  * @returns {AnalyzeSaveHistoryResult}
  */
 export function analyzeSaveHistory(history) {
-  // console.info(history);
   /**
    * score 事件：按曲目+难度展开
    * @type {{id: idString, level: allLevelKind, acc: number, score: number, fc: boolean, date: Date}[]}
@@ -358,7 +357,7 @@ export default analyzeSaveHistory;
  */
 function safeText(v) {
   if (v === null || v === undefined) return '--';
-  var t = String(v);
+  const t = String(v);
   return t.length ? t : '--';
 }
 
@@ -370,8 +369,8 @@ function safeText(v) {
  */
 function fmtSigned(n, digits) {
   if (n === null || n === undefined || Number.isNaN(Number(n))) return '--'
-  var x = Number(n)
-  var s = x > 0 ? '+' : ''
+  const x = Number(n)
+  const s = x > 0 ? '+' : ''
   if (digits === undefined) return s + x
   return s + x.toFixed(digits)
 }
@@ -383,12 +382,12 @@ function fmtSigned(n, digits) {
  */
 function fmtBytes(n) {
   if (n === null || n === undefined || Number.isNaN(Number(n))) return '--'
-  var x = Math.abs(Number(n))
-  var sign = Number(n) < 0 ? '-' : ''
-  var units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']
-  var u = 0
+  let x = Math.abs(Number(n))
+  const sign = Number(n) < 0 ? '-' : ''
+  const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']
+  let u = 0
   while (x >= 1024 && u < units.length - 1) { x /= 1024; u++; }
-  var v = (u === 0) ? Math.round(x) : Math.round(x * 100) / 100
+  const v = (u === 0) ? Math.round(x) : Math.round(x * 100) / 100
   return sign + v + units[u]
 }
 

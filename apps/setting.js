@@ -50,28 +50,23 @@ export class phihelp extends phiPluginBase {
         if (!e.isMaster) {
             return false;
         }
-        let schemas = configInfo.schemas
+        const schemas = configInfo.schemas
 
         /**修改设置部分 */
-        let msg = e.msg.replace(new RegExp(`^[#/](pgr|PGR|屁股肉|phi|Phi|(${Config.getUserCfg('config', 'cmdhead')}))(\\s*)(设置|set)`), '')
-        for (let i in schemas) {
-            let schema = schemas[i]
+        const msg = e.msg.replace(new RegExp(`^[#/](pgr|PGR|屁股肉|phi|Phi|(${Config.getUserCfg('config', 'cmdhead')}))(\\s*)(设置|set)`), '')
+        for (const i in schemas) {
+            const schema = schemas[i]
             if (!schema.field) continue
 
             const field = /**@type {configName} */(schema.field)
             if (msg.match(schema.label)) {
-                let value = msg.replace(schema.label, '').trim()
+                const value = msg.replace(schema.label, '').trim()
                 switch (schema.component) {
-                    case 'Select':
-                        let options = schema.componentProps?.options
-                        if (!options) break;
-                        for (let j = 0; j < options.length; j++) {
-                            if (options[j].label == value) {
-                                Config.modify('config', field, options[j].value)
-                                break;
-                            }
-                        }
+                    case 'Select': {
+                        const option = schema.componentProps?.options?.find((/** @type {any} */ option) => option.label == value)
+                        if (option) Config.modify('config', field, option.value)
                         break;
+                    }
                     case 'Input':
                         Config.modify('config', field, value)
                         break;
@@ -99,7 +94,7 @@ export class phihelp extends phiPluginBase {
                         }
                         break;
                     case 'RadioGroup': {
-                        let options = schema.componentProps?.options
+                        const options = schema.componentProps?.options
                         if (!options) break;
                         for (let j = 0; j < options.length; j++) {
                             if (options[j].label == value) {
@@ -117,10 +112,10 @@ export class phihelp extends phiPluginBase {
 
 
         /**渲染图片部分 */
-        let config = configInfo.getConfigData()
-        let data = []
-        for (let i in schemas) {
-            let schema = schemas[i]
+        const config = configInfo.getConfigData()
+        const data = []
+        for (const i in schemas) {
+            const schema = schemas[i]
             switch (schema.component) {
                 case 'Divider':
                     data.push({
@@ -128,25 +123,20 @@ export class phihelp extends phiPluginBase {
                         type: 'divider'
                     })
                     break;
-                case 'Select':
+                case 'Select': {
                     if (!schema.field) break;
-                    // @ts-ignore
-                    let value = config[schema.field]
-                    let options = schema.componentProps?.options
+                    const options = schema.componentProps?.options
                     if (!options) break;
-                    for (let j = 0; j < options.length; j++) {
-                        if (options[j].value == value) {
-                            value = options[j].label
-                            break;
-                        }
-                    }
+                    // @ts-ignore
+                    const current = config[schema.field]
                     data.push({
                         label: schema.label,
                         bottomHelpMessage: schema.bottomHelpMessage,
                         type: 'space',
-                        value,
+                        value: options.find((/** @type {any} */ option) => option.value == current)?.label ?? current,
                     })
                     break;
+                }
                 case 'Input':
                 case 'InputNumber':
                     if (!schema.field) break;
@@ -183,11 +173,10 @@ export class phihelp extends phiPluginBase {
                     break;
             }
         }
-        // console.info(data)
-        let plugin_data = await getNotes.getNotesData(e.user_id)
+        const plugin_data = await getNotes.getNotesData(e.user_id)
         send.reply(e, await picmodle.common(e, 'setting', {
             data,
-            background: getInfo.getill(getInfo.illlist[Number((Math.random() * (getInfo.illlist.length - 1)).toFixed(0))]),
+            background: getInfo.randomBackground(),
             theme: plugin_data?.theme || 'star'
         }))
         await sendQuickCommands(e, configQuickCommands(Config.getUserCfg('config', 'cmdhead')), '全局设置快捷操作')
@@ -198,10 +187,7 @@ export class phihelp extends phiPluginBase {
      * @param {botEvent} e
      */
     async showUserSetting(e) {
-        if (await getBanGroup.get(e, 'help')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'help')) return false
         let pluginData = await getNotes.getNotesData(e.user_id)
 
         /**@type {Record<'theme' | 'b30AvgKind' | 'b30AvgColor' | 'allowApiUsage' | 'showB30Analysis', string[]>} */
@@ -329,10 +315,7 @@ export class phihelp extends phiPluginBase {
                 return true
             }
 
-            if (settingKey === 'theme' && await getBanGroup.get(e, 'theme')) {
-                send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-                return false
-            }
+            if (settingKey === 'theme' && await getBanGroup.get(e, 'theme')) return false
 
             /** 主题选项动态合并内置 + 自定义主题，其余设置项保持静态数据源 */
             /** @param {string} key */
@@ -464,7 +447,7 @@ export class phihelp extends phiPluginBase {
 
         send.send_with_At(e, await picmodle.common(e, 'setting', {
             ...data,
-            background: getInfo.getill(getInfo.illlist[Number((Math.random() * (getInfo.illlist.length - 1)).toFixed(0))]),
+            background: getInfo.randomBackground(),
             theme: pluginData?.theme || 'default'
         }, 'userSetting'))
         await sendQuickCommandSections(e, userSettingQuickCommandSections(Config.getUserCfg('config', 'cmdhead')), '用户设置快捷操作')

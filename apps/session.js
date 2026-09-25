@@ -1,13 +1,13 @@
 import Config from '../components/Config.js'
 import send from '../model/render/send.js'
-import Save from '../model/save/Save.js'
+/** @import Save from '../model/save/Save.js' */
 import ScoreHistory from '../model/save/scoreHistory.js'
 import getQRcode from '../lib/getQRcode.js'
 import fCompute from '../model/game/fCompute.js'
 import getBanGroup from '../model/user/getBanGroup.js';
 import { allLevel, redisPath } from "../model/game/constNum.js"
 import makeRequest from '../model/api/makeRequest.js'
-import saveHistory from '../model/save/saveHistory.js'
+/** @import saveHistory from '../model/save/saveHistory.js' */
 import getNotes from '../model/user/getNotes.js'
 import { APII18NCN } from '../model/game/constNum.js'
 import phiPluginBase from '../components/baseClass.js'
@@ -64,30 +64,27 @@ export class phisstk extends phiPluginBase {
 
         const credentials = UserCredentials.fromEvent(e)
 
-        if (await getBanGroup.get(e, 'bind')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'bind')) return false
 
         let sessionToken =/**@type {phigrosToken} */ (e.msg.replace(/[#/](.*?)(cn|gb)?(绑定|bind)(\s*)/, "").match(/[0-9a-zA-Z]{25}|qrcode/g)?.[0])
         const useWhich = e.msg.match(/[#/](.*?)(cn|gb)?(绑定|bind)(\s*)/)?.[2]
 
         /** @type {boolean} */
-        let isGlobal = useWhich ? useWhich === 'gb' : Config.getUserCfg('config', 'defaultGlobal');
+        const isGlobal = useWhich ? useWhich === 'gb' : Config.getUserCfg('config', 'defaultGlobal');
         const allowApi = await canUseApi(e)
         let apiBindingSucceeded = false
 
-        let localPhigrosToken = await credentials.getSessionToken()
+        const localPhigrosToken = await credentials.getSessionToken()
 
         if (!sessionToken) {
-            let apiId = e.msg.replace(/[#/](.*?)(绑定|bind)(\s*)/, "").match(/[0-9]+/g)?.[0]
+            const apiId = e.msg.replace(/[#/](.*?)(绑定|bind)(\s*)/, "").match(/[0-9]+/g)?.[0]
             if (apiId && allowApi) {
                 const result = await credentials.bindWithApiId(apiId)
                 if (result?.apiUserId) {
-                    let resMsg = `绑定成功！您的查分ID为：${result.apiUserId}，请妥善保管嗷！`
+                    const resMsg = `绑定成功！您的查分ID为：${result.apiUserId}，请妥善保管嗷！`
                     send.send_with_At(e, resMsg)
-                    let updateData = await credentials.getUpdatedSaveFromApi()
-                    let history = await credentials.getCloudHistory(['data', 'rks', 'scoreHistory'])
+                    const updateData = await credentials.getUpdatedSaveFromApi()
+                    const history = await credentials.getCloudHistory(['data', 'rks', 'scoreHistory'])
                     if (updateData && history) await build(e, updateData, history, sessionQuickCommands, '绑定页快捷操作')
                     else send.send_with_At(e, '绑定已成功，但暂时无法读取 API 存档，请稍后执行更新。')
                     return true
@@ -113,10 +110,10 @@ export class phisstk extends phiPluginBase {
             if (e._signal?.aborted) return true
             /**用户若已经触发且未绑定，则发送原来的二维码 */
             const region = isGlobal ? 'global' : 'cn'
-            let key = `${redisPath}:qrcode:${e.user_id}:${region}`
-            let timeOutKey = `${redisPath}:qrcodeTimeOut:${e.user_id}:${region}`
-            let qrcode = await redis.get(key)
-            let qrcodeTimeOut = qrcode ? await redis.ttl(timeOutKey) : 0
+            const key = `${redisPath}:qrcode:${e.user_id}:${region}`
+            const timeOutKey = `${redisPath}:qrcodeTimeOut:${e.user_id}:${region}`
+            const qrcode = await redis.get(key)
+            const qrcodeTimeOut = qrcode ? await redis.ttl(timeOutKey) : 0
             if (qrcode && qrcodeTimeOut > 0) {
                 let recallTime = qrcodeTimeOut
                 if (qrcodeTimeOut >= 60) recallTime = 60
@@ -190,23 +187,22 @@ export class phisstk extends phiPluginBase {
         if (!Config.getUserCfg('config', 'isGuild')) {
 
             send.reply(e, "正在绑定，请稍等一下哦！\n >_<", false, { recallMsg: 5 })
-            // return true
         }
 
         if (allowApi) {
             try {
 
-                let result = await credentials.bindWithSessionToken(sessionToken, isGlobal)
+                const result = await credentials.bindWithSessionToken(sessionToken, isGlobal)
                 if (result?.apiUserId) {
                     apiBindingSucceeded = true
-                    let resMsg = `绑定成功！您的查分ID为：${result.apiUserId}，请妥善保管嗷！`
+                    const resMsg = `绑定成功！您的查分ID为：${result.apiUserId}，请妥善保管嗷！`
                     send.send_with_At(e, resMsg)
-                    let oldHistory = await credentials.getLocalHistory()
+                    const oldHistory = await credentials.getLocalHistory()
                     if (oldHistory) {
                         await credentials.uploadHistory(oldHistory)
                     }
-                    let updateData = await credentials.getUpdatedSaveFromApi()
-                    let history = await credentials.getCloudHistory(['data', 'rks', 'scoreHistory'])
+                    const updateData = await credentials.getUpdatedSaveFromApi()
+                    const history = await credentials.getCloudHistory(['data', 'rks', 'scoreHistory'])
                     if (updateData && history) await build(e, updateData, history, sessionQuickCommands, '绑定页快捷操作')
                     else send.send_with_At(e, '绑定已成功，但暂时无法读取 API 存档，请稍后执行更新。')
                     return true
@@ -220,12 +216,12 @@ export class phisstk extends phiPluginBase {
 
 
         try {
-            let updateData = apiBindingSucceeded
+            const updateData = apiBindingSucceeded
                 ? await credentials.getUpdatedSaveFromLocal(sessionToken, isGlobal)
                 : await credentials.bindLocallyWithSessionToken(sessionToken, isGlobal)
             if (!updateData) return true;
             send.send_with_At(e, `${apiBindingSucceeded ? '' : 'API绑定不可用，已按当前 Bot 本地状态完成绑定。\n'}请注意保护好自己的sessionToken呐！如果需要获取已绑定的sessionToken可以私聊发送 /${Config.getUserCfg('config', 'cmdhead')} sessionToken 哦！`, false, { recallMsg: 10 })
-            let history = await credentials.getLocalHistory()
+            const history = await credentials.getLocalHistory()
             await build(e, updateData, history, sessionQuickCommands, '绑定页快捷操作')
         } catch (error) {
             logger.error(error)
@@ -244,10 +240,7 @@ export class phisstk extends phiPluginBase {
 
         const credentials = UserCredentials.fromEvent(e)
 
-        if (await getBanGroup.get(e, 'update')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'update')) return false
         let updateData;
         let history;
         if (await canUseApi(e)) {
@@ -272,7 +265,7 @@ export class phisstk extends phiPluginBase {
         }
         if (!updateData || !history) {
 
-            let session = await credentials.getSessionToken()
+            const session = await credentials.getSessionToken()
             if (!session) {
                 send.reply(e, `没有找到你的存档，请先绑定sessionToken哦！如果不知道自己的sessionToken可以尝试扫码绑定嗷！\n帮助：/${Config.getUserCfg('config', 'cmdhead')} tk help\n获取二维码：/${Config.getUserCfg('config', 'cmdhead')} bind qrcode\n普通绑定：/${Config.getUserCfg('config', 'cmdhead')} bind <sessionToken>`, true)
                 return true
@@ -311,10 +304,7 @@ export class phisstk extends phiPluginBase {
 
         const credentials = UserCredentials.fromEvent(e)
 
-        if (await getBanGroup.get(e, 'unbind')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'unbind')) return false
 
 
         const { sessionToken, apiId } = await credentials.getLocalCredentials()
@@ -332,30 +322,18 @@ export class phisstk extends phiPluginBase {
 
     async doUnbind() {
 
-        let e = this.e
+        const e = this.e
         const credentials = UserCredentials.fromEvent(e)
 
-        let msg = e.msg.replace(' ', '')
+        const msg = e.msg.replace(/\s/g, '')
 
         if (msg == '确认') {
-            let flag = true
             try {
                 await credentials.unbindAndReport()
-            } catch (err) {
-                send.send_with_At(e, err)
-                logger.error(err)
-                flag = false
-            }
-            if (flag) try {
                 await getNotes.update(e.user_id, data => { data.task = [] })
-            } catch (err) {
-                send.send_with_At(e, err)
-                logger.error(err)
-                flag = false
-            }
-            if (flag) {
                 send.send_with_At(e, '当前 Bot 本地解绑成功')
-            } else {
+            } catch (err) {
+                logger.error(err)
                 send.send_with_At(e, '没有找到你的存档哦！')
             }
         } else {
@@ -379,28 +357,17 @@ export class phisstk extends phiPluginBase {
 
     async doClean() {
 
-        let e = this.e
+        const e = this.e
         const credentials = UserCredentials.fromEvent(e)
 
-        let msg = e.msg.replace(' ', '')
+        const msg = e.msg.replace(/\s/g, '')
 
         if (msg == '确认') {
-            let flag = true
-            try {
-                await credentials.deleteLocalSave()
-            } catch (err) {
-                send.send_with_At(e, err)
-                flag = false
-            }
-            try {
-                await getNotes.delNotesData(e.user_id)
-            } catch (err) {
-                send.send_with_At(e, err)
-                flag = false
-            }
-            if (flag) {
-                send.send_with_At(e, '清除数据成功')
-            }
+            // 两项都要尝试删除，任一失败都提示用户
+            const results = await Promise.allSettled([credentials.deleteLocalSave(), getNotes.delNotesData(e.user_id)])
+            const failures = results.filter(result => result.status === 'rejected')
+            for (const failure of failures) logger.error(failure.reason)
+            send.send_with_At(e, failures.length ? '部分数据清除失败，请稍后重试或联系管理员。' : '清除数据成功')
         } else {
             send.send_with_At(e, `取消成功！`)
         }
@@ -419,7 +386,7 @@ export class phisstk extends phiPluginBase {
             return false
         }
 
-        let save = await send.getsave_result(e)
+        const save = await send.getsave_result(e)
         if (!save) {
             send.send_with_At(e, `未绑定存档，请先绑定存档嗷！`)
             return true
@@ -450,11 +417,11 @@ function toHex(num) {
 // 定义一个函数，不接受参数，返回一个随机的背景色
 function getRandomBgColor() {
     // 生成三个 0 到 200 之间的随机整数，分别代表红、绿、蓝分量
-    let red = Math.floor(Math.random() * 201);
-    let green = Math.floor(Math.random() * 201);
-    let blue = Math.floor(Math.random() * 201);
+    const red = Math.floor(Math.random() * 201);
+    const green = Math.floor(Math.random() * 201);
+    const blue = Math.floor(Math.random() * 201);
     // 将三个分量转换为十六进制形式，然后拼接成一个 RGB 颜色代码
-    let hexColor = "#" + toHex(red) + toHex(green) + toHex(blue);
+    const hexColor = "#" + toHex(red) + toHex(green) + toHex(blue);
     // 返回生成的颜色代码
     return hexColor;
 }
@@ -475,7 +442,7 @@ function comWidth(num) {
  */
 async function build(e, updateData, history, quickCommands = updateQuickCommands, quickCommandsTitle = '更新页快捷操作') {
 
-    let { added_rks_notes, save } = updateData
+    const { added_rks_notes, save } = updateData
 
     const displayAddedRksNotes = ['', ''];
 
@@ -489,7 +456,7 @@ async function build(e, updateData, history, quickCommands = updateQuickCommands
      * 标记数据中含有的时间
      * @type {{[date:string]:number}}
      */
-    let time_vis = {}
+    const time_vis = {}
 
     /**
      * 总信息
@@ -499,25 +466,20 @@ async function build(e, updateData, history, quickCommands = updateQuickCommands
         * song:import('../model/save/scoreHistory.js').extendedScoreHistoryDetail[]
      * }[]}
      */
-    let tot_update = []
+    const tot_update = []
 
 
-    let now = save
-    let pluginData = await getNotes.getNotesData(e.user_id)
+    const now = save
+    const pluginData = await getNotes.getNotesData(e.user_id)
 
-    // const RecordErr = now.checkRecord()
-
-    // if (RecordErr) {
-    //     send.send_with_At(e, '[测试功能，概率有误，暂时不清楚错误原因]\n请注意，你的存档可能存在一些问题：\n' + RecordErr)
-    // }
-    for (let id of fCompute.objectKeys(history.scoreHistory)) {
+    for (const id of fCompute.objectKeys(history.scoreHistory)) {
         const tem = history.scoreHistory[id]
-        for (let level of allLevel) {
+        for (const level of allLevel) {
             const history = tem[level]
             if (!history) continue
             for (let i = 0; i < history.length; i++) {
-                let score_date = fCompute.formatDate(ScoreHistory.date(history[i]))
-                let score_info = ScoreHistory.extend(id, level, history[i], i ? history[i - 1] : undefined)
+                const score_date = fCompute.formatDate(ScoreHistory.date(history[i]))
+                const score_info = ScoreHistory.extend(id, level, history[i], i ? history[i - 1] : undefined)
                 if (time_vis[score_date] == undefined) {
                     time_vis[score_date] = tot_update.length
                     tot_update.push({ date: score_date, color: getRandomBgColor(), update_num: 0, song: [] })
@@ -528,7 +490,7 @@ async function build(e, updateData, history, quickCommands = updateQuickCommands
         }
     }
 
-    let newnum = tot_update[time_vis[fCompute.formatDate(now.saveInfo.modifiedAt.iso)]]?.update_num || 0
+    const newnum = tot_update[time_vis[fCompute.formatDate(now.saveInfo.modifiedAt.iso)]]?.update_num || 0
 
     tot_update.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
@@ -566,13 +528,10 @@ async function build(e, updateData, history, quickCommands = updateQuickCommands
      * 预分行
      * @type {any[]}
      */
-    let box_line = []
+    const box_line = []
 
     /**循环中当前行的数量 */
-    let line_num = 0
-
-
-    line_num = 5
+    let line_num = 5
     let flag = false
 
     while (tot_update.length) {
@@ -582,10 +541,10 @@ async function build(e, updateData, history, quickCommands = updateQuickCommands
             } else {
                 box_line.push([{ date: tot_update[0].date, color: tot_update[0].color, song: tot_update[0].song.splice(0, 5) }])
             }
-            let tem = box_line[box_line.length - 1]
+            const tem = box_line[box_line.length - 1]
             line_num = tem[tem.length - 1].song.length
         } else {
-            let tem = box_line[box_line.length - 1]
+            const tem = box_line[box_line.length - 1]
             if (flag) {
                 tem.push({ color: tot_update[0].color, song: tot_update[0].song.splice(0, 5 - line_num) })
             } else {
@@ -594,7 +553,7 @@ async function build(e, updateData, history, quickCommands = updateQuickCommands
             }
             line_num += tem[tem.length - 1].song.length
         }
-        let tem = box_line[box_line.length - 1]
+        const tem = box_line[box_line.length - 1]
         tem[tem.length - 1].width = comWidth(tem[tem.length - 1].song.length)
         flag = true
         if (!tot_update[0].song.length) {
@@ -605,12 +564,12 @@ async function build(e, updateData, history, quickCommands = updateQuickCommands
     }
 
     /**添加任务信息 */
-    let task_data = pluginData?.task
-    let task_time = fCompute.formatDate(pluginData?.task_time)
+    const task_data = pluginData?.task
+    const task_time = fCompute.formatDate(pluginData?.task_time)
 
     /**添加曲绘 */
     if (task_data) {
-        for (let i in task_data) {
+        for (const i in task_data) {
             if (task_data[i]) {
                 // @ts-ignore
                 task_data[i].illustration = getInfo.getill(task_data[i].song)
@@ -629,23 +588,22 @@ async function build(e, updateData, history, quickCommands = updateQuickCommands
 
 
 
-    let { rks_history, rks_range, rks_date } = history.getRksLine()
+    const { rks_history, rks_range, rks_date } = history.getRksLine()
 
-    let data = {
+    const data = {
         PlayerId: fCompute.convertRichText(now.saveInfo.PlayerId),
         Rks: Number(now.saveInfo.summary.rankingScore).toFixed(4),
         Date: fCompute.formatDate(now.saveInfo.summary.updatedAt),
         ChallengeMode: (now.saveInfo.summary.challengeModeRank - (now.saveInfo.summary.challengeModeRank % 100)) / 100,
         ChallengeModeRank: now.saveInfo.summary.challengeModeRank % 100,
-        background: getInfo.getill(getInfo.illlist[Math.floor((Math.random() * (getInfo.illlist.length - 1)))]),
+        background: getInfo.randomBackground(),
         box_line: box_line,
         update_ans: newnum ? `更新了${newnum}份成绩` : `未收集到新成绩`,
         Notes: pluginData?.money || 0,
         show: show,
-        tips: getInfo.tips[Math.floor((Math.random() * (getInfo.tips.length - 1)) + 1)],
+        tips: getInfo.tips[fCompute.randInt(0, getInfo.tips.length - 1)],
         task_data: task_data,
         task_time: task_time,
-        // dan: await get.getDan(e.user_id),
         added_rks_notes: displayAddedRksNotes,
         theme: pluginData?.theme || 'star',
         rks_date: [fCompute.formatDate(rks_date[0]), fCompute.formatDate(rks_date[1])],

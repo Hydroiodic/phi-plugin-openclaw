@@ -183,7 +183,7 @@ export default await new class themeManager {
         }
 
         /** 校验 id：缺失/非法时回退目录名，仍非法则跳过 */
-        let id = typeof yamlData.id === 'string' && yamlData.id ? yamlData.id : dirName
+        const id = typeof yamlData.id === 'string' && yamlData.id ? yamlData.id : dirName
         if (!ID_RE.test(id)) {
             logger.warn(`[phi-plugin][主题] ${dirName} 的 id「${id}」非法（须匹配 /^[a-zA-Z0-9_-]+$/），跳过该主题`)
             return null

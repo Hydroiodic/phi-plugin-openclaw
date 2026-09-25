@@ -179,7 +179,7 @@ export class OpenClawPlatform {
     if (e.isPrivate) return this.reply(e, message)
     throw new Error('请在与机器人的私聊中使用此命令。')
   }
-  async relpyPrivate() { throw new Error('请在与机器人的私聊中使用此命令。') }
+  async replyPrivate() { throw new Error('请在与机器人的私聊中使用此命令。') }
   async recall() { return false }
   /** @param {any} e @param {any[]} messages @param {string} description */
   async makeForwardMsg(e, messages = [], description) { return [description || '', ...messages.flatMap(message => [message?.message ?? message, '\n'])] }

@@ -1,6 +1,5 @@
 import Config from '../components/Config.js'
 import logger from '../components/Logger.js'
-import segment from '../components/segment.js'
 import phiPluginBase from '../components/baseClass.js'
 import getBanGroup from '../model/user/getBanGroup.js'
 import getNotes from '../model/user/getNotes.js'
@@ -100,10 +99,7 @@ export class phiMarket extends phiPluginBase {
 
     /** @param {botEvent} e */
     async marketPage(e) {
-        if (await getBanGroup.get(e, 'theme')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'theme')) return false
         const commandHead = `${Config.getUserCfg('config', 'cmdhead')}`
         const action = e.msg.replace(new RegExp(`^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)`, 'i'), '').trim().toLowerCase()
         const state = getMarketPageState(e)
@@ -128,10 +124,7 @@ export class phiMarket extends phiPluginBase {
 
     /** @param {botEvent} e */
     async market(e) {
-        if (await getBanGroup.get(e, 'theme')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'theme')) return false
         const commandHead = `${Config.getUserCfg('config', 'cmdhead')}`
         const raw = e.msg.replace(
             new RegExp(`^[#/](${Config.getUserCfg('config', 'cmdhead')})(\\s*)market(\\s*)`, 'i'),

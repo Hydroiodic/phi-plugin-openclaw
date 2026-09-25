@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import PhigrosUser from '../../lib/PhigrosUser.js'
+/** @import PhigrosUser from '../../lib/PhigrosUser.js' */
 import Save from './Save.js'
 import saveHistory from './saveHistory.js'
 import readFile from '../filesystem/getFile.js'

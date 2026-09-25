@@ -27,12 +27,12 @@ import {
 /**
  * @type {idString[]}
  */
-let songIdList = getInfo.idList || []
+const songIdList = getInfo.idList || []
 /**
  * 存储每首歌曲被抽取的权重
  * @type {Record<string, Record<idString, number>>}
  */
-let songweights = {}
+const songweights = {}
 
 /** @type {Record<string, NodeJS.Timeout>} */
 const songweightCleanupTimers = {}
@@ -62,14 +62,6 @@ function cleanupGameState(groupId, gameList) {
  * @typedef {{ansList: string[], winnerlist: string[]}} LetterGameResult
  */
 
-// let gamelist = {}//存储标准答案曲名
-// let blurlist = {}//存储模糊后的曲名
-// let alphalist = {}//存储翻开的字母
-// let winnerlist = {} //存储猜对者的群名称
-// let lastGuessedTime = {} //存储群聊猜字母全局冷却时间
-// let lastRevealedTime = {} //存储群聊翻字母全局冷却时间
-// let lastTipTime = {} //存储群聊提示全局冷却时间
-// let gameSelectList = {} //群聊游戏选择的游戏范围
 
 
 class letterGameDataObject {
@@ -139,7 +131,7 @@ const letterGameData = {}
  * 存储群聊游戏计时器
  * @type {Object.<string, {startTime: number, newTime: number}>}
  */
-let timeCount = {}
+const timeCount = {}
 
 
 /**
@@ -168,14 +160,13 @@ export default class guessLetter {
          * @type {idString[]}
          */
         let allSelectSongId = []
-        // console.info(getInfo.DLC_Info)
 
         // 初始化游戏数据对象
         letterGameData[group_id] = new letterGameDataObject(Config.getUserCfg('config', 'LetterNum'));
 
         const currentGame = letterGameData[group_id];
 
-        for (let i in getInfo.DLC_Info) {
+        for (const i in getInfo.DLC_Info) {
             if (msg.includes(i)) {
                 letterGameData[group_id].gameSelectList.push(i)
                 allSelectSongId = allSelectSongId.concat(/**@type {idString[]} */(getInfo.DLC_Info[i]))
@@ -209,7 +200,7 @@ export default class guessLetter {
         })
         scheduleSongweightCleanup(group_id)
 
-        let nowTime = Date.now()
+        const nowTime = Date.now()
 
         for (let i = 0; i < currentGame.letterNum; i++) {
             // 根据曲目权重随机返回一首曲目名称
@@ -306,7 +297,8 @@ export default class guessLetter {
 
         if (newMsg) {
             const letter = newMsg.toLowerCase()
-            let output = []
+            /** @type {string[]} */
+            const output = []
             let included = false
 
             if (currentGame.alphalist.includes(letter.toUpperCase())) {
@@ -314,14 +306,13 @@ export default class guessLetter {
                 return true
             }
 
-            for (let i in currentGame.ansList) {
+            for (const i in currentGame.ansList) {
                 const songname = currentGame.ansList[i]
                 const blurname = currentGame.blurlist[i]
-                let characters = ''
                 let letters = ''
 
                 if (/[\u4e00-\u9fa5]/.test(songname)) {
-                    characters = [...songname].filter(char => /[\u4e00-\u9fa5]/.test(char)).join("")
+                    const characters = [...songname].filter(char => /[\u4e00-\u9fa5]/.test(char)).join("")
                     letters = pinyin(characters, { pattern: 'first', toneType: 'none', type: 'string' })
                 }
 
@@ -377,7 +368,7 @@ export default class guessLetter {
      * @param {GameList} gameList 进行中的游戏列表
      */
     static async guess(e, gameList) {
-        const { group_id, msg, user_id, sender } = e //使用对象解构提取group_id,msg,user_id和sender
+        const { group_id, msg, sender } = e
         const currentGame = letterGameData[group_id];
         //必须已经开始了一局
         if (!currentGame) {
@@ -404,7 +395,7 @@ export default class guessLetter {
         currentGame.lastGuessedTime = currentTime
 
         const opened = `\n所有翻开的字母[ ${currentGame.alphalist.join(' ')}]\n`
-        const regex = /^[#/]\s*[第n]\s*(\d+|[一二三四五六七八九十百]+)\s*[个首\.]?(.*)$/
+        const regex = /^[#/]\s*[第n]\s*(\d+|[一二三四五六七八九十百]+)\s*[个首.]?(.*)$/
         /**
          * [0] 完整匹配
          * [1] Num
@@ -424,13 +415,7 @@ export default class guessLetter {
          * @type {string[]}
          */
         const output = []
-        let num = 0
-
-        if (isNaN(result[1])) {
-            num = NumberToArabic(result[1])
-        } else {
-            num = Number(result[1])
-        }
+        let num = isNaN(result[1]) ? NumberToArabic(result[1]) : Number(result[1])
 
         const content = result[2]
 
@@ -471,6 +456,7 @@ export default class guessLetter {
                         }
                         case "原版": {
                             send.reply(e, getPic.getIll(standard_id))
+                            break
                         }
                         default:
                             break;
@@ -578,7 +564,7 @@ export default class guessLetter {
 
         currentGame.ansList.forEach((value, index) => {
             const songname = value
-            let blurname = currentGame.blurlist[index]
+            const blurname = currentGame.blurlist[index]
 
             if (!blurname) {
                 return;

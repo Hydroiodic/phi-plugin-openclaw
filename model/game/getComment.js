@@ -54,20 +54,6 @@ export default new class getComment {
         })
         getFile.SetFile(dataPath, this.data);
 
-        // chokidar.watch(dataPath).on('change', () => {
-        //     logger.info('[phi-plugin] 重载评论区')
-        //     this.data = getFile.FileReader(dataPath);
-        //     this.map = {}
-        //     if (!this.data) {
-        //         this.data = {};
-        //         getFile.SetFile(dataPath);
-        //     }
-        //     Object.keys(this.data).forEach((/**@type {idString} */ id) => {
-        //         this.data[id].forEach((comment) => {
-        //             this.map[comment.thisId] = id
-        //         })
-        //     })
-        // });
     }
 
     /**
@@ -83,9 +69,9 @@ export default new class getComment {
      * @param {string} commentId 评论id
      */
     getByCommentId(commentId) {
-        let songId = this.map[commentId]
+        const songId = this.map[commentId]
         if (!songId) return null;
-        for (let i of this.data[songId]) {
+        for (const i of this.data[songId]) {
             if (i.thisId == commentId) {
                 i.songId = songId
                 return i;
@@ -100,7 +86,7 @@ export default new class getComment {
      * @param {commentObject} comment 评论数据
      */
     add(id, comment) {
-        let arr = new Uint32Array(1);
+        const arr = new Uint32Array(1);
         comment.thisId = crypto.getRandomValues(arr)[0].toString();
         if (this.data[id]) {
             this.data[id].push(comment)
@@ -117,7 +103,7 @@ export default new class getComment {
      * @param {string} commentId 评论id
      */
     del(commentId) {
-        let songId = this.map[commentId]
+        const songId = this.map[commentId]
         if (!songId) return false;
         for (let i = 0; i <= this.data[songId].length; ++i) {
             if (this.data[songId][i].thisId == commentId) {

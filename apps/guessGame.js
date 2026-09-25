@@ -7,7 +7,7 @@ import getBanGroup from '../model/user/getBanGroup.js';
 import phiPluginBase from '../components/baseClass.js';
 import logger from '../components/Logger.js';
 
-let games = "(提示猜曲|tipgame|(ltr|letter|开字母).*|guess|猜曲绘)"
+const games = "(提示猜曲|tipgame|(ltr|letter|开字母).*|guess|猜曲绘)"
 
 /**@import {botEvent} from '../components/baseClass.js' */
 
@@ -19,7 +19,7 @@ let games = "(提示猜曲|tipgame|(ltr|letter|开字母).*|guess|猜曲绘)"
  * 进行中的游戏列表
  * @type {GameList}
  */
-let gameList = {}
+const gameList = {}
 
 export class phiGames extends phiPluginBase {
     constructor() {
@@ -39,7 +39,7 @@ export class phiGames extends phiPluginBase {
                     log: false
                 },
                 {
-                    reg: `^[#/](出|开|翻|揭|看|翻开|打开|揭开|open)(\\s*)[a-zA-Z\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\d\S]$`,
+                    reg: `^[#/](出|开|翻|揭|看|翻开|打开|揭开|open)(\\s*)\\S$`,
                     fnc: 'reveal'
                 },
                 {
@@ -60,7 +60,7 @@ export class phiGames extends phiPluginBase {
      * @returns 
      */
     async start(e) {
-        let msg = e.msg.match(new RegExp(games))?.[0]
+        const msg = e.msg.match(new RegExp(games))?.[0]
         if (!e.group_id) {
             send.send_with_At(e, '请在群聊中使用这个功能嗷！')
             return false
@@ -76,30 +76,21 @@ export class phiGames extends phiPluginBase {
             case "tipgame":
             case "提示猜曲": {
 
-                if (await getBanGroup.get(e, 'tipgame')) {
-                    send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-                    return false
-                }
+                if (await getBanGroup.get(e, 'tipgame')) return false
 
                 return await guessTips.start(e, gameList)
             }
             case "guess":
             case "猜曲绘": {
 
-                if (await getBanGroup.get(e, 'guessgame')) {
-                    send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-                    return false
-                }
+                if (await getBanGroup.get(e, 'guessgame')) return false
 
                 return await guessIll.start(e, gameList)
             }
             default: {
                 if (msg.startsWith("ltr") || msg.startsWith("letter") || msg.startsWith("开字母")) {
 
-                    if (await getBanGroup.get(e, 'ltrgame')) {
-                        send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-                        return false
-                    }
+                    if (await getBanGroup.get(e, 'ltrgame')) return false
 
                     return await guessLetter.start(e, gameList)
                 }

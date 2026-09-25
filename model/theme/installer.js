@@ -314,7 +314,6 @@ export async function assertMarketInstallTarget(themeId) {
 
 /** @param {string} themeId @param {{version:string,sha256:string}} download @param {string} zipPath */
 async function installMarketArchiveUnlocked(themeId, download, zipPath) {
-    let stage = ''
     try {
         const recoveryFailures = await recoverAllMarketInstallsUnlocked()
         if (recoveryFailures.length) throw new ThemeMarketClientError('theme_install_recovery_failed')
@@ -322,7 +321,7 @@ async function installMarketArchiveUnlocked(themeId, download, zipPath) {
         const { existing } = await assertMarketInstallTarget(themeId)
 
         const id = crypto.randomUUID()
-        stage = path.join(WORK_DIR, `stage-${themeId}-${id}`)
+        const stage = path.join(WORK_DIR, `stage-${themeId}-${id}`)
         const backup = path.join(THEMES_DIR, `.phi-market-backup-${themeId}-${id}`)
         let movedOld = false
         let installed = false
@@ -362,7 +361,7 @@ async function installMarketArchiveUnlocked(themeId, download, zipPath) {
             }
             throw error
         } finally {
-            if (stage) await fs.promises.rm(stage, { recursive: true, force: true }).catch(() => {})
+            await fs.promises.rm(stage, { recursive: true, force: true }).catch(() => {})
         }
     } finally {
         await fs.promises.rm(zipPath, { force: true }).catch(() => {})

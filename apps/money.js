@@ -9,9 +9,9 @@ import { infoPath } from '../model/filesystem/path.js'
 import phiPluginBase from '../components/baseClass.js'
 import fCompute from '../model/game/fCompute.js'
 import picmodle from '../model/render/picmodle.js'
-import Save from '../model/save/Save.js'
+/** @import Save from '../model/save/Save.js' */
 import { Level, LevelNum, redisPath } from '../model/game/constNum.js'
-import PluginData from '../model/user/pluginData.js'
+/** @import PluginData from '../model/user/pluginData.js' */
 import themeManager from '../model/theme/manager.js'
 import makeRequest from '../model/api/makeRequest.js'
 import logger from '../components/Logger.js'
@@ -22,7 +22,6 @@ import { getThemeInstallRequesterId } from '../model/theme/installGuard.js'
 
 /**@import {botEvent} from '../components/baseClass.js' */
 
-const illlist = getInfo.illlist
 /** 主题列表（内置 + 自定义，实时获取以支持热更新） */
 const getThemeList = () => themeManager.getThemeList()
 
@@ -69,7 +68,7 @@ const spData = [{
  * 一言
  * @type {Record<"hitokoto" | "from", string>[]}
  */
-let sentence = await readFile.FileReader(path.join(infoPath, 'sentences.json'))
+const sentence = await readFile.FileReader(path.join(infoPath, 'sentences.json'))
 
 export class phimoney extends phiPluginBase {
     constructor() {
@@ -114,10 +113,7 @@ export class phimoney extends phiPluginBase {
      */
     async sign(e) {
 
-        if (await getBanGroup.get(e, 'sign')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'sign')) return false
 
         const save = await send.getsave_result(e, undefined, false)
         return getNotes.withUsers([e.user_id], () => this.signWithSave(e, save))
@@ -125,14 +121,14 @@ export class phimoney extends phiPluginBase {
 
     /** @param {botEvent} e @param {Save | false} save */
     async signWithSave(e, save) {
-        let data = await getNotes.getNotesData(e.user_id)
-        let last_sign = new Date(data.sign_in)
-        let now_time = new Date()
-        let request_time = getDayZeroTimestamp(now_time) //每天0点
-        let todayKey = formatDateKey(now_time)
+        const data = await getNotes.getNotesData(e.user_id)
+        const last_sign = new Date(data.sign_in)
+        const now_time = new Date()
+        const request_time = getDayZeroTimestamp(now_time) //每天0点
+        const todayKey = formatDateKey(now_time)
 
         // 特殊日期处理
-        let spDateIndex = checkSpDateIndex(now_time);
+        const spDateIndex = checkSpDateIndex(now_time);
 
         let signedJustNow = false
         let getnum = 0
@@ -162,7 +158,7 @@ export class phimoney extends phiPluginBase {
 
         /** 今日任务：有存档且今日未刷新时，静默刷新一次并写回 */
         if (save) {
-            let last_task = new Date(data.task_time)
+            const last_task = new Date(data.task_time)
             if (last_task < request_time) {
                 data.task_time = now_time.toISOString()
                 data.task = await randtask(e, save, [])
@@ -189,12 +185,9 @@ export class phimoney extends phiPluginBase {
      */
     async retask(e) {
 
-        if (await getBanGroup.get(e, 'retask')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'retask')) return false
 
-        let save = await send.getsave_result(e)
+        const save = await send.getsave_result(e)
 
         if (!save) {
             return false
@@ -205,10 +198,10 @@ export class phimoney extends phiPluginBase {
 
     /** @param {botEvent} e @param {Save} save */
     async retaskWithSave(e, save) {
-        let data = await getNotes.getNotesData(e.user_id)
-        let last_task = new Date(data.task_time)
-        let now_time = new Date()
-        let request_time = getDayZeroTimestamp(now_time) //每天0点
+        const data = await getNotes.getNotesData(e.user_id)
+        const last_task = new Date(data.task_time)
+        const now_time = new Date()
+        const request_time = getDayZeroTimestamp(now_time) //每天0点
         /**@type {import('../model/user/pluginData.js').taskObj[]} */
         let oldtask = []
 
@@ -250,17 +243,14 @@ export class phimoney extends phiPluginBase {
      */
     async tasks(e) {
 
-        if (await getBanGroup.get(e, 'tasks')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'tasks')) return false
 
-        let save = await send.getsave_result(e)
+        const save = await send.getsave_result(e)
 
         if (!save) {
             return false
         }
-        let data = await getNotes.getNotesData(e.user_id)
+        const data = await getNotes.getNotesData(e.user_id)
 
         const img = await picmodle.common(e, 'sign', await picData(save, data, e));
 
@@ -275,12 +265,9 @@ export class phimoney extends phiPluginBase {
      */
     async send(e) {
 
-        if (await getBanGroup.get(e, 'send')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'send')) return false
         const tmp = `\n格式：/${Config.getUserCfg('config', 'cmdhead')} send <用户ID或@> <数量>\n用户ID可由对方发送 /phi identity 获取；QQ Bot 的用户ID不一定是QQ号。`;
-        let msg = e.msg.replace(/[#/](.*?)(send|送|转)(\s*)/g, "")
+        const msg = e.msg.replace(/[#/](.*?)(send|送|转)(\s*)/g, "")
         const parts = msg.trim().match(/^(<@!?[^>]+>|\[CQ:at,qq=[^\]]+\]|\S+)\s+(\S+)$/)
         if (!parts) {
             send.send_with_At(e, `格式错误！请指定目标${tmp}`, true)
@@ -335,14 +322,11 @@ export class phimoney extends phiPluginBase {
      */
     async theme(e) {
 
-        if (await getBanGroup.get(e, 'theme')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'theme')) return false
 
         const themeList = getThemeList()
-        let msg = e.msg.replace(/.*?theme\s*/g, '')
-        let aim = Number(msg)
+        const msg = e.msg.replace(/.*?theme\s*/g, '')
+        const aim = Number(msg)
         if (!Number.isInteger(aim) || aim < 0 || aim > themeList.length - 1) {
             send.send_with_At(e, `请输入主题数字嗷！\n格式/${Config.getUserCfg('config', 'cmdhead')} theme 0-${themeList.length - 1}`)
             return false
@@ -381,13 +365,10 @@ export class phimoney extends phiPluginBase {
      */
     async jrrp(e) {
 
-        if (await getBanGroup.get(e, 'jrrp')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'jrrp')) return false
 
-        let jrrp = (await createJrrp(e)).oriData;
-        let data = {
+        const jrrp = (await createJrrp(e)).oriData;
+        const data = {
             bkg: getInfo.getill(/**@type {any} */("ShineAfter.ADeanJocularACE.0")),
             lucky: jrrp[0],
             luckRank: jrrp[0] == 100 ? 5 : (jrrp[0] >= 80 ? 4 : (jrrp[0] >= 60 ? 3 : (jrrp[0] >= 40 ? 2 : (jrrp[0] >= 20 ? 1 : 0)))),
@@ -411,9 +392,9 @@ export class phimoney extends phiPluginBase {
  * @returns 
  */
 async function randtask(e, save, task = []) {
-    let rks = save.saveInfo.summary.rankingScore
-    let gameRecord = save.gameRecord
-    let info = getInfo.ori_info
+    const rks = save.saveInfo.summary.rankingScore
+    const gameRecord = save.gameRecord
+    const info = getInfo.ori_info
 
     const { com_rks } = await save.getB19(e, 1000, { avgType: "none" });
 
@@ -481,7 +462,7 @@ async function randtask(e, save, task = []) {
 
 
     /**@type {{song: idString, level: levelKind}[][]} */
-    let ranked_songs = [[], [], [], [], []] //任务难度分级后的曲目列表
+    const ranked_songs = [[], [], [], [], []] //任务难度分级后的曲目列表
 
     if (allTaskList.length < 5) {
         const rank_line = [];
@@ -505,13 +486,13 @@ async function randtask(e, save, task = []) {
         rank_line.push(18)
 
         /**将曲目分级并处理 */
-        for (let id of fCompute.objectKeys(info)) {
+        for (const id of fCompute.objectKeys(info)) {
             if (!info[id]?.chart) continue
-            for (let level of Level) {
+            for (const level of Level) {
                 if (info[id].chart[level]) {
                     if (!gameRecord[id] || !gameRecord[id][LevelNum[level]] || gameRecord[id][LevelNum[level]]?.acc != 100) {
-                        let dif = info[id].chart[level].difficulty
-                        for (let i in rank_line) {
+                        const dif = info[id].chart[level].difficulty
+                        for (const i in rank_line) {
                             if (dif < rank_line[i]) {
                                 ranked_songs[i].push({ song: id, level })
                                 break
@@ -524,20 +505,15 @@ async function randtask(e, save, task = []) {
 
     }
 
-    for (let i in ranked_songs) {
+    for (const i in ranked_songs) {
         if (task[i] && task[i].finished == true) {
             continue
         }
         if (cmdTask.length || phiTask.length) {
             /**@type {taskObj[]} */
-            let crtTaskList = [];
-            if (!phiTask.length || randint(100) < 80) {
-                crtTaskList = cmdTask;
-            } else {
-                crtTaskList = phiTask;
-            }
+            const crtTaskList = cmdTask.length && (!phiTask.length || randint(100) < 80) ? cmdTask : phiTask;
             const randIndex = randint(crtTaskList.length - 1);
-            let aim = crtTaskList.splice(randIndex, 1)[0];
+            const aim = crtTaskList.splice(randIndex, 1)[0];
             task[i] = {
                 song: aim.id,
                 reward: comReward(com_rks, aim.diff, aim.value, aim.oldAcc),
@@ -550,21 +526,15 @@ async function randtask(e, save, task = []) {
             }
         } else if (ranked_songs[i].length) {
             const randIndex = randint(ranked_songs[i].length - 1);
-            let aim = ranked_songs[i][randIndex];
+            const aim = ranked_songs[i][randIndex];
             if (!aim) {
                 continue
             }
-            let id = aim.song
-            let levelN = LevelNum[aim.level]
-            let diff = info?.[id]?.chart?.[aim.level]?.difficulty || 0
-            let value
-            let old_acc = 0
-            let old_score = 0
-            if (gameRecord[id] && gameRecord[id][levelN]) {
-                old_acc = gameRecord[id][levelN].acc
-                old_score = gameRecord[id][levelN].score
-            }
-            value = Math.min(Number(easeInSine(Math.random(), Math.min(old_acc + 0.01, 100), 100 - Math.min(old_acc + 0.01, 100), 1).toFixed(2)), 100)
+            const id = aim.song
+            const levelN = LevelNum[aim.level]
+            const diff = info?.[id]?.chart?.[aim.level]?.difficulty || 0
+            const old_acc = gameRecord[id]?.[levelN]?.acc || 0
+            const value = Math.min(Number(easeInSine(Math.random(), Math.min(old_acc + 0.01, 100), 100 - Math.min(old_acc + 0.01, 100), 1).toFixed(2)), 100)
 
             task[i] = {
                 song: aim.song,
@@ -592,14 +562,14 @@ async function randtask(e, save, task = []) {
  * @param {botEvent} e 
  */
 async function picData(save, plugin_data, e) {
-    let now_time = new Date()
-    let todayKey = formatDateKey(now_time)
+    const now_time = new Date()
+    const todayKey = formatDateKey(now_time)
 
     /** 今日人品（复用 jrrp 的 redis 数据，保证一致） */
-    let fortune = await createJrrp(e)
+    const fortune = await createJrrp(e)
 
     /** 进度条（解锁/FC/PHI 三层叠加） */
-    let edgeRate = {
+    const edgeRate = {
         EZ: { unlock: '0%', fc: '0%', phi: '0%' },
         HD: { unlock: '0%', fc: '0%', phi: '0%' },
         IN: { unlock: '0%', fc: '0%', phi: '0%' },
@@ -607,7 +577,7 @@ async function picData(save, plugin_data, e) {
     }
     if (save) {
         try {
-            let stats = await save.getStats()
+            const stats = await save.getStats()
             edgeRate.EZ.unlock = percent(stats?.[0]?.unlock, stats?.[0]?.tot)
             edgeRate.EZ.fc = percent(stats?.[0]?.fc, stats?.[0]?.tot)
             edgeRate.EZ.phi = percent(stats?.[0]?.phi, stats?.[0]?.tot)
@@ -627,7 +597,7 @@ async function picData(save, plugin_data, e) {
     }
 
     /** 日历（当月） */
-    let calendar = buildCalendar(now_time.getFullYear(), now_time.getMonth() + 1, new Set(plugin_data.sign_history || []), todayKey)
+    const calendar = buildCalendar(now_time.getFullYear(), now_time.getMonth() + 1, new Set(plugin_data.sign_history || []), todayKey)
 
     /** 公告 */
     let notice = null;
@@ -640,15 +610,15 @@ async function picData(save, plugin_data, e) {
 
     /** 任务列表（展示前 5 条） */
     /**@type {{index: string, song: string, illustration: string, meta: string, finished: boolean}[]} */
-    let dailyTasks = []
+    const dailyTasks = []
     if (save && Array.isArray(plugin_data.task)) {
         for (let i = 0; i < Math.min(5, plugin_data.task.length); i++) {
-            let t = plugin_data.task[i]
+            const t = plugin_data.task[i]
             if (!t) continue
             const songInfo = getInfo.ori_info?.[t.song];
-            let ill = getInfo.getill(t.song)
-            let songName = songInfo?.song || t.song
-            let meta = `${t.request?.rank || ''} ${songInfo?.chart?.[t.request.rank]?.difficulty || ''} · ${(t.request?.type || '').toUpperCase()} ${t.request?.value ?? ''} · +${t.reward || 0} Notes`
+            const ill = getInfo.getill(t.song)
+            const songName = songInfo?.song || t.song
+            const meta = `${t.request?.rank || ''} ${songInfo?.chart?.[t.request.rank]?.difficulty || ''} · ${(t.request?.type || '').toUpperCase()} ${t.request?.value ?? ''} · +${t.reward || 0} Notes`
             dailyTasks.push({
                 index: fCompute.ped(i + 1, 2),
                 song: songName,
@@ -666,7 +636,7 @@ async function picData(save, plugin_data, e) {
         ChallengeMode: save ? Math.floor(save.saveInfo.summary.challengeModeRank / 100) : 0,
         ChallengeModeRank: save ? (save.saveInfo.summary.challengeModeRank % 100) : 0,
         avatar: save ? getInfo.idgetavatar(save.gameuser.avatar) : 'Introduction',
-        background: getInfo.getill(illlist[Math.floor(Math.random() * (illlist.length - 1))]),
+        background: getInfo.randomBackground(),
         Notes: plugin_data.money,
         signDays: Array.isArray(plugin_data.sign_history) ? plugin_data.sign_history.length : 0,
         lucky: fortune.lucky,
@@ -703,9 +673,7 @@ function comReward(rks, diff, value, oldAcc) {
  * @returns 
  */
 function randint(max, min = 0) {
-    const range = max - min + 1
-    const randomOffset = Math.floor(Math.random() * range)
-    return (randomOffset + min) % range + min
+    return fCompute.randInt(min, max)
 }
 
 /**
@@ -752,34 +720,18 @@ function getDayZeroTimestamp(t) {
  * @returns {string|string[]}
  */
 function helloMsg(now_time, type = 0) {
-
-    /**判断时间段 */
-    const now_time_str = now_time.toString();
-    let time1 = new Date(now_time_str.replace(/([0-9])+:([0-9])+:([0-9])+/, '06:00:00')).getTime()
-    let time2 = new Date(now_time_str.replace(/([0-9])+:([0-9])+:([0-9])+/, '11:30:00')).getTime()
-    let time3 = new Date(now_time_str.replace(/([0-9])+:([0-9])+:([0-9])+/, '13:00:00')).getTime()
-    let time4 = new Date(now_time_str.replace(/([0-9])+:([0-9])+:([0-9])+/, '18:30:00')).getTime()
-    let time5 = new Date(now_time_str.replace(/([0-9])+:([0-9])+:([0-9])+/, '23:00:00')).getTime()
-    let Remsg = []
-
-    const now_time_ms = new Date().getTime()
-
     const h_m_s = fCompute.formatDate(now_time, 'hh:mm:ss')
-    let ans = []
-    if (now_time_ms < time1) {
-        ans = [`现在是${h_m_s}，夜深了，注意休息哦！`, `(∪.∪ )...zzz`]
-    } else if (now_time_ms < time2) {
-        ans = [`现在是${h_m_s}，早安呐！`, `ヾ(≧▽≦*)o`]
-    } else if (now_time_ms < time3) {
-        ans = [`现在是${h_m_s}，午好嗷！`, `(╹ڡ╹ )`]
-    } else if (now_time_ms < time4) {
-        ans = [`现在是${h_m_s}，下午好哇！`, `(≧∀≦)ゞ`]
-    } else if (now_time_ms < time5) {
-        ans = [`现在是${h_m_s}，晚上好！`, `( •̀ ω •́ )✧`]
-    } else {
-        ans = [`现在是${h_m_s}，夜深了，注意休息哦！`, `(∪.∪ )...zzz`]
-    }
-
+    const minutes = now_time.getHours() * 60 + now_time.getMinutes()
+    /** @type {[number, string, string][]} 各时间段的结束时刻（分钟）与问候语 */
+    const greetings = [
+        [6 * 60, '夜深了，注意休息哦！', '(∪.∪ )...zzz'],
+        [11 * 60 + 30, '早安呐！', 'ヾ(≧▽≦*)o'],
+        [13 * 60, '午好嗷！', '(╹ڡ╹ )'],
+        [18 * 60 + 30, '下午好哇！', '(≧∀≦)ゞ'],
+        [23 * 60, '晚上好！', '( •̀ ω •́ )✧'],
+    ]
+    const [, text, face] = greetings.find(([end]) => minutes < end) ?? greetings[0]
+    const ans = [`现在是${h_m_s}，${text}`, face]
     return type ? ans : ans.join('');
 }
 
@@ -874,7 +826,7 @@ function buildCalendar(year, month, signHistory, todayKey) {
 async function createJrrp(e) {
     try {
         // @ts-ignore
-        let cacheText = await redis.get(`${redisPath}:jrrp:${e.user_id}`)
+        const cacheText = await redis.get(`${redisPath}:jrrp:${e.user_id}`)
         if (cacheText) {
             try {
                 const arr = JSON.parse(cacheText)
@@ -901,9 +853,9 @@ async function createJrrp(e) {
         let common = [...getInfo.word.common]
         let local_sentence = sentence;
 
-        let now_time = new Date()
+        const now_time = new Date()
         // 特殊日期处理
-        let spDateIndex = checkSpDateIndex(now_time);
+        const spDateIndex = checkSpDateIndex(now_time);
         if (spDateIndex !== -1 && spData[spDateIndex].jrrp) {
             luckyRange = spData[spDateIndex].jrrp.lucky ?? luckyRange
             good = spData[spDateIndex].jrrp.good ?? good
@@ -925,7 +877,7 @@ async function createJrrp(e) {
             data.push(..."诸事不宜诸事不宜".split(""));
         } else {
             for (let i = 0; i < 4; i++) {
-                let id = Math.floor(Math.random() * (good.length + common.length))
+                const id = Math.floor(Math.random() * (good.length + common.length))
                 if (id < good.length) {
                     data.push(good[id])
                     good.splice(id, 1)
@@ -935,7 +887,7 @@ async function createJrrp(e) {
                 }
             }
             for (let i = 0; i < 4; i++) {
-                let id = Math.floor(Math.random() * (bad.length + common.length))
+                const id = Math.floor(Math.random() * (bad.length + common.length))
                 if (id < bad.length) {
                     data.push(bad[id])
                     bad.splice(id, 1)

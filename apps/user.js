@@ -22,7 +22,6 @@ import {
 
 /**@import {botEvent} from '../components/baseClass.js' */
 
-const illList = getInfo.illlist
 export class phiuser extends phiPluginBase {
     constructor() {
         super({
@@ -66,19 +65,16 @@ export class phiuser extends phiPluginBase {
      */
     async data(e) {
 
-        if (await getBanGroup.get(e, 'data')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'data')) return false
 
 
-        let save = await send.getsave_result(e)
+        const save = await send.getsave_result(e)
 
         if (!save) {
             return true
         }
         if (save.gameProgress) {
-            let data = save.gameProgress.money
+            const data = save.gameProgress.money
             send.send_with_At(e, `您的data数为：${data[4] ? `${data[4]}PB ` : ''}${data[3] ? `${data[3]}TB ` : ''}${data[2] ? `${data[2]}GB ` : ''}${data[1] ? `${data[1]}MB ` : ''}${data[0] ? `${data[0]}KB ` : ''}`)
         } else {
             send.send_with_At(e, `请先更新数据哦！\n/${Config.getUserCfg('config', 'cmdhead')} update`)
@@ -93,14 +89,11 @@ export class phiuser extends phiPluginBase {
     async info(e) {
         const credentials = UserCredentials.fromEvent(e)
 
-        if (await getBanGroup.get(e, 'info')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'info')) return false
         /**背景 */
         let bksong = e.msg.replace(/^.*(info)[1-2]?\s*/g, '')
         if (bksong) {
-            let tem = getInfo.fuzzysongsnick(bksong)[0]
+            const tem = getInfo.fuzzysongsnick(bksong)[0]
             if (tem) {
                 bksong = getInfo.getill(tem)
             } else {
@@ -108,10 +101,10 @@ export class phiuser extends phiPluginBase {
             }
         }
         if (!bksong) {
-            bksong = getInfo.getill(illList[fCompute.randInt(0, illList.length - 1)], 'blur')
+            bksong = getInfo.randomBackground('blur')
         }
 
-        let save = await send.getsave_result(e, 1.0)
+        const save = await send.getsave_result(e, 1.0)
 
         if (!save) {
             return true
@@ -121,19 +114,18 @@ export class phiuser extends phiPluginBase {
         // 主题管理器才能命中主题包中的完整页面键。
         const pluginData = await getNotes.getNotesData(e.user_id)
 
-        let stats = await save.getStats()
+        const stats = await save.getStats()
 
-        let money = save.gameProgress.money
-        let userbackground = await fCompute.getBackground(save.gameuser.background)
+        const money = save.gameProgress.money
+        const userbackground = await fCompute.getBackground(save.gameuser.background)
 
         if (!userbackground) {
             send.reply(e, `ERROR: 未找到[${save.gameuser.background}]的有关信息！`)
             logger.error(`未找到${save.gameuser.background}对应的曲绘！`)
         }
 
-        // let dan = await getInfo.getDan(e.user_id)
 
-        let gameuser = {
+        const gameuser = {
             avatar: getInfo.idgetavatar(save.gameuser.avatar),
             ChallengeMode: Math.floor(save.saveInfo.summary.challengeModeRank / 100),
             ChallengeModeRank: save.saveInfo.summary.challengeModeRank % 100,
@@ -142,8 +134,6 @@ export class phiuser extends phiPluginBase {
             selfIntro: fCompute.convertRichText(save.gameuser.selfIntro),
             backgroundurl: userbackground,
             PlayerId: fCompute.convertRichText(save.saveInfo.PlayerId),
-            // CLGMOD: dan?.Dan,
-            // EX: dan?.EX,
         }
 
         let user_data;
@@ -164,20 +154,20 @@ export class phiuser extends phiPluginBase {
             send.send_with_At(e, '没有找到可用的历史记录，请先更新存档。')
             return true
         }
-        let { rks_history, data_history, rks_range, data_range, rks_date, data_date } = user_data.getRksAndDataLine()
+        const { rks_history, data_history, rks_range, data_range, rks_date, data_date } = user_data.getRksAndDataLine()
 
 
         /**统计在要求acc>=i的前提下，玩家的rks为多少 */
         /**存档 */
-        let acc_rksRecord = save.getRecord()
+        const acc_rksRecord = save.getRecord()
         /**phi列表 */
-        let acc_rks_phi = save.findAccRecord(100)
+        const acc_rks_phi = save.findAccRecord(100)
         /**所有rks节点 */
-        let acc_rks_data = []
+        const acc_rks_data = []
         /**转换成坐标的节点 */
-        let acc_rks_data_ = []
+        const acc_rks_data_ = []
         /**rks上下界 */
-        let acc_rks_range = [100, 0]
+        const acc_rks_range = [100, 0]
 
         /**预处理 */
         let phi_rks = 0;
@@ -191,7 +181,7 @@ export class phiuser extends phiPluginBase {
         }
 
         /**原本b19中最小acc 要展示的acc序列 */
-        let acc_rks_AccRange = [100]
+        const acc_rks_AccRange = [100]
 
         for (let i = 0; i < Math.min(acc_rksRecord.length, 27); i++) {
             acc_rks_AccRange[0] = Math.min(acc_rks_AccRange[0], acc_rksRecord[i].acc)
@@ -215,8 +205,7 @@ export class phiuser extends phiPluginBase {
                     break
                 }
             }
-            // console.info(acc_rksRecord[0])
-            let tem_rks = (sum_rks + phi_rks) / 30
+            const tem_rks = (sum_rks + phi_rks) / 30
             acc_rks_data.push([i, tem_rks])
             acc_rks_range[0] = Math.min(acc_rks_range[0], tem_rks)
             acc_rks_range[1] = Math.max(acc_rks_range[1], tem_rks)
@@ -225,7 +214,6 @@ export class phiuser extends phiPluginBase {
         if (acc_rks_AccRange[acc_rks_AccRange.length - 1] < 100) {
             acc_rks_AccRange.push(100)
         }
-        // console.info(acc_rks_AccRange)
 
         for (let i = 1; i < acc_rks_data.length; ++i) {
             if (acc_rks_data_[0] && acc_rks_data[i - 1][1] == acc_rks_data[i][1]) {
@@ -234,16 +222,15 @@ export class phiuser extends phiPluginBase {
                 acc_rks_data_.push([fCompute.range(acc_rks_data[i - 1][0], acc_rks_AccRange), fCompute.range(acc_rks_data[i - 1][1], acc_rks_range), fCompute.range(acc_rks_data[i][0], acc_rks_AccRange), fCompute.range(acc_rks_data[i][1], acc_rks_range)])
             }
         }
-        // console.info(acc_rks_data_)
 
         /**处理acc显示区间，防止横轴数字重叠 */
         if (acc_rks_AccRange[0] == 100) {
             acc_rks_AccRange[0] = 0
         }
-        let acc_length = (100 - acc_rks_AccRange[0])
-        let min_acc = acc_rks_AccRange[0]
+        const acc_length = (100 - acc_rks_AccRange[0])
+        const min_acc = acc_rks_AccRange[0]
         /**要传的数组 */
-        let acc_rks_AccRange_position = []
+        const acc_rks_AccRange_position = []
         while (100 - acc_rks_AccRange[acc_rks_AccRange.length - 2] < acc_length / 10) {
             acc_rks_AccRange.splice(acc_rks_AccRange.length - 2, 1)
         }
@@ -254,11 +241,8 @@ export class phiuser extends phiPluginBase {
             }
             acc_rks_AccRange_position.push([acc_rks_AccRange[i], (acc_rks_AccRange[i] - min_acc) / acc_length * 100])
         }
-        // console.info(acc_rks_AccRange_position)
-        // console.info(acc_rks_data_)
-        // console.info(acc_rks_range)
 
-        let data = {
+        const data = {
             gameuser: gameuser,
             userstats: stats,
             rks_history: rks_history,
@@ -274,7 +258,6 @@ export class phiuser extends phiPluginBase {
             theme: pluginData?.theme || 'star',
         }
 
-        // console.info(acc_rks_AccRange_position)
 
         const infoVersion = e.msg.match(new RegExp(`^[#/](?:${Config.getUserCfg('config', 'cmdhead')})\\s*info([12])?`, 'i'))?.at(-1)
         const kind = Number(infoVersion || 0)
@@ -288,13 +271,10 @@ export class phiuser extends phiPluginBase {
      */
     async lvscore(e) {
 
-        if (await getBanGroup.get(e, 'lvscore')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'lvscore')) return false
 
 
-        let save = await send.getsave_result(e, 1.0)
+        const save = await send.getsave_result(e, 1.0)
 
         if (!save) {
             return true
@@ -328,7 +308,7 @@ export class phiuser extends phiPluginBase {
                 range[0] = Number(range[0])
                 range[1] = Number(range[1])
                 if (range[0] > range[1]) {
-                    let tem = range[1]
+                    const tem = range[1]
                     range[1] = range[0]
                     range[0] = tem
                 }
@@ -354,7 +334,7 @@ export class phiuser extends phiPluginBase {
         let tothighest = 0
         let totlowest = 17
         let totsongs = 0
-        let totRating = {
+        const totRating = {
             phi: 0,
             FC: 0,
             V: 0,
@@ -365,13 +345,13 @@ export class phiuser extends phiPluginBase {
             F: 0,
             NEW: 0,
         }
-        let totRank = {
+        const totRank = {
             AT: 0,
             IN: 0,
             HD: 0,
             EZ: 0,
         }
-        let unlockRank = {
+        const unlockRank = {
             AT: 0,
             IN: 0,
             HD: 0,
@@ -379,16 +359,16 @@ export class phiuser extends phiPluginBase {
         }
         let unlocksongs = 0
 
-        let Record = save.gameRecord
+        const Record = save.gameRecord
 
 
-        for (let id of fCompute.objectKeys(getInfo.ori_info)) {
-            let info = getInfo.ori_info[id]
+        for (const id of fCompute.objectKeys(getInfo.ori_info)) {
+            const info = getInfo.ori_info[id]
             let vis = false
             if (!info?.chart) continue
-            for (let i of Level) {
+            for (const i of Level) {
                 if (!info.chart[i]) continue
-                let difficulty = info.chart[i].difficulty
+                const difficulty = info.chart[i].difficulty
                 if (range[0] <= difficulty && difficulty <= range[1] && isask[Level.indexOf(i)]) {
                     ++totcharts
                     ++totRank[i]
@@ -401,15 +381,15 @@ export class phiuser extends phiPluginBase {
         }
 
 
-        for (let id of fCompute.objectKeys(Record)) {
-            let info = getInfo.info(id, true)
-            let record = Record[id]
+        for (const id of fCompute.objectKeys(Record)) {
+            const info = getInfo.info(id, true)
+            const record = Record[id]
             let vis = false
             if (!info?.chart) continue
-            for (let lv in [0, 1, 2, 3]) {
+            for (const lv in [0, 1, 2, 3]) {
                 const levelName = Level[lv];
                 if (!info.chart[levelName]) continue
-                let difficulty = info.chart[levelName].difficulty
+                const difficulty = info.chart[levelName].difficulty
                 if (range[0] <= difficulty && difficulty <= range[1] && isask[lv]) {
 
                     if (!record[lv]) continue
@@ -441,14 +421,14 @@ export class phiuser extends phiPluginBase {
             }
         }
 
-        let illustration = await fCompute.getBackground(save.gameuser.background)
+        const illustration = await fCompute.getBackground(save.gameuser.background)
 
         if (!illustration) {
             send.reply(e, `ERROR: 未找到[${save.gameuser.background}]背景的有关信息！`)
             logger.error(`未找到${save.gameuser.background}的曲绘！`)
         }
 
-        let data = {
+        const data = {
             tot: {
                 at: totRank.AT,
                 in: totRank.IN,
@@ -492,17 +472,9 @@ export class phiuser extends phiPluginBase {
             ChallengeModeRank: save.saveInfo.summary.challengeModeRank % 100,
             rks: save.saveInfo.summary.rankingScore,
             PlayerId: fCompute.convertRichText(save.saveInfo.PlayerId),
-            background: getInfo.getill(illList[fCompute.randInt(0, illList.length - 1)], 'blur'),
+            background: getInfo.randomBackground('blur'),
         }
 
-        // let remsg = ''
-        // remsg += `\n${range[0]}-${range[1]} `
-        // remsg += `clear:${totcleared} fc:${totfc} phi:${totphi}\n`
-        // remsg += `${progress_bar(totphi / totcharts, 30)} ${totphi}/${totcharts}\n`
-        // remsg += `Tot: ${unlockcharts}/${totcharts} acc: ${(totacc / totcharts).toFixed(4)}\n`
-        // remsg += `score: ${totreal_score}/${tottot_score}\n`
-        // remsg += `highest: ${tothighest.toFixed(4)} lowest:${totlowest.toFixed(4)}\n`
-        // remsg += `φ:${totRating['phi']} FC:${totRating['FC']} V:${totRating['V']} S:${totRating['S']} A:${totRating['A']} B:${totRating['B']} C:${totRating['C']} F:${totRating['F']}`
 
 
         send.send_with_At(e, await picmodle.lvsco(e, data))
@@ -515,13 +487,10 @@ export class phiuser extends phiPluginBase {
      */
     async list(e) {
 
-        if (await getBanGroup.get(e, 'list')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'list')) return false
 
 
-        let save = await send.getsave_result(e)
+        const save = await send.getsave_result(e)
 
         if (!save) {
             return true
@@ -531,12 +500,7 @@ export class phiuser extends phiPluginBase {
         const acc_range = [0, 100];
 
         /** @type {string} */
-        let msg = e.msg.replace(/^[#/](.*?)list/, "")
-
-        /**EZ HD IN AT */
-        let isask = [true, true, true, true]
-
-        msg = msg.toUpperCase()
+        let msg = e.msg.replace(/^[#/](.*?)list/, "").toUpperCase()
 
         const accStr = msg.match(/-ACC\s*\d+(\.\d+)?(\s*[-～~]\s*\d+(\.\d+)?|\s*[+-])?/i)?.[0];
         if (accStr) {
@@ -550,46 +514,27 @@ export class phiuser extends phiPluginBase {
             msg = msg.replace(difStr, '');
         }
 
-        if (msg.includes('EZ') || msg.includes('HD') || msg.includes('IN') || msg.includes('AT')) {
-            isask = [false, false, false, false]
-            if (msg.includes('EZ')) { isask[0] = true }
-            if (msg.includes('HD')) { isask[1] = true }
-            if (msg.includes('IN')) { isask[2] = true }
-            if (msg.includes('AT')) { isask[3] = true }
-        }
-        msg = msg.replace(/(list|AT|IN|HD|EZ)*/g, "");
-
-        let scoreAsk = { NEW: true, F: true, C: true, B: true, A: true, S: true, V: true, FC: true, PHI: true };
-        const selectedTags = msg.match(/\b(?:NEW|F|C|B|A|S|V|FC|PHI|AP)\b/g);
-        if (selectedTags) {
-            scoreAsk = { NEW: false, F: false, C: false, B: false, A: false, S: false, V: false, FC: false, PHI: false };
-            for (const tag of selectedTags) {
-                const key = tag === 'AP' ? 'PHI' : tag;
-                // @ts-ignore
-                scoreAsk[key] = true;
-            }
-        }
-        msg = msg.replace(/\b(?:NEW|F|C|B|A|S|V|FC|PHI|AP)\b/g, "");
+        const { isask, scoreAsk } = fCompute.parseLevelAndRating(msg)
 
 
-        let Record = save.gameRecord
+        const Record = save.gameRecord
 
-        let data = []
+        const data = []
 
-        for (let id of fCompute.objectKeys(Record)) {
-            let song = getInfo.idgetsong(id)
+        for (const id of fCompute.objectKeys(Record)) {
+            const song = getInfo.idgetsong(id)
             if (!song) {
                 logger.warn('[phi-plugin]', id, '曲目无信息')
                 continue
             }
-            let info = getInfo.info(id, true)
+            const info = getInfo.info(id, true)
 
-            let record = Record[id]
+            const record = Record[id]
 
-            for (let lv of [0, 1, 2, 3]) {
+            for (const lv of [0, 1, 2, 3]) {
                 const levelName = Level[lv];
                 if (!info?.chart[levelName]) continue
-                let difficulty = info.chart[levelName].difficulty
+                const difficulty = info.chart[levelName].difficulty
                 if (!(dif_range[0] <= difficulty && difficulty <= dif_range[1] && isask[lv]))
                     continue;
                 if (!record[lv]) {
@@ -626,10 +571,10 @@ export class phiuser extends phiPluginBase {
             return (b.difficulty || 0) - (a.difficulty || 0)
         })
 
-        let plugin_data = await getNotes.getNotesData(e.user_id)
+        const plugin_data = await getNotes.getNotesData(e.user_id)
 
         //逻辑暂未实现
-        let request = []
+        const request = []
         request.push(`定数 ${dif_range[0]}-${dif_range[1]}`);
         request.push(`ACC ${acc_range[0]}-${acc_range[1]}`);
 
@@ -637,14 +582,13 @@ export class phiuser extends phiPluginBase {
         send.send_with_At(e, await picmodle.list(e, {
             head_title: "成绩筛选",
             song: data,
-            background: getInfo.getill(illList[fCompute.randInt(0, illList.length - 1)]),
+            background: getInfo.randomBackground(),
             theme: plugin_data?.theme || 'star',
             PlayerId: save.saveInfo.PlayerId,
             Rks: Number(save.saveInfo.summary.rankingScore).toFixed(4),
             Date: save.saveInfo.summary.updatedAt,
             ChallengeMode: Math.floor(save.saveInfo.summary.challengeModeRank / 100),
             ChallengeModeRank: save.saveInfo.summary.challengeModeRank % 100,
-            // dan: await get.getDan(e.user_id),
             request: request
         }))
         await sendQuickCommands(e, userListQuickCommands(Config.getUserCfg('config', 'cmdhead')), '成绩筛选快捷操作')
@@ -660,13 +604,10 @@ export class phiuser extends phiPluginBase {
         const credentials = UserCredentials.fromEvent(e)
 
 
-        if (await getBanGroup.get(e, 'analyze2025SaveHistory')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'analyze2025SaveHistory')) return false
 
 
-        let save = await send.getsave_result(e)
+        const save = await send.getsave_result(e)
 
         if (!save) {
             return true
@@ -682,7 +623,7 @@ export class phiuser extends phiPluginBase {
 
         send.send_with_At(e, await picmodle.analyzeSaveHistory(e, {
             stats,
-            background: getInfo.getill(getInfo.illlist[fCompute.randInt(0, getInfo.illlist.length - 1)]),
+            background: getInfo.randomBackground(),
         }));
         await sendQuickCommands(e, historyQuickCommands(Config.getUserCfg('config', 'cmdhead')), '历史记录快捷操作')
     }
@@ -694,10 +635,7 @@ export class phiuser extends phiPluginBase {
      */
     async hisb30(e) {
         const credentials = UserCredentials.fromEvent(e)
-        if (await getBanGroup.get(e, 'hisb30')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'hisb30')) return false
 
         const save = await send.getsave_result(e)
 
@@ -918,7 +856,6 @@ export class phiuser extends phiPluginBase {
 
         const pluginData = await getNotes.getNotesData(e.user_id);
 
-        // let dan = await get.getDan(e.user_id)
         const money = save.gameProgress?.money || [0, 0, 0, 0, 0]
         const gameuser = {
             avatar: getInfo.idgetavatar(save.gameuser.avatar),
@@ -929,13 +866,12 @@ export class phiuser extends phiPluginBase {
             selfIntro: save.gameuser.selfIntro,
             backgroundUrl: await fCompute.getBackground(save.gameuser.background),
             PlayerId: fCompute.convertRichText(save.saveInfo.PlayerId),
-            // dan: dan,
         }
 
         send.send_with_At(e, await picmodle.common(e, 'historyB30', {
             gameuser,
             rows,
-            background: getInfo.getill(illList[fCompute.randInt(0, illList.length - 1)]),
+            background: getInfo.randomBackground(),
             theme: pluginData?.theme || 'star',
         }))
         await sendQuickCommands(e, historyQuickCommands(Config.getUserCfg('config', 'cmdhead')), '历史记录快捷操作')

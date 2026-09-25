@@ -5,7 +5,6 @@ import picmodle from '../model/render/picmodle.js'
 import getBanGroup from '../model/user/getBanGroup.js';
 import phiPluginBase from '../components/baseClass.js';
 import makeRequest from '../model/api/makeRequest.js';
-import logger from '../components/Logger.js';
 import { UserCredentials } from '../model/user/userCredentials.js';
 import { canUseApi, getApiAccessState } from '../model/user/apiPermission.js'
 import platform from '../components/platform/index.js'
@@ -372,10 +371,7 @@ export class phihelp extends phiPluginBase {
    */
   async chart(e) {
 
-    if (await getBanGroup.get(e, 'chart')) {
-      send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-      return false
-    }
+    if (await getBanGroup.get(e, 'chart')) return false
 
     await this.getMicInfoFromMsg(e, /[#/](.*?)(chart)(\s*)/, ['rank'], {}, async (e, id, optObj) => {
       await getChartImg(e, id, optObj)
@@ -390,10 +386,7 @@ export class phihelp extends phiPluginBase {
    * @returns {Promise<boolean>}
    */
   async tag(e) {
-    if (await getBanGroup.get(e, 'tag')) {
-      send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-      return false
-    }
+    if (await getBanGroup.get(e, 'tag')) return false
 
     const apiAccess = await getApiAccessState(e, 'scoreStatistics')
     if (!apiAccess.enabled) {
@@ -415,10 +408,7 @@ export class phihelp extends phiPluginBase {
    */
   async settag(e) {
     const credentials = UserCredentials.fromEvent(e)
-    if (await getBanGroup.get(e, 'tag')) {
-      send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-      return false
-    }
+    if (await getBanGroup.get(e, 'tag')) return false
 
     const apiAccess = await getApiAccessState(e)
     if (!apiAccess.enabled) {

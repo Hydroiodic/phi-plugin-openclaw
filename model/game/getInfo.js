@@ -1,5 +1,5 @@
 import readFile from '../filesystem/getFile.js'
-import { DlcInfoPath, configPath, dataPath, imgPath, infoPath, ortherIllPath, oldInfoPath, pluginResources } from '../filesystem/path.js'
+import { DlcInfoPath, dataPath, imgPath, infoPath, ortherIllPath, oldInfoPath, pluginResources } from '../filesystem/path.js'
 import { illustrationReference } from '../filesystem/illustrationReference.js'
 import path from 'path'
 import Config from '../../components/Config.js'
@@ -9,8 +9,8 @@ import { allLevel, Level, MAX_DIFFICULTY } from './constNum.js'
 import fCompute from './fCompute.js'
 import logger from '../../components/Logger.js'
 import fileWatcherRegistry from '../../components/FileWatcherRegistry.js'
-import Chart from './Chart.js'
-import Save from '../save/Save.js'
+/** @import Chart from './Chart.js' */
+/** @import Save from '../save/Save.js' */
 
 
 export default new class getInfo {
@@ -211,7 +211,7 @@ export default new class getInfo {
          * @description 扩增曲目信息
          **/
         this.DLC_Info = {}
-        let files = fs.readdirSync(DlcInfoPath).filter(file => file.endsWith('.json'))
+        const files = fs.readdirSync(DlcInfoPath).filter(file => file.endsWith('.json'))
         for (const file of files) {
             this.DLC_Info[path.basename(file, '.json')] = await readFile.FileReader(path.join(DlcInfoPath, file))
         }
@@ -229,9 +229,9 @@ export default new class getInfo {
         this.tips = await readFile.FileReader(path.join(infoPath, 'tips.txt')).replace(/\r/g, '').split('\n')
 
         /**自定义信息 */
-        let user_song = Config.getUserCfg('config', 'otherinfo')
+        const user_song = Config.getUserCfg('config', 'otherinfo')
         if (Config.getUserCfg('config', 'otherinfo')) {
-            for (let i in user_song) {
+            for (const i in user_song) {
                 if (user_song[i]['illustration_big']) {
                     this.illlist.push(user_song[i].song)
                 }
@@ -250,7 +250,7 @@ export default new class getInfo {
          */
         this.sp_info = {}
 
-        for (let i of fCompute.objectKeys(sp_json)) {
+        for (const i of fCompute.objectKeys(sp_json)) {
             const id = /** @type {idString} */(i + '.0');
             this.sp_info[id] = { ...sp_json[i] }
             this.sp_info[id].sp_vis = true
@@ -287,7 +287,7 @@ export default new class getInfo {
          * note统计
          * @type {{[x:idStringWithout0]:Record<levelKind, notesInfoObject>}}
          */
-        let notesInfo = await readFile.FileReader(path.join(infoPath, 'notesInfo.json'))
+        const notesInfo = await readFile.FileReader(path.join(infoPath, 'notesInfo.json'))
 
 
         const historyVersionList = fs.readdirSync(oldInfoPath)
@@ -299,16 +299,15 @@ export default new class getInfo {
 
         versionCodes = versionCodes.sort((a, b) => a - b)
 
-        let lastVersionCode = versionCodes[versionCodes.length - 2].toFixed(0)
+        const lastVersionCode = versionCodes[versionCodes.length - 2].toFixed(0)
 
-        for (let ver of historyVersionList) {
+        for (const ver of historyVersionList) {
             /**@type {versionInfoObject} */
             const verInfo = await readFile.FileReader(path.join(oldInfoPath, ver, 'info.json'))
             /**@type {csvDifObject[]} */
             const csvDifInfo = await readFile.FileReader(path.join(oldInfoPath, ver, 'change.csv'))
             /**@type {Record<idString, csvDifObject>} */
             const difInfo = {}
-            const verCode = Number(ver)
 
             if (ver == lastVersionCode) {
                 oldDif = csvDifInfo
@@ -326,7 +325,7 @@ export default new class getInfo {
 
             const ids = fCompute.objectKeys(difInfo)
 
-            for (let id of ids) {
+            for (const id of ids) {
                 /** @type {Record<levelKind, number>} */
                 const dif = /** @type {any} */ ({})
                 Level.forEach(level => {
@@ -371,21 +370,21 @@ export default new class getInfo {
          * 信息文件
          * @type {csvInfoObject[]}
          */
-        let CsvInfo = await readFile.FileReader(path.join(infoPath, 'info.csv'))
-        let Jsoninfo = await readFile.FileReader(path.join(infoPath, 'infolist.json'))
+        const CsvInfo = await readFile.FileReader(path.join(infoPath, 'info.csv'))
+        const Jsoninfo = await readFile.FileReader(path.join(infoPath, 'infolist.json'))
 
         /**
          * note统计
          * @type {{[x:idStringWithout0]:Record<levelKind, notesInfoObject>}}
          */
-        let oldNotes = await readFile.FileReader(path.join(infoPath, 'oldNotesInfo.json'))
+        const oldNotes = await readFile.FileReader(path.join(infoPath, 'oldNotesInfo.json'))
         /**
          * @type {Record<idStringWithout0, Partial<Record<levelKind, number>>>}
          */
-        let OldDifList = {}
-        for (let i in oldDif) {
+        const OldDifList = {}
+        for (const i in oldDif) {
             OldDifList[oldDif[i].id] = {}
-            for (let level of this.Level) {
+            for (const level of this.Level) {
                 if (oldDif[i][level]) {
                     OldDifList[oldDif[i].id][level] = Number(oldDif[i][level])
                 }
@@ -393,7 +392,6 @@ export default new class getInfo {
         }
 
 
-        // console.info(CsvInfo, Csvdif, Jsoninfo)
         for (let i = 0; i < CsvInfo.length; i++) {
 
             const id = /**@type {idString} */(CsvInfo[i].id + '.0')
@@ -433,7 +431,7 @@ export default new class getInfo {
             this.ori_info[id].composer = CsvInfo[i].composer
             this.ori_info[id].illustrator = CsvInfo[i].illustrator
             this.ori_info[id].chart = {}
-            for (let level of this.Level) {
+            for (const level of this.Level) {
 
                 if (CsvInfo[i][level]) {
 
@@ -461,7 +459,7 @@ export default new class getInfo {
                             /**
                              * @type {updatedChartObject}
                              */
-                            let tem = {
+                            const tem = {
                                 tap: undefined,
                                 drag: undefined,
                                 hold: undefined,
@@ -496,8 +494,8 @@ export default new class getInfo {
                                 if (oldNotes[idWithout0][level].t[3] != notesInfo[idWithout0][level].t[3]) {
                                     Object.assign(tem, { flick: [oldNotes[idWithout0][level].t[3], notesInfo[idWithout0][level].t[3]] })
                                 }
-                                let oldCombo = oldNotes[idWithout0][level].t[0] + oldNotes[idWithout0][level].t[1] + oldNotes[idWithout0][level].t[2] + oldNotes[idWithout0][level].t[3]
-                                let newCombo = notesInfo[idWithout0][level].t[0] + notesInfo[idWithout0][level].t[1] + notesInfo[idWithout0][level].t[2] + notesInfo[idWithout0][level].t[3]
+                                const oldCombo = oldNotes[idWithout0][level].t[0] + oldNotes[idWithout0][level].t[1] + oldNotes[idWithout0][level].t[2] + oldNotes[idWithout0][level].t[3]
+                                const newCombo = notesInfo[idWithout0][level].t[0] + notesInfo[idWithout0][level].t[1] + notesInfo[idWithout0][level].t[2] + notesInfo[idWithout0][level].t[3]
                                 if (oldCombo != newCombo) {
                                     Object.assign(tem, { combo: [oldCombo, newCombo] })
                                 }
@@ -531,7 +529,7 @@ export default new class getInfo {
          * 曲目别名列表 (id不带.0)
          * @type {Record<idStringWithout0, string[]>}
          */
-        let nicklistTemp = await readFile.FileReader(path.join(infoPath, 'nicklist.yaml')) || {}
+        const nicklistTemp = await readFile.FileReader(path.join(infoPath, 'nicklist.yaml')) || {}
         this.baseNicklist = /** @type {Record<idStringWithout0, string[]>} */ (structuredClone(nicklistTemp))
         this.approvedNicklist = /** @type {Record<idStringWithout0, string[]>} */ (
             await readFile.FileReader(path.join(dataPath, 'alias', 'approved-nicklist.yaml')) || {}
@@ -556,8 +554,8 @@ export default new class getInfo {
          */
         this.chapList = await readFile.FileReader(path.join(infoPath, 'chaplist.yaml'))
 
-        for (let i in this.chapList) {
-            for (let item of this.chapList[i]) {
+        for (const i in this.chapList) {
+            for (const item of this.chapList[i]) {
                 if (this.chapNick[item]) {
                     this.chapNick[item].push(i)
                 } else {
@@ -572,9 +570,9 @@ export default new class getInfo {
          */
         this.word = await readFile.FileReader(path.join(infoPath, 'jrrp.json'))
 
-        for (let songId of this.idList) {
-            for (let level of this.allLevel) {
-                let info = this.ori_info[songId]
+        for (const songId of this.idList) {
+            for (const level of this.allLevel) {
+                const info = this.ori_info[songId]
                 if (!info?.chart?.[level]?.difficulty) continue;
                 const difStr = info.chart[level].difficulty.toFixed(1);
                 if (this.info_by_difficulty[difStr]) {
@@ -715,17 +713,17 @@ export default new class getInfo {
         const usernick = Config.getUserCfg('nickconfig')
         const allinfo = this.all_info(original)
 
-        for (let std in this.songnick) {
-            let dis = fCompute.jaroWinklerDistance(mic, std)
+        for (const std in this.songnick) {
+            const dis = fCompute.jaroWinklerDistance(mic, std)
             if (dis >= Distance) {
-                for (let i in this.songnick[std]) {
+                for (const i in this.songnick[std]) {
                     result.push({ id: this.songnick[std][i], dis: dis })
                 }
             }
         }
 
         const ids = fCompute.objectKeys(allinfo);
-        for (let std of ids) {
+        for (const std of ids) {
             let dis = fCompute.jaroWinklerDistance(mic, std)
             if (dis >= Distance) {
                 result.push({ id: allinfo[std].id, dis: dis })
@@ -739,8 +737,8 @@ export default new class getInfo {
 
 
 
-        for (let std in usernick) {
-            let dis = fCompute.jaroWinklerDistance(mic, std)
+        for (const std in usernick) {
+            const dis = fCompute.jaroWinklerDistance(mic, std)
             if (dis >= Distance) {
                 usernick[std].forEach((id, i) => {
                     if (this.info(id) == undefined) return; //过滤无效id
@@ -755,8 +753,8 @@ export default new class getInfo {
         /**
          * @type {idString[]}
          */
-        let all = []
-        for (let i of result) {
+        const all = []
+        for (const i of result) {
 
             if (all.includes(i.id)) continue //去重
             /**如果有完全匹配的曲目则放弃剩下的 */
@@ -803,6 +801,24 @@ export default new class getInfo {
         }
         if (this.sp_info?.[id]) return this.getResourceIllustration('SP', filename)
         return path.join(imgPath, 'phigros.png')
+    }
+
+    /**
+     * 按版本号（如 3.10.0）或版本代码查找历史定数版本
+     * @param {string | number} version
+     * @returns {versionInfoObject | undefined}
+     */
+    findVersion(version) {
+        const key = String(version)
+        return key.includes('.') ? this.versionInfoByLabel[key] : this.versionInfoByCode[key]
+    }
+
+    /**
+     * 随机选一张曲绘作为背景
+     * @param {'common'|'blur'|'low'} [kind]
+     */
+    randomBackground(kind = 'common') {
+        return this.getill(this.illlist[Math.floor(Math.random() * this.illlist.length)], kind)
     }
 
     /** @param {idString} songId @param {levelKind} dif */

@@ -1,5 +1,4 @@
 import crypto from 'node:crypto'
-import Config from '../../components/Config.js'
 import themeManager from './manager.js'
 import themePolicy from './policy.js'
 import {

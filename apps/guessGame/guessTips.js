@@ -1,7 +1,6 @@
 import Config from "../../components/Config.js"
 import fCompute from "../../model/game/fCompute.js"
 import getInfo from "../../model/game/getInfo.js"
-import { allLevel } from "../../model/game/constNum.js"
 import send from "../../model/render/send.js"
 import picmodle from "../../model/render/picmodle.js"
 import getPic from "../../model/render/getPic.js"
@@ -77,7 +76,7 @@ export default new class guessTips {
          * 提取id，要求有曲绘
          * @type {idString[]}
          */
-        let hasIllIdList = []
+        const hasIllIdList = []
 
         const allIdList = getInfo.idList || []
 
@@ -93,8 +92,8 @@ export default new class guessTips {
             return false
         }
         /**选中的歌曲id */
-        let songId = hasIllIdList[fCompute.randInt(0, hasIllIdList.length - 1)]
-        let info = getInfo.info(songId)
+        const songId = hasIllIdList[fCompute.randInt(0, hasIllIdList.length - 1)]
+        const info = getInfo.info(songId)
         if (!info) {
             send.send_with_At(e, '获取曲目信息发生未知错误QAQ！')
             return false
@@ -108,7 +107,7 @@ export default new class guessTips {
         tips.push(`这首曲目的⌈画师⌋为 ${info.illustrator}`)
         /**@type {levelKind[]} */
         const levels = /**@type {any} */ (Object.keys(info.chart))
-        for (let level of levels) {
+        for (const level of levels) {
             if (!info.chart[level]) continue;
             tips.push(`这首曲目的 ⌈${level}⌋ 难度 ⌈定数⌋ 为 ${info.chart[level].difficulty}`)
             tips.push(`这首曲目的 ⌈${level}⌋ 难度 ⌈物量⌋ 为 ${info.chart[level].combo}`)
@@ -118,18 +117,18 @@ export default new class guessTips {
         tips = tips.splice(0, Config.getUserCfg('config', 'GuessTipsTipNum'))
         /**曲绘区域 */
         /**width */
-        let width = fCompute.randInt(100, 150)
+        const width = fCompute.randInt(100, 150)
         /**height */
-        let height = fCompute.randInt(100, 150)
-        let x = fCompute.randInt(0, 2048 - width)
-        let y = fCompute.randInt(0, 1080 - height)
+        const height = fCompute.randInt(100, 150)
+        const x = fCompute.randInt(0, 2048 - width)
+        const y = fCompute.randInt(0, 1080 - height)
         gameList[group_id] = { gameType: 'guessTips' }
         tipsGameData[group_id] = new GuessTipsGameData(songId, tips, width, height, x, y,)
         const currentGame = tipsGameData[group_id]
         const startTime = currentGame.startTime
         send.reply(e, `下面开始进行提示猜歌哦！可以直接发送曲名进行回答哦！每过${Config.getUserCfg('config', 'GuessTipsTipCD')}秒后可以请求下一条提示，共有${Config.getUserCfg('config', 'GuessTipsTipNum') + 1}条提示嗷！所有提示发送完毕${Config.getUserCfg('config', 'GuessTipsAnsTime')}秒后会自动结束游戏嗷！发送 /${Config.getUserCfg('config', 'cmdhead')} ans 也可以提前结束游戏呐！`)
         /**@type {string[]} */
-        let resMsg = []
+        const resMsg = []
         for (let i = 0; i < currentGame.tipNum; i++) {
             resMsg.push(`${i + 1}.${currentGame.tips[i]}`)
         }
@@ -163,7 +162,7 @@ export default new class guessTips {
             send.send_with_At(e, `已经没有提示了呐，再仔细想想吧！`)
             return false
         }
-        let rev = []
+        const rev = []
         if (currentGame.tipNum == currentGame.tips.length) {
             setTimeout(async (startTime) => {
                 if (tipsGameData[group_id]?.startTime == startTime) {
@@ -199,9 +198,9 @@ export default new class guessTips {
         if (!currentGame) {
             return false
         }
-        let songId = getInfo.fuzzysongsnick(msg, 0.95)
+        const songId = getInfo.fuzzysongsnick(msg, 0.95)
         if (songId[0]) {
-            for (let id of songId) {
+            for (const id of songId) {
                 if (currentGame.songId == id) {
                     send.send_with_At(e, '恭喜你，答对啦喵！ヾ(≧▽≦*)o', true)
                     if (currentGame.tipNum == currentGame.tips.length + 1) {

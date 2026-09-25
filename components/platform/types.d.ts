@@ -261,7 +261,7 @@ export interface PlatformAdapter {
     sendWithAt(e: PlatformEvent, msg: PlatformMessageInput, quote?: boolean, data?: Record<string, unknown>): Promise<unknown>
     pickMember(e: PlatformEvent, userId: PlatformUserId): Promise<PlatformMemberLike | null>
     sendPrivate(e: PlatformEvent, msg: PlatformMessageInput): Promise<unknown>
-    relpyPrivate(userId: PlatformUserId, msg: PlatformMessageInput, botId?: PlatformUserId): MaybePromise<unknown>
+    replyPrivate(userId: PlatformUserId, msg: PlatformMessageInput, botId?: PlatformUserId): MaybePromise<unknown>
     recall(e: PlatformEvent, sentMessage: unknown): Promise<unknown>
     makeForwardMsg(e: PlatformEvent, msg?: PlatformMessageInput[], dec?: string): Promise<PlatformMessageOutput>
     sleep(ms: number): Promise<void>

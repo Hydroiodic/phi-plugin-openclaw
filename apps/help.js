@@ -50,22 +50,18 @@ export class phihelp extends phiPluginBase {
      */
     async help(e) {
 
-        if (await getBanGroup.get(e, 'help')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'help')) return false
 
-        let head = Config.getUserCfg('config', 'cmdhead')
-        head = head.match(RegExp(head))[0]
-        let pluginData = await getNotes.getNotesData(e.user_id)
+        const head = displayCmdHead()
+        const pluginData = await getNotes.getNotesData(e.user_id)
         send.reply(e, await picmodle.help(e, {
             helpGroup: helpGroup,
             cmdHead: head || null,
             isMaster: e.isMaster,
-            background: getInfo.getill(getInfo.illlist[Math.floor((Math.random() * (getInfo.illlist.length - 1)))]),
+            background: getInfo.randomBackground(),
             theme: pluginData?.theme || 'star'
         }), true)
-        await sendQuickCommands(e, helpQuickCommands(head || Config.getUserCfg('config', 'cmdhead')), '帮助页常用操作')
+        await sendQuickCommands(e, helpQuickCommands(head), '帮助页常用操作')
         return true
     }
 
@@ -76,10 +72,7 @@ export class phihelp extends phiPluginBase {
      */
     async tkhelp(e) {
 
-        if (await getBanGroup.get(e, 'tkhelp')) {
-            send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-            return false
-        }
+        if (await getBanGroup.get(e, 'tkhelp')) return false
 
         send.send_with_At(e, `sessionToken有关帮助：\n【推荐】：扫码登录TapTap获取token\n指令：/${Config.getUserCfg('config', 'cmdhead')} bind qrcode\n【基础方法】详见《Phigros非官方查分指引》：https://kdocs.cn/l/cvMDjWPTNaz4\n绑定sessionToken指令：\n/${Config.getUserCfg('config', 'cmdhead')} bind <sessionToken>`)
     }
@@ -91,10 +84,6 @@ export class phihelp extends phiPluginBase {
      */
     async apihelp(e) {
 
-        // if (await getBanGroup.get(e, 'apihelp')) {
-        //     send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-        //     return false
-        // }
         const apiAccess = await getApiAccessState(e)
         if (!apiAccess.enabled) {
             send.send_with_At(e, !apiAccess.globalEnabled
@@ -105,16 +94,27 @@ export class phihelp extends phiPluginBase {
             return false
         }
 
-        let head = Config.getUserCfg('config', 'cmdhead')
-        head = head.match(RegExp(head))[0]
-        let pluginData = await getNotes.getNotesData(e.user_id)
+        const head = displayCmdHead()
+        const pluginData = await getNotes.getNotesData(e.user_id)
         send.reply(e, await picmodle.help(e, {
             helpGroup: apiHelp,
             cmdHead: head || null,
             isMaster: e.isMaster,
-            background: getInfo.getill(getInfo.illlist[Math.floor((Math.random() * (getInfo.illlist.length - 1)))]),
+            background: getInfo.randomBackground(),
             theme: pluginData?.theme || 'star'
         }), true)
-        await sendQuickCommands(e, apiHelpQuickCommands(head || Config.getUserCfg('config', 'cmdhead')), 'API帮助快捷操作')
+        await sendQuickCommands(e, apiHelpQuickCommands(head), 'API帮助快捷操作')
+    }
+}
+
+/**
+ * cmdhead 是一个正则（如 phi|pgr），帮助图里展示它匹配到的第一个命令头
+ */
+function displayCmdHead() {
+    const head = Config.getUserCfg('config', 'cmdhead')
+    try {
+        return head.match(new RegExp(head))?.[0] || head
+    } catch {
+        return head
     }
 }
